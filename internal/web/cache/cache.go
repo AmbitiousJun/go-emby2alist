@@ -155,8 +155,11 @@ func calcCacheKey(c *gin.Context) (string, error) {
 		header.WriteString(strings.Join(values, "|"))
 	}
 
-	preEnc := strs.Sort(method + uri + body + header.String())
-	log.Println("headers to encode cacheKey: ", color.ToYellow(header.String()))
+	headerStr := header.String()
+	preEnc := strs.Sort(method + uri + body + headerStr)
+	if headerStr != "" {
+		log.Println("headers to encode cacheKey: ", color.ToYellow(headerStr))
+	}
 
 	// 为防止字典排序后, 不同的 uri 冲突, 这里在排序完的字符串前再加上原始的 uri
 	uriNoArgs := strings.ReplaceAll(uri, "?"+c.Request.URL.RawQuery, "")
@@ -169,7 +172,7 @@ func calcCacheKey(c *gin.Context) (string, error) {
 		log.Println("hash key : ", hash)
 		log.Println("method: ", method)
 		log.Println("body: ", body)
-		log.Println("header: ", header.String())
+		log.Println("header: ", headerStr)
 		log.Println("uriNoArgs: ", uriNoArgs)
 	}
 
