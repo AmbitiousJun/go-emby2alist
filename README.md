@@ -39,6 +39,7 @@
 
 ```shell
 git clone https://ghproxy.cc/https://github.com/AmbitiousJun/go-emby2alist
+cd go-emby2alist
 ```
 
 2. 拷贝配置
