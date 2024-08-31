@@ -3,6 +3,7 @@ package cache
 import (
 	"bytes"
 	"fmt"
+	"go-emby2alist/internal/util/color"
 	"go-emby2alist/internal/util/encrypts"
 	"go-emby2alist/internal/util/https"
 	"go-emby2alist/internal/util/strs"
@@ -154,6 +155,7 @@ func calcCacheKey(c *gin.Context) (string, error) {
 	}
 
 	preEnc := strs.Sort(method + uri + body + header.String())
+	log.Println("headers to encode cacheKey: ", color.ToYellow(header.String()))
 
 	// 为防止字典排序后, 不同的 uri 冲突, 这里在排序完的字符串前再加上原始的 uri
 	uriNoArgs := strings.ReplaceAll(uri, "?"+c.Request.URL.RawQuery, "")
