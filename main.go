@@ -2,6 +2,7 @@ package main
 
 import (
 	"go-emby2alist/internal/config"
+	"go-emby2alist/internal/util/color"
 	"go-emby2alist/internal/web"
 	"log"
 )
@@ -10,8 +11,8 @@ const CurrentVersion = "go-emby2alist => 1.0.0"
 const RepoArr = "https://github.com/AmbitiousJun/go-emby2alist"
 
 func main() {
-	log.Println("版本号: ", CurrentVersion)
-	log.Println("仓库地址: ", RepoArr)
+	log.Printf(color.ToPurple("版本号: %s"), CurrentVersion)
+	log.Printf(color.ToBlue("仓库地址: %s"), RepoArr)
 
 	log.Println("正在加载配置...")
 	if err := config.ReadFromFile("config.yml"); err != nil {
