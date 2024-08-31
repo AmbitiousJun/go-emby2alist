@@ -37,7 +37,7 @@
 1. 获取代码
 
 ```shell
-git clone https://ghproxy.cn/https://github.com/AmbitiousJun/go-emby2alist
+git clone https://ghproxy.cc/https://github.com/AmbitiousJun/go-emby2alist
 ```
 
 2. 拷贝配置
