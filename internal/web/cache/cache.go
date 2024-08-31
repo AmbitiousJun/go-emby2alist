@@ -26,6 +26,7 @@ var CacheKeyIgnoreParams = map[string]struct{}{
 	"X-Streammusic-Savepath": {},
 	"Host":                   {},
 	"User-Agent":             {},
+	"Referrer":               {},
 }
 
 // NopChecker 不缓存检查中间件, 对于实时性要求较强的 uri 不进行缓存
