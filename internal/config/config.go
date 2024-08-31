@@ -17,6 +17,8 @@ type Config struct {
 	VideoPreview *VideoPreview `yaml:"video-preview"`
 	// Path 路径相关配置
 	Path *Path `yaml:"path"`
+	// Cache 缓存相关配置
+	Cache *Cache `yaml:"cache"`
 }
 
 var C *Config

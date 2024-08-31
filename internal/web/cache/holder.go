@@ -2,6 +2,7 @@ package cache
 
 import (
 	"bytes"
+	"go-emby2alist/internal/config"
 	"go-emby2alist/internal/util/strs"
 	"log"
 	"strconv"
@@ -29,7 +30,7 @@ var currentCacheSize int64 = 0
 // DefaultExpired 默认的请求过期时间
 //
 // 可通过设置 "Expired" 响应头进行覆盖
-var DefaultExpired = time.Hour.Milliseconds() * 24
+var DefaultExpired = func() time.Duration { return config.C.Cache.ExpiredDuration() }
 
 // cacheMap 存放缓存数据的 map
 var cacheMap = sync.Map{}
@@ -112,7 +113,7 @@ func putCache(cacheKey string, c *gin.Context, respBody *bytes.Buffer, respHeade
 
 	// 计算缓存过期时间
 	nowMillis := time.Now().UnixMilli()
-	expiredMillis := DefaultExpired + nowMillis
+	expiredMillis := int64(DefaultExpired()) + nowMillis
 	if expiredNum, err := strconv.Atoi(respHeader.expired); err == nil {
 		customMillis := int64(expiredNum)
 

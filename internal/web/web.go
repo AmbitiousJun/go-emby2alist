@@ -2,6 +2,7 @@ package web
 
 import (
 	"fmt"
+	"go-emby2alist/internal/config"
 	"go-emby2alist/internal/web/cache"
 
 	"github.com/gin-gonic/gin"
@@ -12,8 +13,10 @@ func Listen(port int) error {
 	r := gin.Default()
 
 	r.Use(referrerPolicySetter())
-	r.Use(cache.NopChecker())
-	r.Use(cache.RequestCacher())
+	if config.C.Cache.Enable {
+		r.Use(cache.NopChecker())
+		r.Use(cache.RequestCacher())
+	}
 
 	initRoutes(r)
 

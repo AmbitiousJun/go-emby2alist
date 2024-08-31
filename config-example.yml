@@ -21,3 +21,10 @@ path:
     - /series:/电视剧
     - /sport:/运动
     - /animation:/动漫
+cache:
+  # 是否启用缓存中间件
+  # 推荐启用, 既可以缓存 Emby 的大接口以及静态资源, 又可以缓存网盘直链, 避免频繁请求
+  enable: true
+  # 缓存过期时间
+  # 可配置单位: d(天), h(小时), m(分钟), s(秒)
+  expired: 1d
