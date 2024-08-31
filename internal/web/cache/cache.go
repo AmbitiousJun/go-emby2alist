@@ -19,14 +19,15 @@ import (
 //
 // 如果请求地址包含列表中的请求头或者参数, 则不参与 cacheKey 运算
 var CacheKeyIgnoreParams = map[string]struct{}{
-	"StartTimeTicks":         {},
-	"X-Playback-Session-Id":  {},
-	"Range":                  {},
-	"X-Streammusic-Audioid":  {},
-	"X-Streammusic-Savepath": {},
-	"Host":                   {},
-	"User-Agent":             {},
-	"Referrer":               {},
+	// Fileball
+	"StartTimeTicks": {}, "X-Playback-Session-Id": {},
+
+	// Common
+	"Range": {}, "Host": {}, "User-Agent": {}, "Referrer": {}, "Connection": {},
+
+	// StreamMusic
+	"X-Streammusic-Audioid": {}, "X-Streammusic-Savepath": {}, "Icy-Metadata": {},
+	"Authorization": {},
 }
 
 // NopChecker 不缓存检查中间件, 对于实时性要求较强的 uri 不进行缓存
@@ -155,7 +156,7 @@ func calcCacheKey(c *gin.Context) (string, error) {
 	hash := encrypts.Md5Hash(uriNoArgs + preEnc)
 
 	// 仅调试环境生效, 方便查看什么参数导致缓存不命中
-	if gin.Mode() == gin.DebugMode && strings.Contains(uri, "17753/stream") {
+	if gin.Mode() == gin.DebugMode && strings.Contains(uri, "Audio") {
 		log.Println("hash key : ", hash)
 		log.Println("method: ", method)
 		log.Println("body: ", body)
