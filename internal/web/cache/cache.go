@@ -28,6 +28,12 @@ var CacheKeyIgnoreParams = map[string]struct{}{
 	// StreamMusic
 	"X-Streammusic-Audioid": {}, "X-Streammusic-Savepath": {}, "Icy-Metadata": {},
 	"Authorization": {},
+
+	// IP
+	"X-Forwarded-For": {}, "X-Real-IP": {}, "Forwarded": {}, "Client-IP": {},
+	"True-Client-IP": {}, "CF-Connecting-IP": {}, "X-Cluster-Client-IP": {},
+	"Fastly-Client-IP": {}, "X-Client-IP": {}, "X-ProxyUser-IP": {},
+	"Via": {}, "Forwarded-For": {},
 }
 
 // NopChecker 不缓存检查中间件, 对于实时性要求较强的 uri 不进行缓存
