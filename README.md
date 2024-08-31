@@ -58,7 +58,13 @@ docker-compose up -d --build
 
    > 如需要自定义端口，在第四步编译之前，修改 `docker-compose.yml` 文件中的 `8095:8095` 为 `[自定义端口]:8095` 即可
 
-6. 修改配置的时候需要重新启动容器
+6. 日志查看
+
+```shell
+docker logs -f go-emby2alist -n 1000
+```
+
+7. 修改配置的时候需要重新启动容器
 
 ```shell
 docker-compose down
@@ -66,7 +72,7 @@ docker-compose down
 docker-compose up -d
 ```
 
-7. 版本更新
+8. 版本更新
 
 ```shell
 docker-compose down
@@ -74,7 +80,7 @@ git pull
 docker-compose up -d --build
 ```
 
-8. 清除过时的 Docker 镜像
+9. 清除过时的 Docker 镜像
 
 ```shell
 docker image prune -f
