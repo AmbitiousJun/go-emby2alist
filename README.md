@@ -73,6 +73,12 @@ git pull
 docker-compose up -d --build
 ```
 
+8. 清除过时的 Docker 镜像
+
+```shell
+docker image prune -f
+```
+
 
 
 ## 已知问题
