@@ -2,7 +2,7 @@
 
 使用 Go 语言编写的网盘直链反向代理服务，为 Emby + Alist 组合提供更好的使用体验。
 
-> 本项目只专注服务于网盘，且不打算兼容 Jellyfin/Plex（这两个我也用过，说实话真不如 Emby），主打一个易用和轻巧，如果你的 Emby 有其他类型的资源，推荐使用[功能更完善的反向代理服务](https://github.com/bpking1/embyExternalUrl)
+> 本项目只专注服务于网盘，且不打算兼容 Jellyfin / Plex（这两个我也用过，说实话真不如 Emby），主打一个易用和轻巧，如果你的 Emby 有其他类型的资源，推荐使用[功能更完善的反向代理服务](https://github.com/bpking1/embyExternalUrl)
 
 
 
