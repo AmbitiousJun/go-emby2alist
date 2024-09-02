@@ -13,6 +13,7 @@ import (
 	"net/url"
 	"regexp"
 	"strings"
+	"sync"
 
 	"github.com/gin-gonic/gin"
 )
@@ -40,9 +41,12 @@ func getEmbyFileLocalPath(playbackInfoUri string) (string, error) {
 }
 
 // findVideoPreviewInfos 查找 source 的所有转码资源
-func findVideoPreviewInfos(source *jsons.Item) []*jsons.Item {
+//
+// 传递 resChan 进行异步查询, 通过监听 resChan 获取查询结果
+func findVideoPreviewInfos(source *jsons.Item, originName string, resChan chan []*jsons.Item) {
 	if source == nil || source.Type() != jsons.JsonTypeObj {
-		return nil
+		resChan <- nil
+		return
 	}
 
 	// 转换 alist 绝对路径
@@ -60,7 +64,8 @@ func findVideoPreviewInfos(source *jsons.Item) []*jsons.Item {
 		}
 
 		if res.Code == http.StatusForbidden {
-			return []*jsons.Item{}
+			resChan <- nil
+			return
 		}
 	}
 
@@ -69,7 +74,8 @@ func findVideoPreviewInfos(source *jsons.Item) []*jsons.Item {
 		paths, err := alistPathRes.Range()
 		if err != nil {
 			log.Printf("转换 alist 路径异常: %v", err)
-			return []*jsons.Item{}
+			resChan <- nil
+			return
 		}
 
 		for i := 0; i < len(paths); i++ {
@@ -86,40 +92,45 @@ func findVideoPreviewInfos(source *jsons.Item) []*jsons.Item {
 	if transcodingList == nil ||
 		transcodingList.Empty() ||
 		transcodingList.Type() != jsons.JsonTypeArr {
-
-		return []*jsons.Item{}
+		resChan <- nil
+		return
 	}
 
-	res := make([]*jsons.Item, 0)
+	res := make([]*jsons.Item, transcodingList.Len())
+	wg := sync.WaitGroup{}
+	transcodingList.RangeArr(func(idx int, transcode *jsons.Item) error {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			copySource := jsons.NewByVal(source.Struct())
+			templateId, _ := transcode.Attr("template_id").String()
+			templateWidth, _ := transcode.Attr("template_width").Int()
+			templateHeight, _ := transcode.Attr("template_height").Int()
+			prefix := fmt.Sprintf("%s_%dx%d", templateId, templateWidth, templateHeight)
+			copySource.Attr("Name").Set(fmt.Sprintf("(%s) %s", prefix, originName))
 
-	transcodingList.RangeArr(func(_ int, transcode *jsons.Item) error {
-		copySource := jsons.NewByVal(source.Struct())
-		templateId, _ := transcode.Attr("template_id").String()
-		templateWidth, _ := transcode.Attr("template_width").Int()
-		templateHeight, _ := transcode.Attr("template_height").Int()
-		prefix := fmt.Sprintf("%s_%dx%d", templateId, templateWidth, templateHeight)
-		copySource.Attr("Name").Set(fmt.Sprintf("(%s) %s", prefix, source.Attr("Name").Val()))
+			// 重要！！！这里的 id 必须和原本的 id 不一样, 但又要确保能够正常反推出原本的 id
+			newId := fmt.Sprintf("%s_%s", source.Attr("Id").Val(), prefix)
+			copySource.Attr("Id").Set(newId)
+			dsu, _ := copySource.Attr("DirectStreamUrl").String()
+			dsu = urls.AppendArgs(dsu, "MediaSourceId", newId)
 
-		// 重要！！！这里的 id 必须和原本的 id 不一样, 但又要确保能够正常反推出原本的 id
-		newId := fmt.Sprintf("%s_%s", source.Attr("Id").Val(), prefix)
-		copySource.Attr("Id").Set(newId)
-		dsu, _ := copySource.Attr("DirectStreamUrl").String()
-		dsu = urls.AppendArgs(dsu, "MediaSourceId", newId)
+			// 标记转码资源使用转码容器
+			copySource.Put("SupportsTranscoding", jsons.NewByVal(true))
+			copySource.Put("TranscodingContainer", jsons.NewByVal("ts"))
+			copySource.Put("TranscodingSubProtocol", jsons.NewByVal("hls"))
+			copySource.Put("TranscodingUrl", jsons.NewByVal(dsu))
+			copySource.Put("SupportsDirectPlay", jsons.NewByVal(false))
+			copySource.Put("SupportsDirectStream", jsons.NewByVal(false))
+			copySource.DelKey("DirectStreamUrl")
 
-		// 标记转码资源使用转码容器
-		copySource.Put("SupportsTranscoding", jsons.NewByVal(true))
-		copySource.Put("TranscodingContainer", jsons.NewByVal("ts"))
-		copySource.Put("TranscodingSubProtocol", jsons.NewByVal("hls"))
-		copySource.Put("TranscodingUrl", jsons.NewByVal(dsu))
-		copySource.Put("SupportsDirectPlay", jsons.NewByVal(false))
-		copySource.Put("SupportsDirectStream", jsons.NewByVal(false))
-		copySource.DelKey("DirectStreamUrl")
-
-		res = append(res, copySource)
+			res[idx] = copySource
+		}()
 		return nil
 	})
+	wg.Wait()
 
-	return res
+	resChan <- res
 }
 
 // findMediaSourceName 查找 MediaSource 中的视频名称, 如 '1080p HEVC'

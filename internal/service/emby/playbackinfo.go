@@ -7,10 +7,10 @@ import (
 	"go-emby2alist/internal/util/color"
 	"go-emby2alist/internal/util/https"
 	"go-emby2alist/internal/util/jsons"
-	"go-emby2alist/internal/util/urls"
 	"go-emby2alist/internal/web/cache"
 	"log"
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
 )
@@ -31,6 +31,8 @@ func TransferPlaybackInfo(c *gin.Context) {
 	}
 
 	defer func() {
+		// 缓存 5h
+		c.Header(cache.HeaderKeyExpired, cache.Duration(time.Hour*5))
 		// 将请求结果缓存到指定缓存空间下
 		if !itemInfo.MsInfo.Empty {
 			// 请求指定资源的 PlaybackInfo 不缓存
@@ -70,6 +72,7 @@ func TransferPlaybackInfo(c *gin.Context) {
 
 	log.Printf(color.ToBlue("获取到的 MediaSources 个数: %s"), mediaSources.Len())
 	var haveReturned = errors.New("have returned")
+	resChans := make([]chan []*jsons.Item, 0)
 	err = mediaSources.RangeArr(func(_ int, source *jsons.Item) error {
 		if !msInfo.Empty {
 			// 如果客户端请求携带了 MediaSourceId 参数
@@ -87,15 +90,9 @@ func TransferPlaybackInfo(c *gin.Context) {
 		// 转换直链链接
 		source.Attr("SupportsDirectPlay").Set(true)
 		source.Attr("SupportsDirectStream").Set(true)
-		newUrl := urls.ReplaceAll(
-			c.Request.URL.String(),
-			"/emby/Items", "/videos",
-			"PlaybackInfo", "stream",
-		)
-		newUrl = urls.AppendArgs(
-			newUrl,
-			"MediaSourceId", source.Attr("Id").Val().(string),
-			"Static", "true",
+		newUrl := fmt.Sprintf(
+			"/videos/%s/stream?MediaSourceId=%s&api_key=%s&Static=true",
+			itemInfo.Id, source.Attr("Id").Val(), config.C.Emby.ApiKey,
 		)
 
 		// 简化资源名称
@@ -103,6 +100,8 @@ func TransferPlaybackInfo(c *gin.Context) {
 		if name != "" {
 			source.Attr("Name").Set(name)
 		}
+		name = source.Attr("Name").Val().(string)
+		source.Attr("Name").Set(fmt.Sprintf("(原画) %s", name))
 
 		if useTranscode {
 			// 客户端请求指定的转码资源
@@ -131,18 +130,23 @@ func TransferPlaybackInfo(c *gin.Context) {
 		if !msInfo.Empty || !cfg.Enable || !cfg.ContainerValid(source.Attr("Container").Val().(string)) {
 			return nil
 		}
-		previewInfos := findVideoPreviewInfos(source)
-		if len(previewInfos) > 0 {
-			log.Printf(color.ToGreen("找到 %d 个转码资源信息: %d"), len(previewInfos))
-			mediaSources.Append(previewInfos...)
-		}
-
-		source.Attr("Name").Set(fmt.Sprintf("(原画) %s", source.Attr("Name").Val()))
+		resChan := make(chan []*jsons.Item, 1)
+		findVideoPreviewInfos(source, name, resChan)
+		resChans = append(resChans, resChan)
 		return nil
 	})
 
 	if err == haveReturned {
 		return
+	}
+
+	// 收集异步请求的转码资源信息
+	for _, resChan := range resChans {
+		previewInfos := <-resChan
+		if len(previewInfos) > 0 {
+			log.Printf(color.ToGreen("找到 %d 个转码资源信息"), len(previewInfos))
+			mediaSources.Append(previewInfos...)
+		}
 	}
 
 	respHeader.Del("Content-Length")

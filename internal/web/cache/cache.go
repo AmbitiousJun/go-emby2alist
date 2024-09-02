@@ -168,7 +168,7 @@ func calcCacheKey(c *gin.Context) (string, error) {
 	}
 
 	headerStr := header.String()
-	preEnc := strs.Sort(body + headerStr)
+	preEnc := strs.Sort(uri + body + headerStr)
 	if headerStr != "" {
 		log.Println("headers to encode cacheKey: ", color.ToYellow(headerStr))
 	}
