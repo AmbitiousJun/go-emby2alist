@@ -46,6 +46,7 @@ func NopChecker() gin.HandlerFunc {
 		regexp.MustCompile(`(?i)^/.*users/.*/items/\d+($|\?)`),
 		regexp.MustCompile(`(?i)^/.*shows/nextup`),
 		regexp.MustCompile(`(?i)^/.*shows.*/episodes`),
+		regexp.MustCompile(`(?i)^/.*livetv`),
 	}
 
 	return func(c *gin.Context) {
