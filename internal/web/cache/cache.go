@@ -43,9 +43,9 @@ var CacheKeyIgnoreParams = map[string]struct{}{
 func NopChecker() gin.HandlerFunc {
 	noCaches := []*regexp.Regexp{
 		// 跟播放进度相关的接口需要实时更新
-		regexp.MustCompile(`^/.*Users.*Items`),
-		regexp.MustCompile(`^/.*Shows/NextUp`),
-		regexp.MustCompile(`^/.*Shows.*/Episodes`),
+		regexp.MustCompile(`(?i)^/.*users/.*/items/\d+($|\?)`),
+		regexp.MustCompile(`(?i)^/.*shows/nextup`),
+		regexp.MustCompile(`(?i)^/.*shows.*/episodes`),
 	}
 
 	return func(c *gin.Context) {
