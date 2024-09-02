@@ -13,7 +13,6 @@ func Listen(port int) error {
 	r := gin.Default()
 
 	r.Use(referrerPolicySetter())
-	r.Use(needRefererChecker())
 	if config.C.Cache.Enable {
 		r.Use(cache.NopChecker())
 		r.Use(cache.RequestCacher())
