@@ -133,7 +133,7 @@ func TransferPlaybackInfo(c *gin.Context) {
 		}
 		previewInfos := findVideoPreviewInfos(source)
 		if len(previewInfos) > 0 {
-			log.Printf(color.ToGreen("找到 %d 个转码资源信息"), len(previewInfos))
+			log.Printf(color.ToGreen("找到 %d 个转码资源信息: %d"), len(previewInfos))
 			mediaSources.Append(previewInfos...)
 		}
 
