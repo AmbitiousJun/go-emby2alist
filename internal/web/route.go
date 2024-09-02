@@ -47,13 +47,6 @@ func init() {
 	log.Println("路由规则初始化完成")
 }
 
-// referrerPolicySetter 设置代理的 Referrer 策略
-func referrerPolicySetter() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		c.Header("Referrer-Policy", "no-referrer")
-	}
-}
-
 // initRoutes 初始化路由
 func initRoutes(r *gin.Engine) {
 	r.Any("/*vars", globalDftHandler)
