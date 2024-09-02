@@ -5,6 +5,7 @@ import (
 	"go-emby2alist/internal/config"
 	"go-emby2alist/internal/service/alist"
 	"go-emby2alist/internal/service/path"
+	"go-emby2alist/internal/util/color"
 	"go-emby2alist/internal/util/jsons"
 	"go-emby2alist/internal/web/cache"
 	"log"
@@ -21,7 +22,7 @@ func Redirect2AlistLink(c *gin.Context) {
 	if checkErr(c, err) {
 		return
 	}
-	log.Printf("解析到的 itemInfo: %v", jsons.NewByVal(itemInfo))
+	log.Printf(color.ToBlue("解析到的 itemInfo: %v"), jsons.NewByVal(itemInfo))
 
 	// 2 请求资源在 Emby 中的 Path 参数
 	embyPath, err := getEmbyFileLocalPath(itemInfo.PlaybackInfoUri)
@@ -32,18 +33,18 @@ func Redirect2AlistLink(c *gin.Context) {
 	// 3 请求 alist 资源
 	alistPathRes := path.Emby2Alist(embyPath)
 	if alistPathRes.Success {
-		log.Println("尝试请求 Alist 资源: ", alistPathRes.Path)
+		log.Printf(color.ToBlue("尝试请求 Alist 资源: %s"), alistPathRes.Path)
 		res := alist.FetchResource(alistPathRes.Path, itemInfo.MsInfo.Transcode, itemInfo.MsInfo.TemplateId, false)
 
 		if res.Code == http.StatusOK {
-			log.Println("请求成功, 重定向到: ", res.Data)
+			log.Printf(color.ToGreen("请求成功, 重定向到: %s"), res.Data)
 			c.Header(cache.HeaderKeyExpired, cache.Duration(time.Minute*10))
 			c.Redirect(http.StatusFound, res.Data)
 			return
 		}
 
 		if res.Code == http.StatusForbidden {
-			log.Println("请求 Alist 被阻止: ", res.Msg)
+			log.Printf(color.ToRed("请求 Alist 被阻止: %s"), res.Msg)
 			c.String(http.StatusForbidden, res.Msg)
 		}
 	}
@@ -54,11 +55,11 @@ func Redirect2AlistLink(c *gin.Context) {
 	}
 
 	for _, path := range paths {
-		log.Println("尝试请求 Alist 资源: ", path)
+		log.Printf(color.ToBlue("尝试请求 Alist 资源: %s"), path)
 		res := alist.FetchResource(path, itemInfo.MsInfo.Transcode, itemInfo.MsInfo.TemplateId, true)
 
 		if res.Code == http.StatusOK {
-			log.Println("请求成功, 重定向到: ", res.Data)
+			log.Printf(color.ToGreen("请求成功, 重定向到: %s"), res.Data)
 			c.Header(cache.HeaderKeyExpired, cache.Duration(time.Minute*10))
 			c.Redirect(http.StatusFound, res.Data)
 			return
@@ -77,7 +78,7 @@ func checkErr(c *gin.Context, err error) bool {
 		return false
 	}
 	u := config.C.Emby.Host + c.Request.URL.String()
-	log.Printf("代理接口失败: %v, 重定向回源服务器处理\n", err)
+	log.Printf(color.ToRed("代理接口失败: %v, 重定向回源服务器处理\n"), err)
 
 	// 异常接口, 不缓存
 	c.Header(cache.HeaderKeyExpired, "-1")

@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"go-emby2alist/internal/config"
+	"go-emby2alist/internal/util/color"
 	"go-emby2alist/internal/util/https"
 	"go-emby2alist/internal/util/jsons"
 	"go-emby2alist/internal/util/urls"
@@ -24,7 +25,7 @@ const (
 func TransferPlaybackInfo(c *gin.Context) {
 	// 1 解析资源信息
 	itemInfo, err := resolveItemInfo(c)
-	log.Println("ItemInfo 解析结果: ", jsons.NewByVal(itemInfo))
+	log.Printf(color.ToBlue("ItemInfo 解析结果: %s"), jsons.NewByVal(itemInfo))
 	if checkErr(c, err) {
 		return
 	}
@@ -62,12 +63,12 @@ func TransferPlaybackInfo(c *gin.Context) {
 	}
 
 	if mediaSources.Empty() {
-		log.Println("没有找到可播放的资源")
+		log.Println(color.ToYellow("没有找到可播放的资源"))
 		c.JSON(res.Code, resJson.Struct())
 		return
 	}
 
-	log.Println("获取到的 MediaSources 个数: ", mediaSources.Len())
+	log.Printf(color.ToBlue("获取到的 MediaSources 个数: %s"), mediaSources.Len())
 	var haveReturned = errors.New("have returned")
 	err = mediaSources.RangeArr(func(_ int, source *jsons.Item) error {
 		if !msInfo.Empty {
@@ -112,18 +113,18 @@ func TransferPlaybackInfo(c *gin.Context) {
 			source.Put("TranscodingContainer", jsons.NewByVal("ts"))
 			source.Put("SupportsDirectPlay", jsons.NewByVal(false))
 			source.Put("SupportsDirectStream", jsons.NewByVal(false))
-			log.Println("设置转码播放链接为: ", newUrl)
+			log.Printf(color.ToBlue("设置转码播放链接为: %s"), newUrl)
 			source.DelKey("DirectStreamUrl")
 			return nil
 		}
 		source.Attr("DirectStreamUrl").Set(newUrl)
-		log.Println("设置直链播放链接为: ", newUrl)
+		log.Printf(color.ToBlue("设置直链播放链接为: %s"), newUrl)
 
 		source.Put("SupportsTranscoding", jsons.NewByVal(false))
 		source.DelKey("TranscodingUrl")
 		source.DelKey("TranscodingSubProtocol")
 		source.DelKey("TranscodingContainer")
-		log.Println("转码配置被移除")
+		log.Println(color.ToBlue("转码配置被移除"))
 
 		// 添加转码 MediaSource 获取
 		cfg := config.C.VideoPreview
@@ -132,7 +133,7 @@ func TransferPlaybackInfo(c *gin.Context) {
 		}
 		previewInfos := findVideoPreviewInfos(source)
 		if len(previewInfos) > 0 {
-			log.Printf("找到 %d 个转码资源信息", len(previewInfos))
+			log.Printf(color.ToGreen("找到 %d 个转码资源信息"), len(previewInfos))
 			mediaSources.Append(previewInfos...)
 		}
 
@@ -173,7 +174,7 @@ func LoadCacheItems(c *gin.Context) {
 	if err != nil {
 		return
 	}
-	log.Printf("itemInfo 解析结果: %s", jsons.NewByVal(itemInfo))
+	log.Printf(color.ToBlue("itemInfo 解析结果: %s"), jsons.NewByVal(itemInfo))
 
 	// 3 查询缓存空间的 PlaybackInfo 缓存
 	cache, ok := cache.GetSpaceCache(PlaybackCacheSpace, itemInfo.Id)
@@ -190,7 +191,7 @@ func LoadCacheItems(c *gin.Context) {
 	if !ok || cacheMs.Type() != jsons.JsonTypeArr {
 		return
 	}
-	log.Println("使用缓存空间中的 MediaSources 覆盖原始响应")
+	log.Println(color.ToBlue("使用缓存空间中的 MediaSources 覆盖原始响应"))
 
 	// 5 覆盖原始响应
 	resJson.Put("MediaSources", cacheMs)
