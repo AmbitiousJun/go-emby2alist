@@ -54,6 +54,8 @@ func NopChecker() gin.HandlerFunc {
 		regexp.MustCompile(`(?i)^/.*shows.*/episodes`),
 		// 电视直播接口
 		regexp.MustCompile(`(?i)^/.*livetv`),
+		// 计划任务接口
+		regexp.MustCompile(`(?i)^/.*scheduledtasks`),
 	}
 
 	return func(c *gin.Context) {
