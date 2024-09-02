@@ -44,18 +44,16 @@ var CacheKeyIgnoreParams = map[string]struct{}{
 // NopChecker 不缓存检查中间件, 对于实时性要求较强的 uri 不进行缓存
 func NopChecker() gin.HandlerFunc {
 	noCaches := []*regexp.Regexp{
-		// 播放进度接口
-		regexp.MustCompile(`(?i)^/.*users/.*/items/\d+($|\?)`),
-		// 主页的继续观看、最新媒体接口
-		regexp.MustCompile(`(?i)^/.*users/.*(/items)?/(latest|resume|views)`),
 		// 详情页的“即将播放”接口
 		regexp.MustCompile(`(?i)^/.*shows/nextup`),
 		// 详情页的其他剧集接口
 		regexp.MustCompile(`(?i)^/.*shows.*/episodes`),
 		// 电视直播接口
-		regexp.MustCompile(`(?i)^/.*livetv`),
-		// 计划任务接口
-		regexp.MustCompile(`(?i)^/.*scheduledtasks`),
+		regexp.MustCompile(`(?i)^/.*(livetv|channels)`),
+		// 用户接口
+		regexp.MustCompile(`(?i)^/.*(users)`),
+		// 控制台接口
+		regexp.MustCompile(`(?i)^/.*(backuprestore|auth|devices|logs|sync|encoding|plugins|localization|system|library|scheduledtasks|notifications|configurationpages)`),
 	}
 
 	return func(c *gin.Context) {
