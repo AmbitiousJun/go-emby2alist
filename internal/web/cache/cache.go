@@ -29,8 +29,7 @@ var CacheKeyIgnoreParams = map[string]struct{}{
 	"Upgrade-Insecure-Requests": {}, "Referer": {}, "Origin": {},
 
 	// StreamMusic
-	"X-Streammusic-Audioid": {}, "X-Streammusic-Savepath": {}, "Icy-Metadata": {},
-	"Authorization": {},
+	"X-Streammusic-Audioid": {}, "X-Streammusic-Savepath": {},
 
 	// IP
 	"X-Forwarded-For": {}, "X-Real-IP": {}, "Forwarded": {}, "Client-IP": {},
