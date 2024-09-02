@@ -14,7 +14,7 @@ func Listen(port int) error {
 
 	r.Use(referrerPolicySetter())
 	if config.C.Cache.Enable {
-		r.Use(cache.NopChecker())
+		r.Use(cache.CacheableRouteMarker())
 		r.Use(cache.RequestCacher())
 	}
 

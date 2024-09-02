@@ -41,28 +41,31 @@ var CacheKeyIgnoreParams = map[string]struct{}{
 	"Via": {}, "Forwarded-For": {}, "X-From-Cdn": {},
 }
 
-// NopChecker 不缓存检查中间件, 对于实时性要求较强的 uri 不进行缓存
-func NopChecker() gin.HandlerFunc {
-	noCaches := []*regexp.Regexp{
-		// 详情页的“即将播放”接口
-		regexp.MustCompile(`(?i)^/.*shows/nextup`),
-		// 详情页的其他剧集接口
-		regexp.MustCompile(`(?i)^/.*shows.*/episodes`),
-		// 电视直播接口
-		regexp.MustCompile(`(?i)^/.*(livetv|channels)`),
-		// 用户接口
-		regexp.MustCompile(`(?i)^/.*(users)`),
-		// 控制台接口
-		regexp.MustCompile(`(?i)^/.*(backuprestore|auth|devices|logs|sync|encoding|plugins|localization|system|library|scheduledtasks|notifications|configurationpages)`),
+// CacheableRouteMarker 缓存白名单
+// 只有匹配上正则表达式的路由才会被缓存
+func CacheableRouteMarker() gin.HandlerFunc {
+	cacheablePatterns := []*regexp.Regexp{
+		// PlaybackInfo
+		regexp.MustCompile(`(?i)^/.*items/.*/playbackinfo\??`),
+		// 直链重定向
+		regexp.MustCompile(`(?i)^/.*(videos|audio)/.*/(stream|universal)\??`),
+		// 下载
+		regexp.MustCompile(`(?i)^/.*items/.*/download`),
+		// 字幕
+		regexp.MustCompile(`(?i)^/.*videos/.*/subtitles`),
+		// 图片缓存
+		regexp.MustCompile(`(?i)^/.*(images|jpg|png|jpeg|webp|ico)`),
+		// 其他静态资源
+		regexp.MustCompile(`(?i)^/.*(html|css|js|woff)`),
 	}
 
 	return func(c *gin.Context) {
-		for _, noCache := range noCaches {
-			if noCache.MatchString(c.Request.RequestURI) {
-				c.Header(HeaderKeyExpired, "-1")
-				break
+		for _, pattern := range cacheablePatterns {
+			if pattern.MatchString(c.Request.RequestURI) {
+				return
 			}
 		}
+		c.Header(HeaderKeyExpired, "-1")
 	}
 }
 
@@ -165,7 +168,7 @@ func calcCacheKey(c *gin.Context) (string, error) {
 	}
 
 	headerStr := header.String()
-	preEnc := strs.Sort(method + uri + body + headerStr)
+	preEnc := strs.Sort(body + headerStr)
 	if headerStr != "" {
 		log.Println("headers to encode cacheKey: ", color.ToYellow(headerStr))
 	}
@@ -174,16 +177,6 @@ func calcCacheKey(c *gin.Context) (string, error) {
 	uriNoArgs := strings.ReplaceAll(uri, "?"+c.Request.URL.RawQuery, "")
 	uriNoArgs = strings.ReplaceAll(uriNoArgs, c.Request.URL.RawQuery, "")
 
-	hash := encrypts.Md5Hash(uriNoArgs + preEnc)
-
-	// 仅调试环境生效, 方便查看什么参数导致缓存不命中
-	if gin.Mode() == gin.DebugMode && strings.Contains(uri, "Audio") {
-		log.Println("hash key : ", hash)
-		log.Println("method: ", method)
-		log.Println("body: ", body)
-		log.Println("header: ", headerStr)
-		log.Println("uriNoArgs: ", uriNoArgs)
-	}
-
+	hash := encrypts.Md5Hash(method + uriNoArgs + preEnc)
 	return hash, nil
 }
