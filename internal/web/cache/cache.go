@@ -23,6 +23,9 @@ var CacheKeyIgnoreParams = map[string]struct{}{
 	// Fileball
 	"StartTimeTicks": {}, "X-Playback-Session-Id": {},
 
+	// Emby
+	"PlaySessionId": {},
+
 	// Common
 	"Range": {}, "Host": {}, "User-Agent": {}, "Referrer": {}, "Connection": {},
 	"Accept": {}, "Accept-Encoding": {}, "Accept-Language": {}, "Cache-Control": {},
