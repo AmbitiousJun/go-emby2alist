@@ -26,7 +26,7 @@ var CacheKeyIgnoreParams = map[string]struct{}{
 	// Common
 	"Range": {}, "Host": {}, "User-Agent": {}, "Referrer": {}, "Connection": {},
 	"Accept": {}, "Accept-Encoding": {}, "Accept-Language": {}, "Cache-Control": {},
-	"Upgrade-Insecure-Requests": {},
+	"Upgrade-Insecure-Requests": {}, "Referer": {}, "Origin": {},
 
 	// StreamMusic
 	"X-Streammusic-Audioid": {}, "X-Streammusic-Savepath": {}, "Icy-Metadata": {},
@@ -153,6 +153,7 @@ func calcCacheKey(c *gin.Context) (string, error) {
 		header.WriteString(key)
 		header.WriteString("=")
 		header.WriteString(strings.Join(values, "|"))
+		header.WriteString(";")
 	}
 
 	headerStr := header.String()
