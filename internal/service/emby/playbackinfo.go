@@ -31,8 +31,8 @@ func TransferPlaybackInfo(c *gin.Context) {
 	}
 
 	defer func() {
-		// 缓存 5h
-		c.Header(cache.HeaderKeyExpired, cache.Duration(time.Hour*5))
+		// 缓存 12h
+		c.Header(cache.HeaderKeyExpired, cache.Duration(time.Hour*12))
 		// 将请求结果缓存到指定缓存空间下
 		if !itemInfo.MsInfo.Empty {
 			// 请求指定资源的 PlaybackInfo 不缓存
