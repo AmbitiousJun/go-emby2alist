@@ -54,9 +54,9 @@ func CacheableRouteMarker() gin.HandlerFunc {
 		// 字幕
 		regexp.MustCompile(`(?i)^/.*videos/.*/subtitles`),
 		// 图片缓存
-		regexp.MustCompile(`(?i)^/.*(image|jpg|png|jpeg|webp|ico)`),
+		regexp.MustCompile(`(?i)^/.*(/images/|\.jpg|\.png|\.jpeg|\.webp|\.ico)`),
 		// 其他静态资源
-		regexp.MustCompile(`(?i)^/.*(html|css|js|woff)`),
+		regexp.MustCompile(`(?i)^/.*(\.html|\.css|\.js|\.woff)`),
 	}
 
 	return func(c *gin.Context) {
