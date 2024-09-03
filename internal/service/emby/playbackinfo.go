@@ -70,7 +70,7 @@ func TransferPlaybackInfo(c *gin.Context) {
 		return
 	}
 
-	log.Printf(color.ToBlue("获取到的 MediaSources 个数: %s"), mediaSources.Len())
+	log.Printf(color.ToBlue("获取到的 MediaSources 个数: %d"), mediaSources.Len())
 	var haveReturned = errors.New("have returned")
 	resChans := make([]chan []*jsons.Item, 0)
 	err = mediaSources.RangeArr(func(_ int, source *jsons.Item) error {
