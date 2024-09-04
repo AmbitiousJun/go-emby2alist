@@ -105,7 +105,7 @@
 1. 获取代码
 
 ```shell
-git clone --brance 1.0.0 --depth 1 https://ghproxy.cc/https://github.com/AmbitiousJun/go-emby2alist
+git clone --branch 1.0.0 --depth 1 https://ghproxy.cc/https://github.com/AmbitiousJun/go-emby2alist
 cd go-emby2alist
 ```
 
