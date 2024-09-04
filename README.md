@@ -144,7 +144,7 @@ docker-compose up -d
 
 ```shell
 docker-compose down
-git fetch --all
+git fetch origin +refs/heads/*:refs/remotes/origin/*
 git checkout <版本号>
 git pull
 docker-compose up -d --build
