@@ -105,7 +105,7 @@
 1. 获取代码
 
 ```shell
-git clone https://ghproxy.cc/https://github.com/AmbitiousJun/go-emby2alist
+git clone --brance 1.0.0 --depth 1 https://ghproxy.cc/https://github.com/AmbitiousJun/go-emby2alist
 cd go-emby2alist
 ```
 
@@ -144,6 +144,8 @@ docker-compose up -d
 
 ```shell
 docker-compose down
+git fetch --all
+git checkout <版本号>
 git pull
 docker-compose up -d --build
 ```

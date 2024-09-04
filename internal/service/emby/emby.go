@@ -69,10 +69,6 @@ func ProxyOrigin(c *gin.Context) {
 
 	AddDefaultApiKey(c)
 
-	if TestProxyUri(c) {
-		return
-	}
-
 	origin := config.C.Emby.Host
 	if err := https.ProxyRequest(c, origin, true); err != nil {
 		c.String(http.StatusBadRequest, "代理异常: %v", err)
