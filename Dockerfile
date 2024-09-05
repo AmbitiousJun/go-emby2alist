@@ -16,14 +16,14 @@ RUN go mod download
 # 复制源码
 COPY . .
 
-# 编译源码
-RUN go build -o main .
+# 编译源码成静态链接的二进制文件
+RUN CGO_ENABLED=0 go build -a -installsuffix cgo -o main .
 
 # 第二阶段：运行阶段
-FROM ubuntu:latest
+FROM alpine:latest
 
 # 设置时区
-RUN apt-get update && apt-get install -y tzdata
+RUN apk add --no-cache tzdata
 ENV TZ=Asia/Shanghai
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
