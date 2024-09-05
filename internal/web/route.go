@@ -12,7 +12,7 @@ import (
 // 每个规则为一个切片, 参数分别是: 正则表达式, 处理器
 var rules [][2]interface{}
 
-func init() {
+func initRulePatterns() {
 	log.Println("正在初始化路由规则...")
 	rules = compileRules([][2]interface{}{
 		// 代理 websocket
