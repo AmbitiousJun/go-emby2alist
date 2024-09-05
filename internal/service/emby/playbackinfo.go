@@ -131,7 +131,7 @@ func TransferPlaybackInfo(c *gin.Context) {
 			return nil
 		}
 		resChan := make(chan []*jsons.Item, 1)
-		findVideoPreviewInfos(source, name, resChan)
+		go findVideoPreviewInfos(source, name, resChan)
 		resChans = append(resChans, resChan)
 		return nil
 	})
