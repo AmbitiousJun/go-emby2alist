@@ -167,5 +167,5 @@ func RedirectOrigin(c *gin.Context) {
 	}
 
 	origin := config.C.Emby.Host
-	c.Redirect(http.StatusMovedPermanently, origin+c.Request.URL.String())
+	c.Redirect(http.StatusPermanentRedirect, origin+c.Request.URL.String())
 }
