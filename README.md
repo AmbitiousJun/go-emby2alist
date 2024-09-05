@@ -116,6 +116,11 @@ cp config-example.yml config.yml
 ```
 
 3. 根据自己的服务器配置好 `config.yml` 文件
+
+关于路径映射的配置示例图：
+
+![路径映射示例](assets/2024-09-05-17-09-54.png)
+
 4. 编译并运行容器
 
 ```shell
