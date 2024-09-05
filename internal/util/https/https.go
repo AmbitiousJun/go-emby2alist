@@ -29,6 +29,20 @@ func init() {
 	}
 }
 
+// ClientRequestUrl 获取客户端请求的完整地址
+func ClientRequestUrl(c *gin.Context) string {
+	if c == nil {
+		return ""
+	}
+
+	scheme := "http"
+	if c.Request.TLS != nil {
+		scheme = "https"
+	}
+
+	return fmt.Sprintf("%s://%s%s", scheme, c.Request.Host, c.Request.URL.String())
+}
+
 // IsRedirectCode 判断 http code 是否是重定向
 //
 // 301, 302, 307, 308

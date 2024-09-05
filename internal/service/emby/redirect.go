@@ -39,7 +39,7 @@ func Redirect2AlistLink(c *gin.Context) {
 		if res.Code == http.StatusOK {
 			log.Printf(color.ToGreen("请求成功, 重定向到: %s"), res.Data)
 			c.Header(cache.HeaderKeyExpired, cache.Duration(time.Minute*10))
-			c.Redirect(http.StatusFound, res.Data)
+			c.Redirect(http.StatusTemporaryRedirect, res.Data)
 			return
 		}
 
@@ -61,7 +61,7 @@ func Redirect2AlistLink(c *gin.Context) {
 		if res.Code == http.StatusOK {
 			log.Printf(color.ToGreen("请求成功, 重定向到: %s"), res.Data)
 			c.Header(cache.HeaderKeyExpired, cache.Duration(time.Minute*10))
-			c.Redirect(http.StatusFound, res.Data)
+			c.Redirect(http.StatusTemporaryRedirect, res.Data)
 			return
 		}
 	}
