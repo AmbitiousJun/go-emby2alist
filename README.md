@@ -162,3 +162,13 @@ docker image prune -f
 
 1. - [ ] 进一步优化 m3u8 转码直链的兼容性
 1. - [ ] 电视直播直链反代（实现真直链反代，~~不一定能实现~~）
+
+## Star History
+
+<a href="https://star-history.com/#AmbitiousJun/go-emby2alist&Date">
+ <picture>
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=AmbitiousJun/go-emby2alist&type=Date&theme=dark" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=AmbitiousJun/go-emby2alist&type=Date" />
+   <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=AmbitiousJun/go-emby2alist&type=Date" />
+ </picture>
+</a>
