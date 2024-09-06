@@ -10,6 +10,7 @@ import (
 	"go-emby2alist/internal/web/cache"
 	"log"
 	"net/http"
+	"sync"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -21,6 +22,12 @@ const (
 	PlaybackCacheSpace = "PlaybackInfo"
 )
 
+// transferingItems 记录当前正在转换 playbackinfo 的 item id
+//
+// 当请求到 items 接口时, 判断如果 id 存在于这个 map 中，
+// 就尝试多次请求缓存空间的缓存
+var transferingItemIds = sync.Map{}
+
 // TransferPlaybackInfo 代理 PlaybackInfo 接口, 防止客户端转码
 func TransferPlaybackInfo(c *gin.Context) {
 	// 1 解析资源信息
@@ -29,6 +36,8 @@ func TransferPlaybackInfo(c *gin.Context) {
 	if checkErr(c, err) {
 		return
 	}
+	transferingItemIds.Store(itemInfo.Id, struct{}{})
+	defer func() { transferingItemIds.Delete(itemInfo.Id) }()
 
 	defer func() {
 		// 缓存 12h
@@ -181,13 +190,17 @@ func LoadCacheItems(c *gin.Context) {
 	log.Printf(color.ToBlue("itemInfo 解析结果: %s"), jsons.NewByVal(itemInfo))
 
 	// 3 查询缓存空间的 PlaybackInfo 缓存
-	cache, ok := cache.GetSpaceCache(PlaybackCacheSpace, itemInfo.Id)
+	maxTry := 1
+	if _, ok := transferingItemIds.Load(itemInfo.Id); ok {
+		maxTry = 5
+	}
+	spaceCache, ok := cache.TryGetSpaceCache(PlaybackCacheSpace, itemInfo.Id, 1, maxTry)
 	if !ok {
 		return
 	}
 
 	// 4 获取缓存响应体内容
-	cacheBody, err := cache.JsonBody()
+	cacheBody, err := spaceCache.JsonBody()
 	if err != nil {
 		return
 	}
