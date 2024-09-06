@@ -54,7 +54,7 @@ func findVideoPreviewInfos(source *jsons.Item, originName string, resChan chan [
 	var transcodingList *jsons.Item
 	firstFetchSuccess := false
 	if alistPathRes.Success {
-		res := alist.FetchFsOther(alistPathRes.Path)
+		res := alist.FetchFsOther(alistPathRes.Path, nil)
 
 		if res.Code == http.StatusOK {
 			if list, ok := res.Data.Attr("video_preview_play_info").Attr("live_transcoding_task_list").Done(); ok {
@@ -79,7 +79,7 @@ func findVideoPreviewInfos(source *jsons.Item, originName string, resChan chan [
 		}
 
 		for i := 0; i < len(paths); i++ {
-			res := alist.FetchFsOther(paths[i])
+			res := alist.FetchFsOther(paths[i], nil)
 			if res.Code == http.StatusOK {
 				if list, ok := res.Data.Attr("video_preview_play_info").Attr("live_transcoding_task_list").Done(); ok {
 					transcodingList = list

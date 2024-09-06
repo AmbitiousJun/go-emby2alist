@@ -31,10 +31,17 @@ func Redirect2AlistLink(c *gin.Context) {
 	}
 
 	// 3 请求 alist 资源
+	fi := alist.FetchInfo{
+		UseTranscode:          itemInfo.MsInfo.Transcode,
+		Format:                itemInfo.MsInfo.TemplateId,
+		TryRawIfTranscodeFail: false,
+	}
+	fi.Header = c.Request.Header.Clone()
 	alistPathRes := path.Emby2Alist(embyPath)
 	if alistPathRes.Success {
 		log.Printf(color.ToBlue("尝试请求 Alist 资源: %s"), alistPathRes.Path)
-		res := alist.FetchResource(alistPathRes.Path, itemInfo.MsInfo.Transcode, itemInfo.MsInfo.TemplateId, false)
+		fi.Path = alistPathRes.Path
+		res := alist.FetchResource(fi)
 
 		if res.Code == http.StatusOK {
 			log.Printf(color.ToGreen("请求成功, 重定向到: %s"), res.Data)
@@ -56,7 +63,9 @@ func Redirect2AlistLink(c *gin.Context) {
 
 	for _, path := range paths {
 		log.Printf(color.ToBlue("尝试请求 Alist 资源: %s"), path)
-		res := alist.FetchResource(path, itemInfo.MsInfo.Transcode, itemInfo.MsInfo.TemplateId, true)
+		fi.Path = path
+		fi.TryRawIfTranscodeFail = true
+		res := alist.FetchResource(fi)
 
 		if res.Code == http.StatusOK {
 			log.Printf(color.ToGreen("请求成功, 重定向到: %s"), res.Data)

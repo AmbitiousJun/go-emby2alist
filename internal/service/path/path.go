@@ -36,7 +36,7 @@ func Emby2Alist(embyPath string) AlistPathRes {
 			return nil, fmt.Errorf("alistFilePath 解析异常: %s, error: %v", alistFilePath, err)
 		}
 
-		res := alist.FetchFsList("/")
+		res := alist.FetchFsList("/", nil)
 		if res.Code != http.StatusOK {
 			return nil, fmt.Errorf("请求 alist fs list 接口异常: %s", res.Msg)
 		}

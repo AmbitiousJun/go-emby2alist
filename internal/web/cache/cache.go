@@ -27,7 +27,7 @@ var CacheKeyIgnoreParams = map[string]struct{}{
 	"PlaySessionId": {},
 
 	// Common
-	"Range": {}, "Host": {}, "User-Agent": {}, "Referrer": {}, "Connection": {},
+	"Range": {}, "Host": {}, "Referrer": {}, "Connection": {},
 	"Accept": {}, "Accept-Encoding": {}, "Accept-Language": {}, "Cache-Control": {},
 	"Upgrade-Insecure-Requests": {}, "Referer": {}, "Origin": {},
 
