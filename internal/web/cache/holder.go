@@ -106,7 +106,7 @@ func getCache(cacheKey string) (*respCache, bool) {
 }
 
 // putCache 设置缓存
-func putCache(cacheKey string, c *gin.Context, respBody *bytes.Buffer, respHeader *respHeader) {
+func putCache(cacheKey string, c *gin.Context, respBody *bytes.Buffer, respHeader respHeader) {
 	if cacheKey == "" || c == nil || respBody == nil {
 		return
 	}

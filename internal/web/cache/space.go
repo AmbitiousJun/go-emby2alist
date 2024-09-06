@@ -33,14 +33,11 @@ func GetSpaceCache(space, spaceKey string) (*respCache, bool) {
 		return nil, false
 	}
 
+	newHeader := rc.header
+	newHeader.header = rc.header.header.Clone()
 	return &respCache{
-		code: rc.code,
-		header: &respHeader{
-			header:   rc.header.header.Clone(),
-			space:    rc.header.space,
-			spaceKey: rc.header.spaceKey,
-			expired:  rc.header.expired,
-		},
+		code:     rc.code,
+		header:   newHeader,
 		body:     append([]byte(nil), rc.body...),
 		expired:  rc.expired,
 		cacheKey: rc.cacheKey,

@@ -113,7 +113,7 @@ func RequestCacher() gin.HandlerFunc {
 
 		// 7 刷新缓存
 		header := c.Writer.Header()
-		respHeader := &respHeader{
+		respHeader := respHeader{
 			expired:  header.Get(HeaderKeyExpired),
 			space:    header.Get(HeaderKeySpace),
 			spaceKey: header.Get(HeaderKeySpaceKey),

@@ -35,7 +35,7 @@ type respCache struct {
 	expired int64
 
 	// header 响应头信息
-	header *respHeader
+	header respHeader
 }
 
 // respHeader 记录特定请求的缓存参数
