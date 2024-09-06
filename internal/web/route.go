@@ -39,7 +39,7 @@ func initRulePatterns() {
 		//
 		// (?i): 忽略大小写
 		// 有些请求使用重定向会导致部分客户端无法正常使用, 这里统一进行拦截
-		{`^/$|(?i)^/.*(web|users|artists|genres|similar|shows|system|remote|scheduledtasks)`, emby.ProxyOrigin},
+		{`^/$|(?i)^.*(/web|/users|/artists|/genres|/similar|/shows|/system|/remote|/scheduledtasks)`, emby.ProxyOrigin},
 
 		// 其余资源走重定向回源
 		{`.*`, emby.RedirectOrigin},
