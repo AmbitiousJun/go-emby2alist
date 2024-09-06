@@ -157,17 +157,17 @@ func findMediaSourceName(source *jsons.Item) string {
 var itemIdRegex = regexp.MustCompile(`(?:/emby)?/.*/(\d+)(?:/|\?)?`)
 
 // resolveItemInfo 解析 emby 资源 item 信息
-func resolveItemInfo(c *gin.Context) (*ItemInfo, error) {
+func resolveItemInfo(c *gin.Context) (ItemInfo, error) {
 	if c == nil {
-		return nil, errors.New("参数 c 不能为空")
+		return ItemInfo{}, errors.New("参数 c 不能为空")
 	}
 
 	uri := c.Request.RequestURI
 	matches := itemIdRegex.FindStringSubmatch(uri)
 	if len(matches) < 2 {
-		return nil, fmt.Errorf("itemId 匹配失败, uri: %s", uri)
+		return ItemInfo{}, fmt.Errorf("itemId 匹配失败, uri: %s", uri)
 	}
-	itemInfo := &ItemInfo{Id: matches[1], ApiKey: c.Query("X-Emby-Token")}
+	itemInfo := ItemInfo{Id: matches[1], ApiKey: c.Query("X-Emby-Token")}
 
 	if itemInfo.ApiKey == "" {
 		itemInfo.ApiKey = c.Query("api_key")
@@ -178,13 +178,13 @@ func resolveItemInfo(c *gin.Context) (*ItemInfo, error) {
 
 	msInfo, err := resolveMediaSourceId(c.Query("MediaSourceId"))
 	if err != nil {
-		return nil, fmt.Errorf("解析 MediaSource 失败, uri: %s, err: %v", uri, err)
+		return ItemInfo{}, fmt.Errorf("解析 MediaSource 失败, uri: %s, err: %v", uri, err)
 	}
 	itemInfo.MsInfo = msInfo
 
 	u, err := url.Parse(fmt.Sprintf("/Items/%s/PlaybackInfo", itemInfo.Id))
 	if err != nil {
-		return nil, fmt.Errorf("构建 PlaybackInfo uri 失败, err: %v", err)
+		return ItemInfo{}, fmt.Errorf("构建 PlaybackInfo uri 失败, err: %v", err)
 	}
 	q := u.Query()
 	q.Set("api_key", itemInfo.ApiKey)
@@ -198,8 +198,8 @@ func resolveItemInfo(c *gin.Context) (*ItemInfo, error) {
 }
 
 // resolveMediaSourceId 解析 MediaSourceId
-func resolveMediaSourceId(id string) (*MsInfo, error) {
-	res := &MsInfo{Empty: true, RawId: id}
+func resolveMediaSourceId(id string) (MsInfo, error) {
+	res := MsInfo{Empty: true, RawId: id}
 
 	if id == "" {
 		return res, nil
@@ -213,7 +213,7 @@ func resolveMediaSourceId(id string) (*MsInfo, error) {
 
 	segments := strings.Split(id, "_")
 	if len(segments) != 3 {
-		return nil, errors.New("MediaSourceId 格式错误: " + id)
+		return MsInfo{}, errors.New("MediaSourceId 格式错误: " + id)
 	}
 
 	res.Transcode = true

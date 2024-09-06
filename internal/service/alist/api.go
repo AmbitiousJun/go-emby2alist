@@ -18,9 +18,9 @@ import (
 //	useTranscode: 是否请求转码资源 (只支持视频资源, 如果该项为 false, 则后两个参数可任意传递)
 //	format: 要请求的转码资源的格式, 如: FHD
 //	tryRawIfTranscodeFail: 如果请求转码资源失败, 是否尝试请求原画资源
-func FetchResource(path string, useTranscode bool, format string, tryRawIfTranscodeFail bool) *model.HttpRes[string] {
+func FetchResource(path string, useTranscode bool, format string, tryRawIfTranscodeFail bool) model.HttpRes[string] {
 	if path = strings.TrimSpace(path); path == "" {
-		return &model.HttpRes[string]{Code: http.StatusBadRequest, Msg: "参数 path 不能为空"}
+		return model.HttpRes[string]{Code: http.StatusBadRequest, Msg: "参数 path 不能为空"}
 	}
 
 	if !useTranscode {
@@ -28,19 +28,19 @@ func FetchResource(path string, useTranscode bool, format string, tryRawIfTransc
 		res := FetchFsGet(path)
 		if res.Code == http.StatusOK {
 			if link, ok := res.Data.Attr("raw_url").String(); ok {
-				return &model.HttpRes[string]{Code: http.StatusOK, Data: link}
+				return model.HttpRes[string]{Code: http.StatusOK, Data: link}
 			}
 		}
 		if res.Msg == "" {
 			res.Msg = fmt.Sprintf("未知异常, 原始响应: %v", jsons.NewByObj(res))
 		}
-		return &model.HttpRes[string]{Code: res.Code, Msg: res.Msg}
+		return model.HttpRes[string]{Code: res.Code, Msg: res.Msg}
 	}
 
 	// 转码资源请求失败后, 递归请求原画资源
-	failedAndTryRaw := func(originRes *model.HttpRes[*jsons.Item]) *model.HttpRes[string] {
+	failedAndTryRaw := func(originRes model.HttpRes[*jsons.Item]) model.HttpRes[string] {
 		if !tryRawIfTranscodeFail {
-			return &model.HttpRes[string]{Code: originRes.Code, Msg: originRes.Msg}
+			return model.HttpRes[string]{Code: originRes.Code, Msg: originRes.Msg}
 		}
 		log.Printf("请求转码资源失败, 尝试请求原画资源, 原始响应: %v", jsons.NewByObj(originRes))
 		return FetchResource(path, false, "", false)
@@ -68,15 +68,15 @@ func FetchResource(path string, useTranscode bool, format string, tryRawIfTransc
 		return failedAndTryRaw(res)
 	}
 
-	return &model.HttpRes[string]{Code: http.StatusOK, Data: link}
+	return model.HttpRes[string]{Code: http.StatusOK, Data: link}
 }
 
 // FetchFsList 请求 alist "/api/fs/list" 接口
 //
 // 传入 path 与接口的 path 作用一致
-func FetchFsList(path string) *model.HttpRes[*jsons.Item] {
+func FetchFsList(path string) model.HttpRes[*jsons.Item] {
 	if path = strings.TrimSpace(path); path == "" {
-		return &model.HttpRes[*jsons.Item]{Code: http.StatusBadRequest, Msg: "参数 path 不能为空"}
+		return model.HttpRes[*jsons.Item]{Code: http.StatusBadRequest, Msg: "参数 path 不能为空"}
 	}
 	return Fetch("/api/fs/list", http.MethodPost, map[string]interface{}{
 		"refresh":  true,
@@ -88,9 +88,9 @@ func FetchFsList(path string) *model.HttpRes[*jsons.Item] {
 // FetchFsGet 请求 alist "/api/fs/get" 接口
 //
 // 传入 path 与接口的 path 作用一致
-func FetchFsGet(path string) *model.HttpRes[*jsons.Item] {
+func FetchFsGet(path string) model.HttpRes[*jsons.Item] {
 	if path = strings.TrimSpace(path); path == "" {
-		return &model.HttpRes[*jsons.Item]{Code: http.StatusBadRequest, Msg: "参数 path 不能为空"}
+		return model.HttpRes[*jsons.Item]{Code: http.StatusBadRequest, Msg: "参数 path 不能为空"}
 	}
 
 	return Fetch("/api/fs/get", http.MethodPost, map[string]interface{}{
@@ -103,9 +103,9 @@ func FetchFsGet(path string) *model.HttpRes[*jsons.Item] {
 // FetchFsOther 请求 alist "/api/fs/other" 接口
 //
 // 传入 path 与接口的 path 作用一致
-func FetchFsOther(path string) *model.HttpRes[*jsons.Item] {
+func FetchFsOther(path string) model.HttpRes[*jsons.Item] {
 	if path = strings.TrimSpace(path); path == "" {
-		return &model.HttpRes[*jsons.Item]{Code: http.StatusBadRequest, Msg: "参数 path 不能为空"}
+		return model.HttpRes[*jsons.Item]{Code: http.StatusBadRequest, Msg: "参数 path 不能为空"}
 	}
 
 	return Fetch("/api/fs/other", http.MethodPost, map[string]interface{}{
@@ -116,7 +116,7 @@ func FetchFsOther(path string) *model.HttpRes[*jsons.Item] {
 }
 
 // Fetch 请求 alist api
-func Fetch(uri, method string, body map[string]interface{}) *model.HttpRes[*jsons.Item] {
+func Fetch(uri, method string, body map[string]interface{}) model.HttpRes[*jsons.Item] {
 	host := config.C.Alist.Host
 	token := config.C.Alist.Token
 
@@ -127,27 +127,27 @@ func Fetch(uri, method string, body map[string]interface{}) *model.HttpRes[*json
 
 	resp, err := https.Request(method, host+uri, header, https.MapBody(body))
 	if err != nil {
-		return &model.HttpRes[*jsons.Item]{Code: http.StatusBadRequest, Msg: "请求发送失败: " + err.Error()}
+		return model.HttpRes[*jsons.Item]{Code: http.StatusBadRequest, Msg: "请求发送失败: " + err.Error()}
 	}
 	defer resp.Body.Close()
 
 	// 2 封装响应
 	bodyBytes, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return &model.HttpRes[*jsons.Item]{Code: http.StatusBadRequest, Msg: "读取响应体失败: " + err.Error()}
+		return model.HttpRes[*jsons.Item]{Code: http.StatusBadRequest, Msg: "读取响应体失败: " + err.Error()}
 	}
 	result, err := jsons.New(string(bodyBytes))
 	if err != nil {
-		return &model.HttpRes[*jsons.Item]{Code: http.StatusBadRequest, Msg: "解析响应体失败: " + err.Error()}
+		return model.HttpRes[*jsons.Item]{Code: http.StatusBadRequest, Msg: "解析响应体失败: " + err.Error()}
 	}
 
 	if code, ok := result.Attr("code").Int(); !ok || code != http.StatusOK {
-		return &model.HttpRes[*jsons.Item]{Code: code, Msg: result.Attr("message").Val().(string)}
+		return model.HttpRes[*jsons.Item]{Code: code, Msg: result.Attr("message").Val().(string)}
 	}
 
 	if data, ok := result.Attr("data").Done(); ok {
-		return &model.HttpRes[*jsons.Item]{Code: http.StatusOK, Data: data}
+		return model.HttpRes[*jsons.Item]{Code: http.StatusOK, Data: data}
 	}
 
-	return &model.HttpRes[*jsons.Item]{Code: http.StatusBadRequest, Msg: "未知异常, result: " + result.String()}
+	return model.HttpRes[*jsons.Item]{Code: http.StatusBadRequest, Msg: "未知异常, result: " + result.String()}
 }

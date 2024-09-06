@@ -23,7 +23,7 @@ type AlistPathRes struct {
 }
 
 // Emby2Alist Emby 资源路径转 Alist 资源路径
-func Emby2Alist(embyPath string) *AlistPathRes {
+func Emby2Alist(embyPath string) AlistPathRes {
 	embyMount := config.C.Emby.MountPath
 	alistFilePath := strings.ReplaceAll(embyPath, embyMount, "")
 	if mapPath, ok := config.C.Path.MapEmby2Alist(alistFilePath); ok {
@@ -59,7 +59,7 @@ func Emby2Alist(embyPath string) *AlistPathRes {
 		return paths, nil
 	}
 
-	return &AlistPathRes{
+	return AlistPathRes{
 		Success: true,
 		Path:    alistFilePath,
 		Range:   rangeFunc,

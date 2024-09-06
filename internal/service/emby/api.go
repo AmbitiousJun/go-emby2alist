@@ -34,14 +34,14 @@ func AddDefaultApiKey(c *gin.Context) {
 // Fetch 请求 emby api 接口, 使用 map 请求体
 //
 // 如果 uri 中不包含 token, 自动从配置中取 token 进行拼接
-func Fetch(uri, method string, body map[string]interface{}) (*model.HttpRes[*jsons.Item], http.Header) {
+func Fetch(uri, method string, body map[string]interface{}) (model.HttpRes[*jsons.Item], http.Header) {
 	return RawFetch(uri, method, https.MapBody(body))
 }
 
 // RawFetch 请求 emby api 接口, 使用流式请求体
 //
 // 如果 uri 中不包含 token, 自动从配置中取 token 进行拼接
-func RawFetch(uri, method string, body io.ReadCloser) (*model.HttpRes[*jsons.Item], http.Header) {
+func RawFetch(uri, method string, body io.ReadCloser) (model.HttpRes[*jsons.Item], http.Header) {
 	host := config.C.Emby.Host
 	token := config.C.Emby.ApiKey
 
@@ -57,18 +57,18 @@ func RawFetch(uri, method string, body io.ReadCloser) (*model.HttpRes[*jsons.Ite
 
 	resp, err := https.Request(method, u, header, body)
 	if err != nil {
-		return &model.HttpRes[*jsons.Item]{Code: http.StatusBadRequest, Msg: "请求发送失败: " + err.Error()}, nil
+		return model.HttpRes[*jsons.Item]{Code: http.StatusBadRequest, Msg: "请求发送失败: " + err.Error()}, nil
 	}
 	defer resp.Body.Close()
 
 	// 3 读取响应
 	bodyBytes, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return &model.HttpRes[*jsons.Item]{Code: http.StatusBadRequest, Msg: "读取响应失败: " + err.Error()}, nil
+		return model.HttpRes[*jsons.Item]{Code: http.StatusBadRequest, Msg: "读取响应失败: " + err.Error()}, nil
 	}
 	result, err := jsons.New(string(bodyBytes))
 	if err != nil {
-		return &model.HttpRes[*jsons.Item]{Code: http.StatusBadRequest, Msg: "解析响应失败: " + err.Error()}, nil
+		return model.HttpRes[*jsons.Item]{Code: http.StatusBadRequest, Msg: "解析响应失败: " + err.Error()}, nil
 	}
-	return &model.HttpRes[*jsons.Item]{Code: http.StatusOK, Data: result}, resp.Header
+	return model.HttpRes[*jsons.Item]{Code: http.StatusOK, Data: result}, resp.Header
 }
