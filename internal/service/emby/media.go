@@ -1,6 +1,7 @@
 package emby
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"go-emby2alist/internal/config"
@@ -8,6 +9,7 @@ import (
 	"go-emby2alist/internal/service/path"
 	"go-emby2alist/internal/util/jsons"
 	"go-emby2alist/internal/util/urls"
+	"io"
 	"log"
 	"net/http"
 	"net/url"
@@ -176,7 +178,7 @@ func resolveItemInfo(c *gin.Context) (ItemInfo, error) {
 		itemInfo.ApiKey = config.C.Emby.ApiKey
 	}
 
-	msInfo, err := resolveMediaSourceId(c.Query("MediaSourceId"))
+	msInfo, err := resolveMediaSourceId(getRequestMediaSourceId(c))
 	if err != nil {
 		return ItemInfo{}, fmt.Errorf("解析 MediaSource 失败, uri: %s, err: %v", uri, err)
 	}
@@ -193,8 +195,38 @@ func resolveItemInfo(c *gin.Context) (ItemInfo, error) {
 	}
 	u.RawQuery = q.Encode()
 	itemInfo.PlaybackInfoUri = u.String()
+	itemInfo.PlaybackInfoRpUri = proxyPlaybackInfoUri(u.String())
 
 	return itemInfo, nil
+}
+
+// getRequestMediaSourceId 尝试从请求参数或请求体中获取 MediaSourceId 信息
+//
+// 优先返回请求参数中的值, 如果两者都获取不到, 就返回空字符串
+func getRequestMediaSourceId(c *gin.Context) string {
+	if c == nil {
+		return ""
+	}
+
+	// 1 从请求参数中获取
+	if q := strings.TrimSpace(c.Query("MediaSourceId")); q != "" {
+		return q
+	}
+
+	// 2 从请求体中获取
+	bodyBytes, err := io.ReadAll(c.Request.Body)
+	if err != nil {
+		return ""
+	}
+	c.Request.Body = io.NopCloser(bytes.NewBuffer(bodyBytes))
+	reqJson, err := jsons.New(string(bodyBytes))
+	if err != nil {
+		return ""
+	}
+	if msId, ok := reqJson.Attr("MediaSourceId").String(); ok {
+		return msId
+	}
+	return ""
 }
 
 // resolveMediaSourceId 解析 MediaSourceId

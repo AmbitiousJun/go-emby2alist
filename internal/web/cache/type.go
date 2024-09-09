@@ -65,3 +65,8 @@ func (c *respCache) JsonBody() (*jsons.Item, error) {
 func (c *respCache) Header(key string) string {
 	return c.header.header.Get(key)
 }
+
+// Headers 获取响应头
+func (c *respCache) Headers() http.Header {
+	return c.header.header
+}

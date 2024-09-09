@@ -5,7 +5,6 @@ package cache
 import (
 	"go-emby2alist/internal/util/strs"
 	"sync"
-	"time"
 )
 
 const (
@@ -21,24 +20,6 @@ const (
 //
 // 三层结构: map[string]map[string]*respCache
 var spaceMap = sync.Map{}
-
-// TryGetSpaceCache 尝试获取缓存空间的缓存对象
-func TryGetSpaceCache(space, spaceKey string, curTry, maxTry int) (respCache, bool) {
-	if maxTry < 1 || curTry < 1 || curTry > maxTry {
-		return respCache{}, false
-	}
-
-	if res, ok := GetSpaceCache(space, spaceKey); ok {
-		return res, ok
-	}
-
-	// 还有重试次数时, 再睡眠
-	if curTry < maxTry {
-		time.Sleep(time.Second)
-	}
-
-	return TryGetSpaceCache(space, spaceKey, curTry+1, maxTry)
-}
 
 // GetSpaceCache 获取缓存空间的缓存对象数组
 func GetSpaceCache(space, spaceKey string) (respCache, bool) {

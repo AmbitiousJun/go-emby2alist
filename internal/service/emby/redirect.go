@@ -82,15 +82,23 @@ func Redirect2AlistLink(c *gin.Context) {
 // 不为空则重定向到源服务器
 //
 // 返回 true 表示已重定向
+//
+// 如果检测到 query 参数 ignore_error 为 true, 则不进行重定向
 func checkErr(c *gin.Context, err error) bool {
 	if err == nil || c == nil {
 		return false
 	}
-	u := config.C.Emby.Host + c.Request.URL.String()
-	log.Printf(color.ToRed("代理接口失败: %v, 重定向回源服务器处理\n"), err)
 
 	// 异常接口, 不缓存
 	c.Header(cache.HeaderKeyExpired, "-1")
+
+	if c.Query("ignore_error") == "true" {
+		c.String(http.StatusOK, "error has been ignored: "+err.Error())
+		return true
+	}
+
+	u := config.C.Emby.Host + c.Request.URL.String()
+	log.Printf(color.ToRed("代理接口失败: %v, 重定向回源服务器处理\n"), err)
 	c.Redirect(http.StatusTemporaryRedirect, u)
 	return true
 }

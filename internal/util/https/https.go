@@ -29,8 +29,8 @@ func init() {
 	}
 }
 
-// ClientRequestUrl 获取客户端请求的完整地址
-func ClientRequestUrl(c *gin.Context) string {
+// ClientRequestHost 获取客户端请求的 Host
+func ClientRequestHost(c *gin.Context) string {
 	if c == nil {
 		return ""
 	}
@@ -40,7 +40,12 @@ func ClientRequestUrl(c *gin.Context) string {
 		scheme = "https"
 	}
 
-	return fmt.Sprintf("%s://%s%s", scheme, c.Request.Host, c.Request.URL.String())
+	return fmt.Sprintf("%s://%s", scheme, c.Request.Host)
+}
+
+// ClientRequestUrl 获取客户端请求的完整地址
+func ClientRequestUrl(c *gin.Context) string {
+	return fmt.Sprintf("%s%s", ClientRequestHost(c), c.Request.URL.String())
 }
 
 // IsRedirectCode 判断 http code 是否是重定向
