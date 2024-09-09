@@ -13,6 +13,8 @@ type Emby struct {
 	MountPath string `yaml:"mount-path"`
 	// emby api key, 在 emby 管理后台配置并获取
 	ApiKey string `yaml:"api-key"`
+	// EpisodesUnplayPrior 在获取剧集列表时是否将未播资源优先展示
+	EpisodesUnplayPrior bool `yaml:"episodes-unplay-prior"`
 }
 
 func (e *Emby) Init() error {

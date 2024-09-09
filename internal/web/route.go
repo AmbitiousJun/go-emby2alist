@@ -27,6 +27,9 @@ func initRulePatterns() {
 		// 代理 Items 接口
 		{`(?i)^/.*users/.*/items/\d+($|\?)`, emby.LoadCacheItems},
 
+		// 重排序剧集
+		{`(?i)^/.*shows/.*/episodes\??`, emby.ResortEpisodes},
+
 		// 资源重定向到直链
 		{`(?i)^/.*(videos|audio)/.*/(stream|universal)\??`, emby.Redirect2AlistLink},
 
