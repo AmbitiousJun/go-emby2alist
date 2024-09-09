@@ -58,13 +58,26 @@ func NewByObj(obj interface{}) *Item {
 }
 
 // NewByArr 根据数组初始化 json 数据
-func NewByArr(arr []interface{}) *Item {
+func NewByArr(arr interface{}) *Item {
 	if arr == nil {
 		return NewByVal(nil)
 	}
+
+	if item, ok := arr.(*Item); ok {
+		return item
+	}
+
+	v := reflect.ValueOf(arr)
+	if v.Kind() == reflect.Ptr {
+		v = v.Elem()
+	}
+	if v.Kind() != reflect.Array && v.Kind() != reflect.Slice {
+		return NewByVal(arr)
+	}
+
 	item := NewEmptyArr()
-	for _, elm := range arr {
-		item.arr = append(item.arr, NewByVal(elm))
+	for i := 0; i < v.Len(); i++ {
+		item.arr = append(item.arr, NewByVal(v.Index(i).Interface()))
 	}
 	return item
 }
@@ -77,7 +90,7 @@ func NewByVal(val interface{}) *Item {
 	}
 
 	switch newVal := val.(type) {
-	case bool, int, float64:
+	case bool, int, float64, int64:
 		item.val = newVal
 		return item
 	case string:
@@ -101,7 +114,7 @@ func NewByVal(val interface{}) *Item {
 		return NewByObj(val)
 	}
 	if t.Kind() == reflect.Array || t.Kind() == reflect.Slice {
-		return NewByArr(val.([]interface{}))
+		return NewByArr(val)
 	}
 	panic("无效的数据类型: " + t.Name())
 }

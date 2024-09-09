@@ -73,6 +73,17 @@ func (ti *TempItem) Int() (int, bool) {
 	return 0, false
 }
 
+// Int64 获取链式调用后的 int64 值
+func (ti *TempItem) Int64() (int64, bool) {
+	if ti.item == nil || ti.item.jType != JsonTypeVal {
+		return 0, false
+	}
+	if val, ok := ti.item.val.(int64); ok {
+		return val, true
+	}
+	return 0, false
+}
+
 // Float 获取链式调用后的 float 值
 func (ti *TempItem) Float() (float64, bool) {
 	if ti.item == nil || ti.item.jType != JsonTypeVal {
@@ -115,7 +126,7 @@ func (ti *TempItem) Set(val interface{}) *TempItem {
 	}
 
 	switch val.(type) {
-	case bool, string, int, float64:
+	case bool, string, int, float64, int64:
 		ti.item.val = val
 	default:
 	}
