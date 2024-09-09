@@ -148,6 +148,9 @@ docker-compose up -d
 8. 版本更新
 
 ```shell
+# 获取到最新代码后, 可以检查一下 config-example.yml 是否有新增配置
+# 及时同步自己的 config.yml 才能用上新功能
+
 # 更新到正式版
 docker-compose down
 git fetch --tag
