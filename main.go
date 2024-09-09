@@ -1,14 +1,13 @@
 package main
 
 import (
-	"fmt"
 	"go-emby2alist/internal/config"
 	"go-emby2alist/internal/util/color"
 	"go-emby2alist/internal/web"
 	"log"
 )
 
-const CurrentVersion = "go-emby2alist => 1.0.4-beta-v4"
+const CurrentVersion = "go-emby2alist => 1.0.4-beta-v5"
 const RepoArr = "https://github.com/AmbitiousJun/go-emby2alist"
 
 func main() {
@@ -28,7 +27,7 @@ func main() {
 }
 
 func printBanner() {
-	fmt.Println(`
+	log.Println(`
                                   _           ____       _ _     _   
   __ _  ___         ___ _ __ ___ | |__  _   _|___ \ __ _| (_)___| |_ 
  / _| |/ _ \ _____ / _ \ '_ | _ \| '_ \| | | | __) / _| | | / __| __|
