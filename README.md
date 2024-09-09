@@ -148,10 +148,17 @@ docker-compose up -d
 8. 版本更新
 
 ```shell
+# 更新到正式版
 docker-compose down
 git fetch --tag
 git checkout <版本号>
 git pull
+docker-compose up -d --build
+
+# 更新到测试版 (仅尝鲜, 不稳定)
+docker-compose down
+git checkout main
+git pull origin main
 docker-compose up -d --build
 ```
 
