@@ -2,7 +2,7 @@ emby:
   host: http://192.168.0.109:8096            # emby 访问地址 (非 docker 内网)
   mount-path: /data                          # rclone/cd2 挂载的本地磁盘路径, 如果 emby 是容器部署, 这里要配的就是容器内部的挂载路径
   api-key: 2f8sng5sjd5enm65df5e4s12q96324fwc # emby api key 可以在 emby 管理后台配置
-  episodes-unplay-prior: true                # 是否修改剧集排序, 让未播的剧集靠前排列
+  episodes-unplay-prior: true                # 是否修改剧集排序, 让未播的剧集靠前排列; 启用该配置时, 会忽略原接口的分页机制
 alist:
   host: http://192.168.0.109:5244            # alist 访问地址 (非 docker 内网)
   token: alist-xxxxx                         # alist api key 可以在 alist 管理后台查看
