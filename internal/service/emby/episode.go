@@ -5,7 +5,9 @@ import (
 	"go-emby2alist/internal/config"
 	"go-emby2alist/internal/util/https"
 	"go-emby2alist/internal/util/jsons"
+	"math"
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 )
@@ -22,8 +24,20 @@ func ResortEpisodes(c *gin.Context) {
 	}
 
 	// 2 去除分页限制
+	limitStr := c.Query("Limit")
+	limit, err := strconv.Atoi(limitStr)
+	if err != nil {
+		limit = 30
+	}
+	startStr := c.Query("StartIndex")
+	start, err := strconv.Atoi(startStr)
+	if err != nil {
+		start = 0
+	}
 	q := c.Request.URL.Query()
-	q.Del("Limit")
+	// 设置一个足够大的值, 查出全部数据
+	q.Set("Limit", strconv.Itoa(math.MaxInt32))
+	q.Set("StartIndex", "0")
 	c.Request.URL.RawQuery = q.Encode()
 
 	// 3 代理请求
@@ -40,14 +54,15 @@ func ResortEpisodes(c *gin.Context) {
 
 	// 4 处理数据
 	items, ok := resJson.Attr("Items").Done()
-	if !ok {
+	if !ok || items.Type() != jsons.JsonTypeArr {
 		return
 	}
-	playedItems, allItems := make([]*jsons.Item, 0), jsons.NewEmptyArr()
+	resJson.Attr("TotalRecordCount").Set(items.Len())
+	playedItems, allItems := make([]interface{}, 0), make([]interface{}, 0)
 	items.RangeArr(func(_ int, value *jsons.Item) error {
-		if allItems.Len() > 0 {
+		if len(allItems) > 0 {
 			// 找到第一个未播的剧集之后, 剩余剧集都当作是未播的
-			allItems.Append(value)
+			allItems = append(allItems, value)
 			return nil
 		}
 
@@ -56,10 +71,25 @@ func ResortEpisodes(c *gin.Context) {
 			return nil
 		}
 
-		allItems.Append(value)
+		allItems = append(allItems, value)
 		return nil
 	})
+
 	// 将已播的数据放在末尾
-	allItems.Append(playedItems...)
-	resJson.Put("Items", allItems)
+	allItems = append(allItems, playedItems...)
+
+	// 总个数小于等于 start, 返回 空
+	if len(allItems) <= start {
+		allItems = make([]interface{}, 0)
+	} else {
+		allItems = allItems[start:]
+	}
+
+	// 个数超过 Limit, 需要切断
+	if len(allItems) > limit {
+		allItems = allItems[:limit]
+	}
+
+	resJson.Put("Items", jsons.NewByVal(allItems))
+	c.Writer.Header().Del("Content-Length")
 }
