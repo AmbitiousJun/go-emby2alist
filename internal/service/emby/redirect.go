@@ -25,7 +25,7 @@ func Redirect2AlistLink(c *gin.Context) {
 	log.Printf(color.ToBlue("解析到的 itemInfo: %v"), jsons.NewByVal(itemInfo))
 
 	// 2 请求资源在 Emby 中的 Path 参数
-	embyPath, err := getEmbyFileLocalPath(itemInfo.PlaybackInfoUri)
+	embyPath, err := getEmbyFileLocalPath(itemInfo)
 	if checkErr(c, err) {
 		return
 	}

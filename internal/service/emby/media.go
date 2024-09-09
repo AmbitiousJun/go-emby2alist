@@ -22,21 +22,26 @@ import (
 
 // getEmbyFileLocalPath 获取 Emby 指定资源的 Path 参数
 //
+// 优先从缓存空间中获取 PlaybackInfo 数据
+//
 // uri 中必须有 query 参数 MediaSourceId,
 // 如果没有携带该参数, 可能会请求到多个资源, 默认返回第一个资源
-func getEmbyFileLocalPath(playbackInfoUri string) (string, error) {
-	if playbackInfoUri == "" {
-		return "", errors.New("参数 playbackInfoUri 不能为空")
+func getEmbyFileLocalPath(itemInfo ItemInfo) (string, error) {
+	var body *jsons.Item
+
+	if cacheBody, ok := getPlaybackInfoByCacheSpace(itemInfo); ok {
+		body = cacheBody
+	} else {
+		res, _ := Fetch(itemInfo.PlaybackInfoUri, http.MethodPost, nil)
+		if res.Code != http.StatusOK {
+			return "", fmt.Errorf("请求 Emby 接口异常, error: %s", res.Msg)
+		}
+		body = res.Data
 	}
 
-	res, _ := Fetch(playbackInfoUri, http.MethodPost, nil)
-	if res.Code != http.StatusOK {
-		return "", fmt.Errorf("请求 Emby 接口异常, error: %s", res.Msg)
-	}
-
-	path, ok := res.Data.Attr("MediaSources").Idx(0).Attr("Path").String()
+	path, ok := body.Attr("MediaSources").Idx(0).Attr("Path").String()
 	if !ok {
-		return "", fmt.Errorf("获取不到 Path 参数, 原始响应: %v", res.Data)
+		return "", fmt.Errorf("获取不到 Path 参数, 原始响应: %v", body)
 	}
 
 	return path, nil
