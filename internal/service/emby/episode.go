@@ -38,12 +38,7 @@ func ResortEpisodes(c *gin.Context) {
 		c.JSON(res.Code, resJson.Struct())
 	}()
 
-	// 4 检查记录数
-	if count, ok := resJson.Attr("TotalRecordCount").Int(); !ok || count < 1 {
-		return
-	}
-
-	// 5 处理数据
+	// 4 处理数据
 	items, ok := resJson.Attr("Items").Done()
 	if !ok {
 		return
