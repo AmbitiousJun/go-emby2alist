@@ -27,7 +27,7 @@ func ResortEpisodes(c *gin.Context) {
 	limitStr := c.Query("Limit")
 	limit, err := strconv.Atoi(limitStr)
 	if err != nil {
-		limit = 30
+		limit = math.MaxInt32
 	}
 	startStr := c.Query("StartIndex")
 	start, err := strconv.Atoi(startStr)
@@ -57,7 +57,6 @@ func ResortEpisodes(c *gin.Context) {
 	if !ok || items.Type() != jsons.JsonTypeArr {
 		return
 	}
-	resJson.Attr("TotalRecordCount").Set(items.Len())
 	playedItems, allItems := make([]interface{}, 0), make([]interface{}, 0)
 	items.RangeArr(func(_ int, value *jsons.Item) error {
 		if len(allItems) > 0 {
