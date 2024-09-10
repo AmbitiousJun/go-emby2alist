@@ -97,6 +97,8 @@ func NewByVal(val interface{}) *Item {
 		// 将字符串中的 unicode 字符转换为 utf8
 		if conv, err := strconv.Unquote(`"` + newVal + `"`); err == nil {
 			item.val = conv
+		} else if json, err := New(newVal); err == nil {
+			return json
 		} else {
 			item.val = newVal
 		}
