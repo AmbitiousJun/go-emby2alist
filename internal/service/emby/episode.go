@@ -44,7 +44,7 @@ func ResortEpisodes(c *gin.Context) {
 	if !ok || items.Type() != jsons.JsonTypeArr {
 		return
 	}
-	playedItems, allItems := make([]interface{}, 0), make([]interface{}, 0)
+	playedItems, allItems := make([]*jsons.Item, 0), make([]*jsons.Item, 0)
 	items.RangeArr(func(_ int, value *jsons.Item) error {
 		if len(allItems) > 0 {
 			// 找到第一个未播的剧集之后, 剩余剧集都当作是未播的
