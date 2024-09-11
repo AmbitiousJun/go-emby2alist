@@ -73,7 +73,7 @@ func loopMaintainPlaylist() {
 	// maintainDuration goroutine 维护 playlist 的间隔
 	maintainDuration := time.Minute * 10
 	// stopUpdateTimeMillis 超过这个时间未读, playlist 停止更新
-	stopUpdateTimeMillis := (maintainDuration*2 + time.Minute).Milliseconds()
+	stopUpdateTimeMillis := (maintainDuration * 2).Milliseconds()
 	// removeTimeMillis 超过这个时间未读, playlist 被移除
 	removeTimeMillis := (time.Hour * 12).Milliseconds()
 
@@ -178,6 +178,9 @@ func loopMaintainPlaylist() {
 	updateAll := func() {
 		// 复制一份 arr
 		cpArr := append(([]*Info)(nil), infoArr...)
+		if len(cpArr) > 0 {
+			log.Printf(color.ToPurple("当前正在维护的 playlist 个数: %d"), len(cpArr))
+		}
 		for _, info := range cpArr {
 			key := calcMapKey(Info{AlistPath: info.AlistPath, TemplateId: info.TemplateId})
 
@@ -190,7 +193,6 @@ func loopMaintainPlaylist() {
 
 			// 超过指定时间未读, 不更新
 			if beforeNow(info.LastRead + stopUpdateTimeMillis) {
-				log.Printf(color.ToGray("playlist 停止读取, 不再更新, alistPath: %s, templateId: %s"), info.AlistPath, info.TemplateId)
 				continue
 			}
 
