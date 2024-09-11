@@ -75,7 +75,7 @@ func loopMaintainPlaylist() {
 	// stopUpdateTimeMillis 超过这个时间未读, playlist 停止更新
 	stopUpdateTimeMillis := (maintainDuration + time.Minute).Milliseconds()
 	// removeTimeMillis 超过这个时间未读, playlist 被移除
-	removeTimeMillis := (time.Hour * 1).Milliseconds()
+	removeTimeMillis := time.Hour.Milliseconds()
 
 	// publicApiUpdateMutex 对外部暴露的 api 的内部实现中
 	// 如果涉及到更新的操作, 需要获取这个锁, 避免频繁请求 alist
@@ -185,9 +185,9 @@ func loopMaintainPlaylist() {
 			key := calcMapKey(Info{AlistPath: info.AlistPath, TemplateId: info.TemplateId})
 
 			// 长时间未读, 移除
-			if beforeNow(info.LastRead + removeTimeMillis) {
+			if beforeNow(info.LastUpdate + removeTimeMillis) {
 				removeInfo(key)
-				log.Printf(color.ToGray("playlist 长时间未读取, 已移除, alistPath: %s, templateId: %s"), info.AlistPath, info.TemplateId)
+				log.Printf(color.ToGray("playlist 长时间未被更新, 已移除, alistPath: %s, templateId: %s"), info.AlistPath, info.TemplateId)
 				continue
 			}
 
