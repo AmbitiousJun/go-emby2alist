@@ -25,7 +25,7 @@ func main() {
 }
 
 func printBanner() {
-	log.Printf(color.ToBlue(`
+	log.Printf(color.ToYellow(`
                                   _           ____       _ _     _   
   __ _  ___         ___ _ __ ___ | |__  _   _|___ \ __ _| (_)___| |_ 
  / _| |/ _ \ _____ / _ \ '_ | _ \| '_ \| | | | __) / _| | | / __| __|
@@ -35,5 +35,5 @@ func printBanner() {
  
  Repository: %s
     Version: %s
-	`), CurrentVersion, RepoAddr)
+	`), RepoAddr, CurrentVersion)
 }
