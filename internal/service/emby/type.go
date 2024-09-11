@@ -9,6 +9,7 @@ type MsInfo struct {
 	TemplateId       string // alist 中转码资源的模板 id
 	Format           string // 转码资源的格式, 比如：1920x1080
 	SourceNamePrefix string // 转码资源名称前缀
+	AlistPath        string // 资源在 alist 中的地址
 }
 
 // ItemInfo emby 资源 item 解析信息

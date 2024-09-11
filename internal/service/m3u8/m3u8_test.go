@@ -1,0 +1,36 @@
+package m3u8_test
+
+import (
+	"go-emby2alist/internal/config"
+	"go-emby2alist/internal/service/m3u8"
+	"log"
+	"testing"
+)
+
+func TestPlaylistCache(t *testing.T) {
+	config.ReadFromFile("../../../config.yml")
+	info := m3u8.Info{
+		AlistPath:  "/运动/安小雨跳绳课 (2021)/安小雨跳绳课.S01E01.3000次.25分钟.1080p.mp4",
+		TemplateId: "FHD",
+	}
+
+	// 注册 playlist
+	m3u8.PushPlaylistAsync(info)
+
+	// 获取 playlist
+	m3uContent, ok := m3u8.GetPlaylist(info.AlistPath, info.TemplateId, true)
+	if !ok {
+		log.Fatal("获取 m3u 失败")
+	}
+	log.Println(m3uContent)
+
+	// 获取 ts
+	log.Printf("\n\n\n")
+	log.Println("获取 162 ts: ")
+	log.Println(m3u8.GetTsLink(info.AlistPath, info.TemplateId, 162))
+
+	// 获取 ts
+	log.Printf("\n\n\n")
+	log.Println("获取 150 ts: ")
+	log.Println(m3u8.GetTsLink(info.AlistPath, info.TemplateId, 150))
+}

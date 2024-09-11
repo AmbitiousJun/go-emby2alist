@@ -8,7 +8,6 @@ import (
 	"go-emby2alist/internal/service/alist"
 	"go-emby2alist/internal/service/path"
 	"go-emby2alist/internal/util/jsons"
-	"go-emby2alist/internal/util/urls"
 	"io"
 	"log"
 	"net/http"
@@ -19,6 +18,9 @@ import (
 
 	"github.com/gin-gonic/gin"
 )
+
+// MediaSourceIdSegment 自定义 MediaSourceId 的分隔符
+const MediaSourceIdSegment = "[[_]]"
 
 // getEmbyFileLocalPath 获取 Emby 指定资源的 Path 参数
 //
@@ -113,23 +115,37 @@ func findVideoPreviewInfos(source *jsons.Item, originName string, resChan chan [
 			templateId, _ := transcode.Attr("template_id").String()
 			templateWidth, _ := transcode.Attr("template_width").Int()
 			templateHeight, _ := transcode.Attr("template_height").Int()
-			prefix := fmt.Sprintf("%s_%dx%d", templateId, templateWidth, templateHeight)
-			copySource.Attr("Name").Set(fmt.Sprintf("(%s) %s", prefix, originName))
+			playlistUrl, _ := transcode.Attr("url").String()
+			format := fmt.Sprintf("%dx%d", templateWidth, templateHeight)
+			copySource.Attr("Name").Set(fmt.Sprintf("(%s_%s) %s", templateId, format, originName))
 
 			// 重要！！！这里的 id 必须和原本的 id 不一样, 但又要确保能够正常反推出原本的 id
-			newId := fmt.Sprintf("%s_%s", source.Attr("Id").Val(), prefix)
+			newId := fmt.Sprintf(
+				"%s%s%s%s%s%s%s",
+				source.Attr("Id").Val(), MediaSourceIdSegment,
+				templateId, MediaSourceIdSegment,
+				format, MediaSourceIdSegment,
+				url.QueryEscape(alistPathRes.Path),
+			)
 			copySource.Attr("Id").Set(newId)
-			dsu, _ := copySource.Attr("DirectStreamUrl").String()
-			dsu = urls.AppendArgs(dsu, "MediaSourceId", newId)
+
+			// 设置转码代理播放链接
+			tu, _ := url.Parse("/videos/proxy_playlist")
+			q := tu.Query()
+			q.Set("alist_path", alistPathRes.Path)
+			q.Set("template_id", templateId)
+			q.Set("api_key", config.C.Emby.ApiKey)
+			q.Set("remote", playlistUrl)
+			tu.RawQuery = q.Encode()
 
 			// 标记转码资源使用转码容器
 			copySource.Put("SupportsTranscoding", jsons.NewByVal(true))
 			copySource.Put("TranscodingContainer", jsons.NewByVal("ts"))
 			copySource.Put("TranscodingSubProtocol", jsons.NewByVal("hls"))
-			copySource.Put("TranscodingUrl", jsons.NewByVal(dsu))
+			copySource.Put("TranscodingUrl", jsons.NewByVal(tu.String()))
+			copySource.DelKey("DirectStreamUrl")
 			copySource.Put("SupportsDirectPlay", jsons.NewByVal(false))
 			copySource.Put("SupportsDirectStream", jsons.NewByVal(false))
-			copySource.DelKey("DirectStreamUrl")
 
 			res[idx] = copySource
 		}()
@@ -248,8 +264,8 @@ func resolveMediaSourceId(id string) (MsInfo, error) {
 		return res, nil
 	}
 
-	segments := strings.Split(id, "_")
-	if len(segments) != 3 {
+	segments := strings.Split(id, MediaSourceIdSegment)
+	if len(segments) != 4 {
 		return MsInfo{}, errors.New("MediaSourceId 格式错误: " + id)
 	}
 
@@ -257,6 +273,7 @@ func resolveMediaSourceId(id string) (MsInfo, error) {
 	res.OriginId = segments[0]
 	res.TemplateId = segments[1]
 	res.Format = segments[2]
+	res.AlistPath = segments[3]
 	res.SourceNamePrefix = fmt.Sprintf("%s_%s", res.TemplateId, res.Format)
 	return res, nil
 }

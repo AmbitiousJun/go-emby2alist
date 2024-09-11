@@ -1,11 +1,33 @@
 package m3u8
 
+// ParentHeadComments 记录文件头注释
+var ParentHeadComments = map[string]struct{}{
+	"#EXTM3U": {}, "#EXT-X-VERSION": {}, "#EXT-X-MEDIA-SEQUENCE": {},
+	"#EXT-X-TARGETDURATION": {},
+}
+
+// ParentTailComments 记录文件尾注释
+var ParentTailComments = map[string]struct{}{
+	"#EXT-X-ENDLIST": {},
+}
+
+// 响应头中，有效的 m3u8 Content-Type 属性
+var ValidM3U8Contents = map[string]struct{}{
+	"application/vnd.apple.mpegurl": {},
+	"application/x-mpegurl":         {},
+	"audio/x-mpegurl":               {},
+	"application/octet-stream":      {},
+}
+
 // Info 记录一个 m3u8 相关信息
 type Info struct {
-	AlistPath    string   // 资源在 alist 中的绝对路径
-	TemplateId   string   // 转码资源模板 id
-	RemoteBase   string   // 远程 m3u8 地址前缀
-	RemoteTsUrls []string // 远程的 ts URL 列表, 用于重定向
+	AlistPath     string    // 资源在 alist 中的绝对路径
+	TemplateId    string    // 转码资源模板 id
+	Remote        string    // 请求 m3u8 的原始地址
+	RemoteBase    string    // 远程 m3u8 地址前缀
+	HeadComments  []string  // 头注释信息
+	TailComments  []string  // 尾注释信息
+	RemoteTsInfos []*TsInfo // 远程的 ts URL 列表, 用于重定向
 
 	// LastRead 客户端最后读取的时间戳 (毫秒)
 	//
@@ -18,4 +40,10 @@ type Info struct {
 	// 客户端来读取时, 如果 m3u info 已经超过 10 分钟没有更新了
 	// 触发更新机制之后, 再返回最新的地址
 	LastUpdate int64
+}
+
+// TsInfo 记录一个 ts 相关信息
+type TsInfo struct {
+	Comments []string // 注释信息
+	Url      string   // 远程流请求地址
 }

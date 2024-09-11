@@ -12,6 +12,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"net/url"
 	"strings"
 	"time"
 
@@ -104,15 +105,23 @@ func PlaybackInfoReverseProxy(c *gin.Context) {
 
 		if useTranscode {
 			// 客户端请求指定的转码资源
-			source.Attr("Name").Set(fmt.Sprintf("(%s) %s", msInfo.SourceNamePrefix, source.Attr("Name").Val()))
+
+			tu, _ := url.Parse("/videos/proxy_playlist")
+			q := tu.Query()
+			q.Set("template_id", itemInfo.MsInfo.TemplateId)
+			q.Set("api_key", config.C.Emby.ApiKey)
+			q.Set("alist_path", itemInfo.MsInfo.AlistPath)
+			tu.RawQuery = q.Encode()
+
+			source.Attr("Name").Set(fmt.Sprintf("(%s) %s", msInfo.SourceNamePrefix, name))
 			source.Put("SupportsTranscoding", jsons.NewByVal(true))
-			source.Put("TranscodingUrl", jsons.NewByVal(newUrl))
+			source.Put("TranscodingUrl", jsons.NewByVal(tu.String()))
 			source.Put("TranscodingSubProtocol", jsons.NewByVal("hls"))
 			source.Put("TranscodingContainer", jsons.NewByVal("ts"))
 			source.Put("SupportsDirectPlay", jsons.NewByVal(false))
 			source.Put("SupportsDirectStream", jsons.NewByVal(false))
-			log.Printf(color.ToBlue("设置转码播放链接为: %s"), newUrl)
 			source.DelKey("DirectStreamUrl")
+			log.Printf(color.ToBlue("设置转码播放链接为: %s"), tu.String())
 			return nil
 		}
 		source.Attr("DirectStreamUrl").Set(newUrl)

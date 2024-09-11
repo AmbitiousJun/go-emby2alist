@@ -2,6 +2,7 @@ package web
 
 import (
 	"go-emby2alist/internal/service/emby"
+	"go-emby2alist/internal/service/m3u8"
 	"log"
 
 	"github.com/gin-gonic/gin"
@@ -32,6 +33,10 @@ func initRulePatterns() {
 
 		// 资源重定向到直链
 		{`(?i)^/.*(videos|audio)/.*/(stream|universal)\??`, emby.Redirect2AlistLink},
+		// 代理 m3u8 转码播放列表
+		{`(?i)^/.*videos/proxy_playlist\??`, m3u8.ProxyPlaylist},
+		// 代理 ts 重定向到直链
+		{`(?i)^/.*videos/proxy_ts\??`, m3u8.ProxyTsLink},
 
 		// 资源下载, 重定向到直链
 		{`(?i)^/.*items/.*/download`, emby.Redirect2AlistLink},
