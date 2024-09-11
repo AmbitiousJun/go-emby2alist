@@ -70,12 +70,12 @@ func loopMaintainPlaylist() {
 	// arr 记录播放列表, 便于实现淘汰机制
 	infoArr := make([]*Info, 0)
 
-	// stopUpdateTimeMillis 超过这个时间未读, playlist 停止更新
-	stopUpdateTimeMillis := (time.Minute * 30).Milliseconds()
-	// removeTimeMillis 超过这个时间未读, playlist 被移除
-	removeTimeMillis := (time.Hour * 12).Milliseconds()
 	// maintainDuration goroutine 维护 playlist 的间隔
 	maintainDuration := time.Minute * 10
+	// stopUpdateTimeMillis 超过这个时间未读, playlist 停止更新
+	stopUpdateTimeMillis := (maintainDuration*2 + time.Minute).Milliseconds()
+	// removeTimeMillis 超过这个时间未读, playlist 被移除
+	removeTimeMillis := (time.Hour * 12).Milliseconds()
 
 	// publicApiUpdateMutex 对外部暴露的 api 的内部实现中
 	// 如果涉及到更新的操作, 需要获取这个锁, 避免频繁请求 alist
@@ -184,11 +184,13 @@ func loopMaintainPlaylist() {
 			// 长时间未读, 移除
 			if beforeNow(info.LastRead + removeTimeMillis) {
 				removeInfo(key)
+				log.Printf(color.ToGray("playlist 长时间未读取, 已移除, alistPath: %s, templateId: %s"), info.AlistPath, info.TemplateId)
 				continue
 			}
 
 			// 超过指定时间未读, 不更新
 			if beforeNow(info.LastRead + stopUpdateTimeMillis) {
+				log.Printf(color.ToGray("playlist 停止读取, 不再更新, alistPath: %s, templateId: %s"), info.AlistPath, info.TemplateId)
 				continue
 			}
 
@@ -238,6 +240,7 @@ func loopMaintainPlaylist() {
 		copy(toDeletes, infoArr)
 		for _, toDel := range toDeletes {
 			removeInfo(calcMapKey(Info{AlistPath: toDel.AlistPath, TemplateId: toDel.TemplateId}))
+			log.Printf(color.ToGray("playlist 被淘汰并从内存中移除, alistPath: %s, templateId: %s"), toDel.AlistPath, toDel.TemplateId)
 		}
 	}
 
