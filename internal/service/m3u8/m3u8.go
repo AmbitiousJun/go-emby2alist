@@ -73,7 +73,7 @@ func loopMaintainPlaylist() {
 	// maintainDuration goroutine 维护 playlist 的间隔
 	maintainDuration := time.Minute * 10
 	// stopUpdateTimeMillis 超过这个时间未读, playlist 停止更新
-	stopUpdateTimeMillis := (maintainDuration*2 - time.Minute).Milliseconds()
+	stopUpdateTimeMillis := (maintainDuration + time.Minute).Milliseconds()
 	// removeTimeMillis 超过这个时间未读, playlist 被移除
 	removeTimeMillis := (time.Hour * 1).Milliseconds()
 
