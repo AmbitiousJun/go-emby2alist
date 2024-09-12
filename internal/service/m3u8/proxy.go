@@ -1,6 +1,8 @@
 package m3u8
 
 import (
+	"errors"
+	"fmt"
 	"go-emby2alist/internal/config"
 	"go-emby2alist/internal/util/color"
 	"log"
@@ -12,47 +14,58 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// baseCheck 对代理请求参数作基本校验
+func baseCheck(c *gin.Context) (ProxyParams, error) {
+	if c.Request.Method != http.MethodGet {
+		return ProxyParams{}, errors.New("仅支持 GET")
+	}
+
+	var params ProxyParams
+	if err := c.ShouldBindQuery(&params); err != nil {
+		return ProxyParams{}, err
+	}
+
+	alistPath, err := url.QueryUnescape(strings.TrimSpace(params.AlistPath))
+	if err != nil {
+		return ProxyParams{}, fmt.Errorf("alistPath 转换失败: %v", err)
+	}
+	params.AlistPath = alistPath
+
+	if params.AlistPath == "" || params.TemplateId == "" || params.ApiKey == "" {
+		return ProxyParams{}, errors.New("参数不足")
+	}
+
+	if params.ApiKey != config.C.Emby.ApiKey {
+		return ProxyParams{}, errors.New("无权限访问")
+	}
+	return params, nil
+}
+
 // ProxyPlaylist 代理 m3u8 转码地址
 func ProxyPlaylist(c *gin.Context) {
-	if c.Request.Method != http.MethodGet {
-		c.String(http.StatusMethodNotAllowed, "仅支持 GET")
-		return
-	}
-
-	alistPath, err := url.QueryUnescape(strings.TrimSpace(c.Query("alist_path")))
+	params, err := baseCheck(c)
 	if err != nil {
-		c.String(http.StatusBadRequest, "alistPath 转换失败: %v", err)
+		c.String(http.StatusBadRequest, err.Error())
 		return
 	}
-	templateId := strings.TrimSpace(c.Query("template_id"))
-	apiKey := strings.TrimSpace(c.Query("api_key"))
-	remote := strings.TrimSpace(c.Query("remote"))
-	if alistPath == "" || templateId == "" || apiKey == "" {
-		c.String(http.StatusBadRequest, "参数不足")
-		return
-	}
-
-	if apiKey != config.C.Emby.ApiKey {
-		c.String(http.StatusUnauthorized, "无权限访问")
-		return
-	}
+	reqType := params.Type == "main"
 
 	okContent := func(content string) {
 		c.Header("Content-Type", "application/vnd.apple.mpegurl")
 		c.String(http.StatusOK, content)
 	}
 
-	m3uContent, ok := GetPlaylist(alistPath, templateId, true)
+	m3uContent, ok := GetPlaylist(params.AlistPath, params.TemplateId, true, reqType)
 	if ok {
 		okContent(m3uContent)
 		return
 	}
 
 	// 获取失败, 将当前请求的地址加入到预处理通道
-	PushPlaylistAsync(Info{AlistPath: alistPath, TemplateId: templateId, Remote: remote})
+	PushPlaylistAsync(Info{AlistPath: params.AlistPath, TemplateId: params.TemplateId, Remote: params.Remote})
 
 	// 重新获取一次
-	m3uContent, ok = GetPlaylist(alistPath, templateId, true)
+	m3uContent, ok = GetPlaylist(params.AlistPath, params.TemplateId, true, reqType)
 	if ok {
 		okContent(m3uContent)
 		return
@@ -62,28 +75,13 @@ func ProxyPlaylist(c *gin.Context) {
 
 // ProxyTsLink 代理 ts 直链地址
 func ProxyTsLink(c *gin.Context) {
-	if c.Request.Method != http.MethodGet {
-		c.String(http.StatusMethodNotAllowed, "仅支持 GET")
+	params, err := baseCheck(c)
+	if err != nil {
+		c.String(http.StatusBadRequest, err.Error())
 		return
 	}
 
-	alistPath, err := url.QueryUnescape(strings.TrimSpace(c.Query("alist_path")))
-	if err != nil {
-		c.String(http.StatusBadRequest, "alistPath 转换失败: %v", err)
-		return
-	}
-	idxStr := strings.TrimSpace(c.Query("idx"))
-	templateId := strings.TrimSpace(c.Query("template_id"))
-	apiKey := strings.TrimSpace(c.Query("api_key"))
-	if alistPath == "" || idxStr == "" || templateId == "" || apiKey == "" {
-		c.String(http.StatusBadRequest, "参数不足")
-		return
-	}
-	if config.C.Emby.ApiKey != apiKey {
-		c.String(http.StatusUnauthorized, "无权限访问")
-		return
-	}
-	idx, err := strconv.Atoi(idxStr)
+	idx, err := strconv.Atoi(params.IdxStr)
 	if err != nil || idx < 0 {
 		c.String(http.StatusBadRequest, "无效 idx")
 		return
@@ -94,19 +92,55 @@ func ProxyTsLink(c *gin.Context) {
 		c.Redirect(http.StatusTemporaryRedirect, link)
 	}
 
-	tsLink, ok := GetTsLink(alistPath, templateId, idx)
+	tsLink, ok := GetTsLink(params.AlistPath, params.TemplateId, idx)
 	if ok {
 		okRedirect(tsLink)
 		return
 	}
 
 	// 获取失败, 将当前请求的地址加入到预处理通道
-	PushPlaylistAsync(Info{AlistPath: alistPath, TemplateId: templateId})
+	PushPlaylistAsync(Info{AlistPath: params.AlistPath, TemplateId: params.TemplateId})
 
-	tsLink, ok = GetTsLink(alistPath, templateId, idx)
+	tsLink, ok = GetTsLink(params.AlistPath, params.TemplateId, idx)
 	if ok {
 		okRedirect(tsLink)
 		return
 	}
 	c.String(http.StatusBadRequest, "获取不到 ts, 请检查日志")
+}
+
+// ProxySubtitle 代理字幕请求
+func ProxySubtitle(c *gin.Context) {
+	params, err := baseCheck(c)
+	if err != nil {
+		c.String(http.StatusBadRequest, err.Error())
+		return
+	}
+
+	idx, err := strconv.Atoi(params.IdxStr)
+	if err != nil || idx < 0 {
+		c.String(http.StatusBadRequest, "无效 idx")
+		return
+	}
+
+	okRedirect := func(link string) {
+		log.Printf(color.ToGreen("重定向字幕: %s"), link)
+		c.Redirect(http.StatusTemporaryRedirect, link)
+	}
+
+	subtitleLink, ok := GetSubtitleLink(params.AlistPath, params.TemplateId, idx)
+	if ok {
+		okRedirect(subtitleLink)
+		return
+	}
+
+	// 获取失败, 将当前请求的地址加入到预处理通道
+	PushPlaylistAsync(Info{AlistPath: params.AlistPath, TemplateId: params.TemplateId})
+
+	subtitleLink, ok = GetSubtitleLink(params.AlistPath, params.TemplateId, idx)
+	if ok {
+		okRedirect(subtitleLink)
+		return
+	}
+	c.String(http.StatusBadRequest, "获取不到字幕")
 }

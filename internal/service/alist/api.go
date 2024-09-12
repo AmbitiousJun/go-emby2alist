@@ -13,9 +13,9 @@ import (
 )
 
 // FetchResource 请求 alist 资源 url 直链
-func FetchResource(fi FetchInfo) model.HttpRes[string] {
+func FetchResource(fi FetchInfo) model.HttpRes[Resource] {
 	if fi.Path = strings.TrimSpace(fi.Path); fi.Path == "" {
-		return model.HttpRes[string]{Code: http.StatusBadRequest, Msg: "参数 path 不能为空"}
+		return model.HttpRes[Resource]{Code: http.StatusBadRequest, Msg: "参数 path 不能为空"}
 	}
 
 	if !fi.UseTranscode {
@@ -23,19 +23,19 @@ func FetchResource(fi FetchInfo) model.HttpRes[string] {
 		res := FetchFsGet(fi.Path, fi.Header)
 		if res.Code == http.StatusOK {
 			if link, ok := res.Data.Attr("raw_url").String(); ok {
-				return model.HttpRes[string]{Code: http.StatusOK, Data: link}
+				return model.HttpRes[Resource]{Code: http.StatusOK, Data: Resource{Url: link}}
 			}
 		}
 		if res.Msg == "" {
 			res.Msg = fmt.Sprintf("未知异常, 原始响应: %v", jsons.NewByObj(res))
 		}
-		return model.HttpRes[string]{Code: res.Code, Msg: res.Msg}
+		return model.HttpRes[Resource]{Code: res.Code, Msg: res.Msg}
 	}
 
 	// 转码资源请求失败后, 递归请求原画资源
-	failedAndTryRaw := func(originRes model.HttpRes[*jsons.Item]) model.HttpRes[string] {
+	failedAndTryRaw := func(originRes model.HttpRes[*jsons.Item]) model.HttpRes[Resource] {
 		if !fi.TryRawIfTranscodeFail {
-			return model.HttpRes[string]{Code: originRes.Code, Msg: originRes.Msg}
+			return model.HttpRes[Resource]{Code: originRes.Code, Msg: originRes.Msg}
 		}
 		log.Printf("请求转码资源失败, 尝试请求原画资源, 原始响应: %v", jsons.NewByObj(originRes))
 		fi.UseTranscode = false
@@ -64,7 +64,20 @@ func FetchResource(fi FetchInfo) model.HttpRes[string] {
 		return failedAndTryRaw(res)
 	}
 
-	return model.HttpRes[string]{Code: http.StatusOK, Data: link}
+	// 封装字幕链接, 封装失败也不返回失败
+	subtitles := make([]SubtitleInfo, 0)
+	subList, ok := res.Data.Attr("video_preview_play_info").Attr("live_transcoding_subtitle_task_list").Done()
+	if ok {
+		subList.RangeArr(func(_ int, value *jsons.Item) error {
+			subtitles = append(subtitles, SubtitleInfo{
+				Lang: value.Attr("language").Val().(string),
+				Url:  value.Attr("url").Val().(string),
+			})
+			return nil
+		})
+	}
+
+	return model.HttpRes[Resource]{Code: http.StatusOK, Data: Resource{Url: link, Subtitles: subtitles}}
 }
 
 // FetchFsList 请求 alist "/api/fs/list" 接口

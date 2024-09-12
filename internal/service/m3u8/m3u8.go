@@ -23,10 +23,13 @@ func init() {
 }
 
 // GetPlaylist 获取 m3u 播放列表, 返回 m3u 文本
-var GetPlaylist func(alistPath, templateId string, proxy bool) (string, bool)
+var GetPlaylist func(alistPath, templateId string, proxy, main bool) (string, bool)
 
 // GetTsLink 获取 m3u 播放列表中的某个 ts 链接
 var GetTsLink func(alistPath, templateId string, idx int) (string, bool)
+
+// GetSubtitleLink 获取字幕链接
+var GetSubtitleLink func(alistPath, templateId string, idx int) (string, bool)
 
 // preMaintainInfoChan 预处理通道
 //
@@ -138,13 +141,13 @@ func loopMaintainPlaylist() {
 		return nil
 	}
 
-	GetPlaylist = func(alistPath, templateId string, proxy bool) (string, bool) {
+	GetPlaylist = func(alistPath, templateId string, proxy, main bool) (string, bool) {
 		info := queryInfo(alistPath, templateId)
 		if info == nil {
 			return "", false
 		}
 		if proxy {
-			return info.ProxyContent(), true
+			return info.ProxyContent(main), true
 		}
 		return info.Content(), true
 	}
@@ -155,6 +158,17 @@ func loopMaintainPlaylist() {
 			return "", false
 		}
 		return info.GetTsLink(idx)
+	}
+
+	GetSubtitleLink = func(alistPath, templateId string, idx int) (string, bool) {
+		info := queryInfo(alistPath, templateId)
+		if info == nil {
+			return "", false
+		}
+		if idx < 0 || idx >= len(info.Subtitles) {
+			return "", false
+		}
+		return info.Subtitles[idx].Url, true
 	}
 
 	// removeInfo 删除内存中的 info 信息
@@ -178,9 +192,8 @@ func loopMaintainPlaylist() {
 	updateAll := func() {
 		// 复制一份 arr
 		cpArr := append(([]*Info)(nil), infoArr...)
-		if len(cpArr) > 0 {
-			log.Printf(color.ToPurple("当前正在维护的 playlist 个数: %d"), len(cpArr))
-		}
+		tot, active := len(cpArr), 0
+
 		for _, info := range cpArr {
 			key := calcMapKey(Info{AlistPath: info.AlistPath, TemplateId: info.TemplateId})
 
@@ -188,6 +201,7 @@ func loopMaintainPlaylist() {
 			if beforeNow(info.LastUpdate + removeTimeMillis) {
 				removeInfo(key)
 				log.Printf(color.ToGray("playlist 长时间未被更新, 已移除, alistPath: %s, templateId: %s"), info.AlistPath, info.TemplateId)
+				tot--
 				continue
 			}
 
@@ -197,10 +211,17 @@ func loopMaintainPlaylist() {
 			}
 
 			// 如果更新失败, 移除
+			active++
 			if err := info.UpdateContent(); err != nil {
 				printErr(info, err)
 				removeInfo(key)
+				tot--
+				active--
 			}
+		}
+
+		if len(cpArr) > 0 {
+			log.Printf(color.ToPurple("当前正在维护的 playlist 个数: %d, 活跃个数: %d"), tot, active)
 		}
 	}
 

@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"go-emby2alist/internal/config"
+	"go-emby2alist/internal/model"
 	"go-emby2alist/internal/service/alist"
 	"go-emby2alist/internal/util/color"
 	"go-emby2alist/internal/util/https"
@@ -109,6 +110,30 @@ func (i *Info) GetTsLink(idx int) (string, bool) {
 	return i.RemoteBase + i.RemoteTsInfos[idx].Url, true
 }
 
+// MasterFunc 获取变体 m3u8
+//
+// 当 info 包含有字幕时, 需要调用这个方法返回
+func (i *Info) MasterFunc(cntMapper func() string) string {
+	sb := strings.Builder{}
+	sb.WriteString("#EXTM3U\n")
+	sb.WriteString("#EXT-X-VERSION:3\n")
+	// 写入字幕信息
+	for idx, subInfo := range i.Subtitles {
+		u, _ := url.Parse("proxy_subtitle")
+		q := u.Query()
+		q.Set("alist_path", i.AlistPath)
+		q.Set("template_id", i.TemplateId)
+		q.Set("idx", strconv.Itoa(idx))
+		q.Set("api_key", config.C.Emby.ApiKey)
+		u.RawQuery = q.Encode()
+		cmt := fmt.Sprintf(`#EXT-X-MEDIA:TYPE=SUBTITLES,GROUP-ID="subs",NAME="%s",LANGUAGE="%s",URI="%s"`, subInfo.Lang, subInfo.Lang, u.String())
+		sb.WriteString(cmt + "\n")
+	}
+	sb.WriteString(`#EXT-X-STREAM-INF:SUBTITLES="subs"` + "\n")
+	sb.WriteString(cntMapper())
+	return sb.String()
+}
+
 // ContentFunc 将 i 对象转换成 m3u8 文本
 //
 // tsMapper 函数可以将当前 info 中的 ts 地址映射为自定义地址
@@ -140,7 +165,20 @@ func (i *Info) ContentFunc(tsMapper func(int, string) string) string {
 }
 
 // ProxyContent 将 i 转换为 m3u8 本地代理文本
-func (i *Info) ProxyContent() string {
+func (i *Info) ProxyContent(main bool) string {
+	// 有内封字幕的资源, 切换为变体 m3u8
+	if !main && len(i.Subtitles) > 0 {
+		return i.MasterFunc(func() string {
+			u, _ := url.Parse("proxy_playlist")
+			q := u.Query()
+			q.Set("alist_path", i.AlistPath)
+			q.Set("template_id", i.TemplateId)
+			q.Set("api_key", config.C.Emby.ApiKey)
+			q.Set("type", "main")
+			u.RawQuery = q.Encode()
+			return u.String()
+		})
+	}
 	return i.ContentFunc(func(idx int, _ string) string {
 		u, _ := url.Parse("proxy_ts")
 		q := u.Query()
@@ -181,9 +219,10 @@ func (i *Info) UpdateContent() error {
 		i.Remote = ""
 	}
 
+	var res model.HttpRes[alist.Resource]
 	if newInfo == nil {
 		// 2 请求 alist 资源
-		res := alist.FetchResource(alist.FetchInfo{
+		res = alist.FetchResource(alist.FetchInfo{
 			Path:         i.AlistPath,
 			UseTranscode: true,
 			Format:       i.TemplateId,
@@ -193,7 +232,7 @@ func (i *Info) UpdateContent() error {
 		}
 
 		// 3 解析地址
-		newInfo, err = NewByRemote(res.Data, nil)
+		newInfo, err = NewByRemote(res.Data.Url, nil)
 		if err != nil {
 			return fmt.Errorf("解析远程 m3u8 失败, url: %s, err: %v", res.Data, err)
 		}
@@ -204,6 +243,7 @@ func (i *Info) UpdateContent() error {
 	i.HeadComments = append(([]string)(nil), newInfo.HeadComments...)
 	i.TailComments = append(([]string)(nil), newInfo.TailComments...)
 	i.RemoteTsInfos = append(([]*TsInfo)(nil), newInfo.RemoteTsInfos...)
+	i.Subtitles = append(([]alist.SubtitleInfo)(nil), res.Data.Subtitles...)
 	i.LastUpdate = time.Now().UnixMilli()
 	return nil
 }

@@ -37,6 +37,8 @@ func initRulePatterns() {
 		{`(?i)^/.*videos/proxy_playlist\??`, m3u8.ProxyPlaylist},
 		// 代理 ts 重定向到直链
 		{`(?i)^/.*videos/proxy_ts\??`, m3u8.ProxyTsLink},
+		// 代理 m3u8 字幕
+		{`(?i)^/.*videos/proxy_subtitle\??`, m3u8.ProxySubtitle},
 
 		// 资源下载, 重定向到直链
 		{`(?i)^/.*items/.*/download`, emby.Redirect2AlistLink},

@@ -1,9 +1,12 @@
 package m3u8
 
+import "go-emby2alist/internal/service/alist"
+
 // ParentHeadComments 记录文件头注释
 var ParentHeadComments = map[string]struct{}{
 	"#EXTM3U": {}, "#EXT-X-VERSION": {}, "#EXT-X-MEDIA-SEQUENCE": {},
-	"#EXT-X-TARGETDURATION": {},
+	"#EXT-X-TARGETDURATION": {}, "#EXT-X-MEDIA": {}, "#EXT-X-INDEPENDENT-SEGMENTS": {},
+	"#EXT-X-STREAM-INF": {},
 }
 
 // ParentTailComments 记录文件尾注释
@@ -21,13 +24,14 @@ var ValidM3U8Contents = map[string]struct{}{
 
 // Info 记录一个 m3u8 相关信息
 type Info struct {
-	AlistPath     string    // 资源在 alist 中的绝对路径
-	TemplateId    string    // 转码资源模板 id
-	Remote        string    // 请求 m3u8 的原始地址
-	RemoteBase    string    // 远程 m3u8 地址前缀
-	HeadComments  []string  // 头注释信息
-	TailComments  []string  // 尾注释信息
-	RemoteTsInfos []*TsInfo // 远程的 ts URL 列表, 用于重定向
+	AlistPath     string               // 资源在 alist 中的绝对路径
+	TemplateId    string               // 转码资源模板 id
+	Subtitles     []alist.SubtitleInfo // 字幕信息, 如果一个资源是含有字幕的, 会返回变体 m3u8
+	Remote        string               // 请求 m3u8 的原始地址
+	RemoteBase    string               // 远程 m3u8 地址前缀
+	HeadComments  []string             // 头注释信息
+	TailComments  []string             // 尾注释信息
+	RemoteTsInfos []*TsInfo            // 远程的 ts URL 列表, 用于重定向
 
 	// LastRead 客户端最后读取的时间戳 (毫秒)
 	//
@@ -46,4 +50,14 @@ type Info struct {
 type TsInfo struct {
 	Comments []string // 注释信息
 	Url      string   // 远程流请求地址
+}
+
+// ProxyParams 代理请求接收参数
+type ProxyParams struct {
+	AlistPath  string `form:"alist_path"`
+	TemplateId string `form:"template_id"`
+	Remote     string `form:"remote"`
+	Type       string `form:"type"`
+	ApiKey     string `form:"api_key"`
+	IdxStr     string `form:"idx"`
 }

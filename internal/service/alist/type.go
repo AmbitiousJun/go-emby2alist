@@ -10,3 +10,15 @@ type FetchInfo struct {
 	TryRawIfTranscodeFail bool        // 如果请求转码资源失败, 是否尝试请求原画资源
 	Header                http.Header // 自定义的请求头
 }
+
+// Resource alist 资源信息封装
+type Resource struct {
+	Url       string         // 资源远程路径
+	Subtitles []SubtitleInfo // 字幕信息
+}
+
+// SubtitleInfo 资源内嵌的字幕信息
+type SubtitleInfo struct {
+	Lang string // 字幕语言
+	Url  string // 字幕远程路径
+}
