@@ -94,14 +94,11 @@ func NewByVal(val interface{}) *Item {
 		item.val = newVal
 		return item
 	case string:
-		// 将字符串中的 unicode 字符转换为 utf8
 		if conv, err := strconv.Unquote(`"` + newVal + `"`); err == nil {
-			item.val = conv
-		} else if json, err := New(newVal); err == nil {
-			return json
-		} else {
-			item.val = newVal
-		}
+			// 将字符串中的 unicode 字符转换为 utf8
+			newVal = conv
+		} 
+		item.val = newVal
 		return item
 	case *Item:
 		return newVal
@@ -175,6 +172,10 @@ func New(rawJson string) (*Item, error) {
 	var i int
 	if err := json.Unmarshal([]byte(rawJson), &i); err == nil {
 		return NewByVal(i), nil
+	}
+	var i64 int64
+	if err := json.Unmarshal([]byte(rawJson), &i64); err == nil {
+		return NewByVal(i64), nil
 	}
 	var f float64
 	if err := json.Unmarshal([]byte(rawJson), &f); err == nil {
