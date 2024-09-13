@@ -6,10 +6,12 @@ import (
 	"go-emby2alist/internal/service/alist"
 	"go-emby2alist/internal/service/path"
 	"go-emby2alist/internal/util/color"
+	"go-emby2alist/internal/util/https"
 	"go-emby2alist/internal/util/jsons"
 	"go-emby2alist/internal/web/cache"
 	"log"
 	"net/http"
+	"net/url"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -24,15 +26,31 @@ func Redirect2AlistLink(c *gin.Context) {
 	}
 	log.Printf(color.ToBlue("解析到的 itemInfo: %v"), jsons.NewByVal(itemInfo))
 
-	// 2 请求资源在 Emby 中的 Path 参数
+	// 2 如果请求的是转码资源, 重定向到本地的 m3u8 代理服务
+	msInfo := itemInfo.MsInfo
+	useTranscode := !msInfo.Empty && msInfo.Transcode
+	if useTranscode {
+		u, _ := url.Parse("/videos/proxy_playlist")
+		q := u.Query()
+		q.Set("template_id", itemInfo.MsInfo.TemplateId)
+		q.Set("api_key", config.C.Emby.ApiKey)
+		q.Set("alist_path", itemInfo.MsInfo.AlistPath)
+		u.RawQuery = q.Encode()
+		res := https.ClientRequestHost(c) + u.String()
+		log.Printf(color.ToGreen("重定向 playlist: %s"), res)
+		c.Redirect(http.StatusTemporaryRedirect, res)
+		return
+	}
+
+	// 3 请求资源在 Emby 中的 Path 参数
 	embyPath, err := getEmbyFileLocalPath(itemInfo)
 	if checkErr(c, err) {
 		return
 	}
 
-	// 3 请求 alist 资源
+	// 4 请求 alist 资源
 	fi := alist.FetchInfo{
-		UseTranscode:          itemInfo.MsInfo.Transcode,
+		UseTranscode:          useTranscode,
 		Format:                itemInfo.MsInfo.TemplateId,
 		TryRawIfTranscodeFail: false,
 	}

@@ -48,7 +48,7 @@ func CacheableRouteMarker() gin.HandlerFunc {
 		// PlaybackInfo
 		regexp.MustCompile(`(?i)^/.*items/.*/playbackinfo/reverseproxy\??`),
 		// 直链重定向
-		regexp.MustCompile(`(?i)^/.*(videos|audio)/.*/(stream|universal)\??`),
+		regexp.MustCompile(`(?i)^/.*(videos|audio)/.*/(stream|universal)(\.\w+)?\??`),
 		// 下载
 		regexp.MustCompile(`(?i)^/.*items/.*/download`),
 		// 字幕

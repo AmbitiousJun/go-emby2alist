@@ -32,7 +32,7 @@ func initRulePatterns() {
 		{`(?i)^/.*shows/.*/episodes\??`, emby.ResortEpisodes},
 
 		// 资源重定向到直链
-		{`(?i)^/.*(videos|audio)/.*/(stream|universal)\??`, emby.Redirect2AlistLink},
+		{`(?i)^/.*(videos|audio)/.*/(stream|universal)(\.\w+)?\??`, emby.Redirect2AlistLink},
 		// 代理 m3u8 转码播放列表
 		{`(?i)^/.*videos/proxy_playlist\??`, m3u8.ProxyPlaylist},
 		// 代理 ts 重定向到直链
