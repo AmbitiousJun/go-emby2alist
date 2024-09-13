@@ -31,6 +31,9 @@ func initRulePatterns() {
 		// 重排序剧集
 		{`(?i)^/.*shows/.*/episodes\??`, emby.ResortEpisodes},
 
+		// 字幕长时间缓存
+		{`(?i)^/.*videos/.*/subtitles`, emby.ProxySubtitles},
+
 		// 资源重定向到直链
 		{`(?i)^/.*(videos|audio)/.*/(stream|universal)(\.\w+)?\??`, emby.Redirect2AlistLink},
 		// 代理 m3u8 转码播放列表
@@ -42,9 +45,6 @@ func initRulePatterns() {
 
 		// 资源下载, 重定向到直链
 		{`(?i)^/.*items/.*/download`, emby.Redirect2AlistLink},
-
-		// 字幕长时间缓存
-		{`(?i)^/.*videos/.*/subtitles`, emby.ProxySubtitles},
 
 		// 特定资源走代理
 		//

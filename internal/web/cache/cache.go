@@ -47,12 +47,12 @@ func CacheableRouteMarker() gin.HandlerFunc {
 	cacheablePatterns := []*regexp.Regexp{
 		// PlaybackInfo
 		regexp.MustCompile(`(?i)^/.*items/.*/playbackinfo/reverseproxy\??`),
+		// 字幕
+		regexp.MustCompile(`(?i)^/.*videos/.*/subtitles`),
 		// 直链重定向
 		regexp.MustCompile(`(?i)^/.*(videos|audio)/.*/(stream|universal)(\.\w+)?\??`),
 		// 下载
 		regexp.MustCompile(`(?i)^/.*items/.*/download`),
-		// 字幕
-		regexp.MustCompile(`(?i)^/.*videos/.*/subtitles`),
 		// 图片缓存
 		regexp.MustCompile(`(?i)^/.*(/images/|\.jpg|\.png|\.jpeg|\.webp|\.ico)`),
 		// 其他静态资源
