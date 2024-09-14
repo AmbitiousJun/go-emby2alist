@@ -18,8 +18,8 @@ func main() {
 		log.Fatal("加载失败", err)
 	}
 
-	log.Println("正在启动服务, 监听端口 8095...")
-	if err := web.Listen(8095); err != nil {
+	log.Println("正在启动服务...")
+	if err := web.Listen(); err != nil {
 		log.Fatal(err)
 	}
 }

@@ -3,6 +3,7 @@ package config
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 	"reflect"
 
 	"gopkg.in/yaml.v3"
@@ -19,9 +20,15 @@ type Config struct {
 	Path *Path `yaml:"path"`
 	// Cache 缓存相关配置
 	Cache *Cache `yaml:"cache"`
+	// Ssl ssl 相关配置
+	Ssl *Ssl `yaml:"ssl"`
 }
 
+// C 全局唯一配置对象
 var C *Config
+
+// BasePath 配置文件所在的基础路径
+var BasePath string
 
 type Initializer interface {
 	// Init 配置初始化
@@ -33,6 +40,10 @@ func ReadFromFile(path string) error {
 	bytes, err := os.ReadFile(path)
 	if err != nil {
 		return fmt.Errorf("读取配置文件失败: %v", err)
+	}
+
+	if err = initBasePath(path); err != nil {
+		return fmt.Errorf("初始化 BasePath 失败: %v", err)
 	}
 
 	C = new(Config)
@@ -58,5 +69,19 @@ func ReadFromFile(path string) error {
 		}
 	}
 
+	return nil
+}
+
+// initBasePath 初始化 BasePath
+func initBasePath(path string) error {
+	if filepath.IsAbs(path) {
+		BasePath = filepath.Dir(path)
+		return nil
+	}
+	absPath, err := filepath.Abs(path)
+	if err != nil {
+		return err
+	}
+	BasePath = filepath.Dir(absPath)
 	return nil
 }

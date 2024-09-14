@@ -7,6 +7,7 @@ import (
 	"go-emby2alist/internal/util/https"
 	"go-emby2alist/internal/util/jsons"
 	"go-emby2alist/internal/web/cache"
+	"go-emby2alist/internal/web/webport"
 	"io"
 	"log"
 	"net/http"
@@ -162,6 +163,12 @@ func RedirectOrigin(c *gin.Context) {
 	}
 
 	if _, ok := NoRedirectClients[c.Query("X-Emby-Client")]; ok {
+		ProxyOrigin(c)
+		return
+	}
+
+	log.Println(c.Request.Host)
+	if config.C.Ssl.Enable && strings.HasSuffix(c.Request.Host, webport.HTTPS) {
 		ProxyOrigin(c)
 		return
 	}

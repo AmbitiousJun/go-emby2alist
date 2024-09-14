@@ -1,2 +1,4 @@
 config.yml
 *debug*
+ssl/*crt
+ssl/*key
