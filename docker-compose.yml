@@ -11,4 +11,5 @@ services:
     volumes:
       - ./config.yml:/app/config.yml
     ports:
-      - 8095:8095
+      - 8095:8095 # http
+      - 8094:8094 # https
