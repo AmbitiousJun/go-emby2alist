@@ -1,8 +1,14 @@
-# go-emby2alist
+<h1 style="width: fit-content; margin: 0 auto;">go-emby2alist</h1>
 
-![Static Badge](https://img.shields.io/badge/version-1.0.4-blue)
+<hr/>
 
-使用 Go 语言编写的网盘直链反向代理服务，为 Emby + Alist 组合提供更好的使用体验。
+<div style="width: fit-content; margin: 0 auto">
+  <img src="https://img.shields.io/badge/version-1.0.4-blue"></img>
+</div>
+
+<div style="width: fit-content; margin: 0 auto">
+  使用 Go 语言编写的网盘直链反向代理服务，为 Emby + Alist 组合提供更好的使用体验。
+</div>
 
 > **网盘直链反向代理**:~~（Tips：如果你不是小白，这一段可以不用看了）~~
 >
@@ -66,7 +72,7 @@
   >
   > 也就是说：
   >
-  > - 首次提取时，速度会很慢，有可能得等个大半天才能看到字幕（使用第三方播放器【如 mxplayer, fileball】可以解决）
+  > - 首次提取时，速度会很慢，有可能得等个大半天才能看到字幕（使用第三方播放器【如 `MX player`, `Fileball`】可以解决）
   > - 带字幕的视频首次播放时，还是会消耗服务器的流量
 
 - 直链缓存（为了兼容阿里云盘，直链缓存时间目前固定为 10 分钟，其他云盘暂无测试）
@@ -214,8 +220,10 @@ services:
     container_name: go-emby2alist
     volumes:
       - ./config.yml:/app/config.yml
+      - ./ssl:/app/ssl
     ports:
-      - 8095:8095
+      - 8095:8095 # http
+      - 8094:8094 # https
 ```
 
 3. 运行容器
@@ -239,7 +247,7 @@ docker-compose up -d --build
 
 1. - [ ] 电视直播直链反代（实现真直链反代，不需要经过 emby 内部对源地址可用性的校验，~~不一定能实现~~）
 
-1. - [ ] 适配 ssl
+1. - [x] 适配 ssl
 
 1. - [ ] Emby 官方客户端的字幕问题
 
