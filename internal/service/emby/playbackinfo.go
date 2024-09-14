@@ -7,13 +7,10 @@ import (
 	"go-emby2alist/internal/util/color"
 	"go-emby2alist/internal/util/https"
 	"go-emby2alist/internal/util/jsons"
-	"go-emby2alist/internal/util/urls"
 	"go-emby2alist/internal/web/cache"
-	"io"
 	"log"
 	"net/http"
 	"net/url"
-	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -25,8 +22,8 @@ const (
 	PlaybackCacheSpace = "PlaybackInfo"
 )
 
-// PlaybackInfoReverseProxy 代理 PlaybackInfo 接口, 防止客户端转码
-func PlaybackInfoReverseProxy(c *gin.Context) {
+// TransferPlaybackInfo 代理 PlaybackInfo 接口, 防止客户端转码
+func TransferPlaybackInfo(c *gin.Context) {
 	// 1 解析资源信息
 	itemInfo, err := resolveItemInfo(c)
 	log.Printf(color.ToBlue("ItemInfo 解析结果: %s"), jsons.NewByVal(itemInfo))
@@ -51,7 +48,7 @@ func PlaybackInfoReverseProxy(c *gin.Context) {
 	}
 
 	// 2 请求 emby 源服务器的 PlaybackInfo 信息
-	res, respHeader := RawFetch(unProxyPlaybackInfoUri(c.Request.URL.String()), c.Request.Method, c.Request.Body)
+	res, respHeader := RawFetch(c.Request.URL.String(), c.Request.Method, c.Request.Body)
 	if res.Code != http.StatusOK {
 		checkErr(c, errors.New(res.Msg))
 		return
@@ -162,29 +159,6 @@ func PlaybackInfoReverseProxy(c *gin.Context) {
 	c.JSON(res.Code, resJson.Struct())
 }
 
-// TransferPlaybackInfo 拦截并代理 PlaybackInfo
-//
-// 如果 PlaybackInfo 缓存空间有相应的缓存
-// 则直接使用缓存响应
-func TransferPlaybackInfo(c *gin.Context) {
-	// 1 解析出 ItemId
-	itemInfo, err := resolveItemInfo(c)
-	if err != nil {
-		return
-	}
-	log.Printf(color.ToBlue("itemInfo 解析结果: %s"), jsons.NewByVal(itemInfo))
-
-	// 2 从缓存空间中获取数据
-	if res, ok := getPlaybackInfoByCacheSpace(itemInfo); ok {
-		log.Println(color.ToBlue("使用缓存空间中的 PlaybackInfo 响应"))
-		c.JSON(http.StatusOK, res.Struct())
-		return
-	}
-
-	// 3 请求代理接口
-	checkErr(c, https.ProxyRequest(c, https.ClientRequestHost(c)+itemInfo.PlaybackInfoRpUri, false))
-}
-
 // LoadCacheItems 拦截并代理 items 接口
 //
 // 如果 PlaybackInfo 缓存空间有相应的缓存
@@ -217,17 +191,11 @@ func LoadCacheItems(c *gin.Context) {
 	log.Printf(color.ToBlue("itemInfo 解析结果: %s"), jsons.NewByVal(itemInfo))
 
 	// 4 获取附带转码信息的 PlaybackInfo 数据
-	var cacheBody *jsons.Item
-	if cb, ok := getPlaybackInfoByCacheSpace(itemInfo); ok {
-		cacheBody = cb
-		log.Println(color.ToBlue("使用缓存空间中的 MediaSources 覆盖原始响应"))
-	} else if cb, ok := getPlaybackInfoByRequest(c, itemInfo); ok {
-		cacheBody = cb
-		log.Println(color.ToBlue("请求最新的 MediaSources 来覆盖原始响应"))
-	}
-	if cacheBody == nil {
+	cacheBody, ok := getPlaybackInfoByCacheSpace(itemInfo)
+	if !ok {
 		return
 	}
+	log.Println(color.ToBlue("使用缓存空间中的 MediaSources 覆盖原始响应"))
 
 	cacheMs, ok := cacheBody.Attr("MediaSources").Done()
 	if !ok || cacheMs.Type() != jsons.JsonTypeArr {
@@ -237,32 +205,6 @@ func LoadCacheItems(c *gin.Context) {
 	// 5 覆盖原始响应
 	resJson.Put("MediaSources", cacheMs)
 	c.Writer.Header().Del("Content-Length")
-}
-
-// getPlaybackInfoByRequest 请求本地的 PlaybackInfo 接口获取信息
-func getPlaybackInfoByRequest(c *gin.Context, itemInfo ItemInfo) (*jsons.Item, bool) {
-	if c == nil {
-		return nil, false
-	}
-	url := https.ClientRequestHost(c) + itemInfo.PlaybackInfoRpUri
-	url = urls.AppendArgs(url, "ignore_error", "true")
-	resp, err := https.Request(http.MethodPost, url, nil, nil)
-	if err != nil {
-		return nil, false
-	}
-	defer resp.Body.Close()
-	if resp.StatusCode != http.StatusOK {
-		return nil, false
-	}
-	bodyBytes, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return nil, false
-	}
-	resJson, err := jsons.New(string(bodyBytes))
-	if err != nil {
-		return nil, false
-	}
-	return resJson, true
 }
 
 // getPlaybackInfoByCacheSpace 从缓存空间中获取 PlaybackInfo 信息
@@ -278,14 +220,4 @@ func getPlaybackInfoByCacheSpace(itemInfo ItemInfo) (*jsons.Item, bool) {
 		return nil, false
 	}
 	return cacheBody, true
-}
-
-// proxyPlaybackInfoUri 将 PlaybackInfo uri 转成反向代理 uri
-func proxyPlaybackInfoUri(uri string) string {
-	return strings.ReplaceAll(uri, "/PlaybackInfo", "/PlaybackInfo/ReverseProxy")
-}
-
-// unProxyPlaybackInfoUri 去除 PlaybackInfo 反向代理 uri
-func unProxyPlaybackInfoUri(pxyUri string) string {
-	return strings.ReplaceAll(pxyUri, "/PlaybackInfo/ReverseProxy", "/PlaybackInfo")
 }

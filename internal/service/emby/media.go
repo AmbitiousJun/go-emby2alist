@@ -216,7 +216,6 @@ func resolveItemInfo(c *gin.Context) (ItemInfo, error) {
 	}
 	u.RawQuery = q.Encode()
 	itemInfo.PlaybackInfoUri = u.String()
-	itemInfo.PlaybackInfoRpUri = proxyPlaybackInfoUri(u.String())
 
 	return itemInfo, nil
 }

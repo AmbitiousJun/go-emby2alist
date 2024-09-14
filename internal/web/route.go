@@ -19,9 +19,6 @@ func initRulePatterns() {
 		// 代理 websocket
 		{`(?i)^/.*(socket|embywebsocket)`, emby.ProxySocket()},
 
-		// 代理 PlaybackInfo 接口到源服务器, 并进行自定义修改
-		{`(?i)^/.*items/.*/playbackinfo/reverseproxy\??`, emby.PlaybackInfoReverseProxy},
-
 		// 代理 PlaybackInfo 接口
 		{`(?i)^/.*items/.*/playbackinfo\??`, emby.TransferPlaybackInfo},
 

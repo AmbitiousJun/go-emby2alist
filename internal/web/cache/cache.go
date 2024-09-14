@@ -46,7 +46,7 @@ var CacheKeyIgnoreParams = map[string]struct{}{
 func CacheableRouteMarker() gin.HandlerFunc {
 	cacheablePatterns := []*regexp.Regexp{
 		// PlaybackInfo
-		regexp.MustCompile(`(?i)^/.*items/.*/playbackinfo/reverseproxy\??`),
+		regexp.MustCompile(`(?i)^/.*items/.*/playbackinfo\??`),
 		// 字幕
 		regexp.MustCompile(`(?i)^/.*videos/.*/subtitles`),
 		// 直链重定向
