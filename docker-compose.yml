@@ -10,6 +10,7 @@ services:
     container_name: go-emby2alist
     volumes:
       - ./config.yml:/app/config.yml
+      - ./ssl:/app/ssl
     ports:
       - 8095:8095 # http
       - 8094:8094 # https
