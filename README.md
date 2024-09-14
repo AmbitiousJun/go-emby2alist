@@ -1,5 +1,7 @@
 # go-emby2alist
 
+![Static Badge](https://img.shields.io/badge/version-1.0.4-blue)
+
 使用 Go 语言编写的网盘直链反向代理服务，为 Emby + Alist 组合提供更好的使用体验。
 
 > **网盘直链反向代理**:~~（Tips：如果你不是小白，这一段可以不用看了）~~
@@ -44,14 +46,31 @@
 **功能**：
 
 - 静态资源 308 重定向
+
 - Alist 网盘原画直链播放
+
 - Alist 网盘转码直链播放
-![](assets/2024-08-31-17-15-53.png)
+  ![](assets/2024-08-31-17-15-53.png)
+
 - websocket 代理
+
 - 客户端防转码（转容器）
+
 - 缓存中间件，实际使用体验不会比直连源服务器差
+
 - 字幕缓存（字幕缓存时间固定 30 天）
+
+  > 目前还无法阻止 emby 去本地挂载文件上读取字幕
+  >
+  > 带字幕的视频首次播放时，emby 会调用 ffmpeg 将字幕从本地文件中提取出来，再进行缓存
+  >
+  > 也就是说：
+  >
+  > - 首次提取时，速度会很慢，有可能得等个大半天才能看到字幕（使用第三方播放器【如 mxplayer, fileball】可以解决）
+  > - 带字幕的视频首次播放时，还是会消耗服务器的流量
+
 - 直链缓存（为了兼容阿里云盘，直链缓存时间目前固定为 10 分钟，其他云盘暂无测试）
+
 - 大接口缓存（Alist 转码资源是通过代理并修改 PlaybackInfo 接口实现，请求比较耗时，每次大约 2~3 秒左右，目前已经利用 Go 语言的并发优势，尽力地将接口处理逻辑异步化，快的话 1 秒即可请求完成，该接口的缓存时间目前固定为 12 小时，后续如果出现异常再作调整）
 
 
@@ -62,12 +81,12 @@
 | -------------------------------- | ------------------------------------------------------------ |
 | `Emby Web`                       | 无法正常播放 Alist 转码 m3u8 直链                            |
 | `Emby for macOS`，`Emby for iOS` | 基本的操作都正常，~~由于本人没这两个客户端的高级版~~，无法测试播放功能 |
-| `Emby for Android`               | 使用安卓 TV 测试，功能大部分正常，Alist 转码 m3u8 直链可播放，可保存进度，但是无法恢复播放，且在播放时会出现跳帧的情况（直链过期） |
-| `Emby for AndroidTV`             | 基本功能正常，但使用自带播放器播放时无法频繁跳进度，会被限制 |
-| `Fileball`                       | 所有功能可用，缺点是只支持 IOS                               |
-| `Infuse`                         | 功能大部分正常，只支持播放原画直链（在设置中将缓存方式设置为`不缓存`可有效防止频繁请求） |
+| `Emby for Android`               | 使用安卓 TV 测试，功能大部分正常，Alist 转码 m3u8 直链可播放，可保存进度，但是无法恢复播放 |
+| `Emby for AndroidTV`             | 无法正常播放 Alist 转码 m3u8 直链，但使用自带播放器播放时无法频繁跳进度，会被限制 |
+| `Fileball`                       | 目前为止测试过的兼容性最好的客户端，可惜只支持 IOS           |
+| `Infuse`                         | 功能大部分正常，但只支持播放原画直链（在设置中将缓存方式设置为`不缓存`可有效防止频繁请求） |
 | `VidHub`                         | 所有功能可用，缺点同样是只支持苹果全家桶（~~并且收费~~）     |
-| `音流 StreamMusic`               | 直连模式正常可用（~~媒体库模式没测试，个人觉得没必要~~）     |
+| `音流 StreamMusic`               | 直连模式正常可用                                             |
 
 
 
@@ -102,6 +121,8 @@
    > 这里推荐一个好用的[镜像加速源](https://dockerpull.com)
 
 ## 使用 DockerCompose 部署安装
+
+### 通过源码构建
 
 1. 获取代码
 
@@ -172,12 +193,55 @@ docker-compose up -d --build
 docker image prune -f
 ```
 
+### 使用现有镜像
+
+1. 准备配置
+
+参考[示例配置](https://github.com/AmbitiousJun/go-emby2alist/blob/main/config-example.yml)，配置好自己的服务器信息，保存并命名为 `config.yml`
+
+2. 创建 docker-compose 文件
+
+在配置相同目录下，创建 `docker-compose.yml` 粘贴以下代码：
+
+```yaml
+version: "3.1"
+services:
+  go-emby2alist:
+    image: ambitiousjun/go-emby2alist:1.0.4
+    environment:
+      - TZ=Asia/Shanghai
+      - GIN_MODE=release
+    container_name: go-emby2alist
+    volumes:
+      - ./config.yml:/app/config.yml
+    ports:
+      - 8095:8095
+```
+
+3. 运行容器
+
+```shell
+docker-compose up -d --build
+```
+
 
 
 ## 开发计划
 
-1. - [ ] 进一步优化 m3u8 转码直链的兼容性
-1. - [ ] 电视直播直链反代（实现真直链反代，~~不一定能实现~~）
+1. - [x] 进一步优化 m3u8 转码直链的兼容性 
+
+   > 已通过本地代理并重定向 ts 解决 m3u8 直链过期问题
+   >
+   > 仍然存在的问题：
+   >
+   > - `Emby Web`、`Emby for AndroidTV` 无法播放
+   > - 对于内封字幕的视频，即使在 Alist 接口能获取到转码字幕直链，在代码中也将链接嵌入 m3u8 里边了，但是播放器就是无法识别
+
+1. - [ ] 电视直播直链反代（实现真直链反代，不需要经过 emby 内部对源地址可用性的校验，~~不一定能实现~~）
+
+1. - [ ] 适配 ssl
+
+1. - [ ] Emby 官方客户端的字幕问题
 
 ## Star History
 
