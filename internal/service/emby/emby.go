@@ -167,8 +167,9 @@ func RedirectOrigin(c *gin.Context) {
 		return
 	}
 
-	log.Println(c.Request.Host)
-	if config.C.Ssl.Enable && strings.HasSuffix(c.Request.Host, webport.HTTPS) {
+	port, exist := c.Get("port")
+	if config.C.Ssl.Enable && (exist && port == webport.HTTPS) {
+		// https 只能走代理
 		ProxyOrigin(c)
 		return
 	}
