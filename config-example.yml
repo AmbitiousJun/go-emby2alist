@@ -33,3 +33,12 @@ cache:
   # 该配置不会影响特殊接口的缓存时间
   # 比如直链获取接口的缓存时间固定为 10m, 字幕获取接口的缓存时间固定为 30d
   expired: 1d
+ssl:
+  enable: true        # 是否启用 https
+  # 是否使用单一端口
+  #
+  # 不启用: 程序会在 8094 端口上监听 https 连接, 不监听 http
+  # 启用: 程序会在 8094 端口上监听 https 连接, 在 8095 端口上监听 http 连接
+  single-port: false
+  key: testssl.cn.key # 私钥文件名
+  crt: testssl.cn.crt # 证书文件名
