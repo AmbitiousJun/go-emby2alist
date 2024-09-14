@@ -49,7 +49,7 @@ func initRouter(r *gin.Engine) {
 func listenHTTP(errChan chan error) {
 	r := gin.Default()
 	r.Use(func(c *gin.Context) {
-		c.Set("port", webport.HTTP)
+		c.Set(webport.GinKey, webport.HTTP)
 	})
 	initRouter(r)
 	log.Printf(color.ToBlue("在端口【%s】上启动 HTTP 服务"), webport.HTTP)
@@ -64,7 +64,7 @@ func listenHTTP(errChan chan error) {
 func listenHTTPS(errChan chan error) {
 	r := gin.Default()
 	r.Use(func(c *gin.Context) {
-		c.Set("port", webport.HTTPS)
+		c.Set(webport.GinKey, webport.HTTPS)
 	})
 	initRouter(r)
 	log.Printf(color.ToBlue("在端口【%s】上启动 HTTPS 服务"), webport.HTTPS)

@@ -167,7 +167,7 @@ func RedirectOrigin(c *gin.Context) {
 		return
 	}
 
-	port, exist := c.Get("port")
+	port, exist := c.Get(webport.GinKey)
 	if config.C.Ssl.Enable && (exist && port == webport.HTTPS) {
 		// https 只能走代理
 		ProxyOrigin(c)
