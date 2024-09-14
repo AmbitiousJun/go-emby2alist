@@ -53,8 +53,6 @@ func CacheableRouteMarker() gin.HandlerFunc {
 		regexp.MustCompile(`(?i)^/.*(videos|audio)/.*/(stream|universal)(\.\w+)?\??`),
 		// 下载
 		regexp.MustCompile(`(?i)^/.*items/.*/download`),
-		// 图片缓存
-		regexp.MustCompile(`(?i)^/.*(/images/|\.jpg|\.png|\.jpeg|\.webp|\.ico)`),
 		// 其他静态资源
 		regexp.MustCompile(`(?i)^/.*(\.html|\.css|\.js|\.woff)`),
 	}
