@@ -42,8 +42,8 @@ ssl:
   enable: false
   # 是否使用单一端口
   #
-  # 不启用: 程序会在 8094 端口上监听 https 连接, 不监听 http
-  # 启用: 程序会在 8094 端口上监听 https 连接, 在 8095 端口上监听 http 连接
+  # 启用: 程序会在 8094 端口上监听 https 连接, 不监听 http
+  # 不启用: 程序会在 8094 端口上监听 https 连接, 在 8095 端口上监听 http 连接
   single-port: false
   key: testssl.cn.key # 私钥文件名
   crt: testssl.cn.crt # 证书文件名
