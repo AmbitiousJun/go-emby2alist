@@ -2,3 +2,4 @@ config.yml
 *debug*
 ssl/*crt
 ssl/*key
+.DS_Store
