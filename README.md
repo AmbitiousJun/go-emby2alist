@@ -1,10 +1,10 @@
-<h1 style="text-align: center;">go-emby2alist</h1>
+<h1 align="center">go-emby2alist</h1>
 
-<div style="text-align: center;">
+<div align="center">
   <img src="https://img.shields.io/badge/version-1.0.4-blue"></img>
 </div>
 
-<div style="text-align: center;">
+<div align="center">
   使用 Go 语言编写的网盘直链反向代理服务，为 Emby + Alist 组合提供更好的使用体验。
 </div>
 
