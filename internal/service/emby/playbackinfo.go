@@ -167,13 +167,11 @@ func TransferPlaybackInfo(c *gin.Context) {
 // 防止转码资源信息丢失
 func LoadCacheItems(c *gin.Context) {
 	// 1 代理请求
-	res, respHeader := RawFetch(c.Request.URL.String(), c.Request.Method, c.Request.Body)
-	if res.Code != http.StatusOK {
-		checkErr(c, errors.New(res.Msg))
+	res, ok := proxyAndSetRespHeader(c)
+	if !ok {
 		return
 	}
 	resJson := res.Data
-	https.CloneHeader(c, respHeader)
 	defer func() {
 		c.JSON(res.Code, resJson.Struct())
 	}()

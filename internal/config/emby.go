@@ -15,6 +15,8 @@ type Emby struct {
 	ApiKey string `yaml:"api-key"`
 	// EpisodesUnplayPrior 在获取剧集列表时是否将未播资源优先展示
 	EpisodesUnplayPrior bool `yaml:"episodes-unplay-prior"`
+	// ResortRandomItems 是否对随机的 items 进行重排序
+	ResortRandomItems bool `yaml:"resort-random-items"`
 }
 
 func (e *Emby) Init() error {

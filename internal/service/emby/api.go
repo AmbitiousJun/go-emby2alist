@@ -1,6 +1,7 @@
 package emby
 
 import (
+	"errors"
 	"go-emby2alist/internal/config"
 	"go-emby2alist/internal/model"
 	"go-emby2alist/internal/util/https"
@@ -12,6 +13,20 @@ import (
 
 	"github.com/gin-gonic/gin"
 )
+
+// proxyAndSetRespHeader 代理 emby 接口
+// 返回响应内容, 并将响应头写入 c
+//
+// 如果请求是失败的响应, 会直接返回客户端, 并在第二个参数中返回 false
+func proxyAndSetRespHeader(c *gin.Context) (model.HttpRes[*jsons.Item], bool) {
+	res, respHeader := RawFetch(c.Request.URL.String(), c.Request.Method, c.Request.Body)
+	if res.Code != http.StatusOK {
+		checkErr(c, errors.New(res.Msg))
+		return res, false
+	}
+	https.CloneHeader(c, respHeader)
+	return res, true
+}
 
 // AddDefaultApiKey 为请求加上 api_key
 //

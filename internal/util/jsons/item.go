@@ -1,6 +1,9 @@
 package jsons
 
-import "errors"
+import (
+	"errors"
+	"math/rand"
+)
 
 // JsonType json 属性值类型
 type JsonType string
@@ -148,6 +151,16 @@ func (i *Item) Map(mapFunc func(val *Item) interface{}) []interface{} {
 		return nil
 	})
 	return res
+}
+
+// Shuffle 打乱一个数组, 只有这个 item 是数组类型时, 才生效
+func (i *Item) Shuffle() {
+	if i.jType != JsonTypeArr {
+		return
+	}
+	rand.Shuffle(i.Len(), func(j, k int) {
+		i.arr[j], i.arr[k] = i.arr[k], i.arr[j]
+	})
 }
 
 // DelIdx 删除数组元素

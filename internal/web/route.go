@@ -17,14 +17,18 @@ var rules [][2]interface{}
 func initRulePatterns() {
 	log.Println("正在初始化路由规则...")
 	rules = compileRules([][2]interface{}{
-		// 代理 websocket
+		// websocket
 		{constant.Reg_Socket, emby.ProxySocket()},
 
-		// 代理 PlaybackInfo 接口
+		// PlaybackInfo 接口
 		{constant.Reg_PlaybackInfo, emby.TransferPlaybackInfo},
 
-		// 代理 Items 接口
+		// Items 接口
 		{constant.Reg_UserItems, emby.LoadCacheItems},
+		// 随机列表接口
+		{constant.Reg_UserItemsRandomResort, emby.ResortRandomItems},
+		// 代理原始的随机列表接口, 去除 limit 限制, 并进行缓存
+		{constant.Reg_UserItemsRandomNoLimit, emby.RandomItemsNoLimit},
 
 		// 重排序剧集
 		{constant.Reg_ShowEpisodes, emby.ResortEpisodes},
@@ -34,13 +38,12 @@ func initRulePatterns() {
 
 		// 资源重定向到直链
 		{constant.Reg_ResourceStream, emby.Redirect2AlistLink},
-		// 代理 m3u8 转码播放列表
+		// m3u8 转码播放列表
 		{constant.Reg_ProxyPlaylist, m3u8.ProxyPlaylist},
-		// 代理 ts 重定向到直链
+		// ts 重定向到直链
 		{constant.Reg_ProxyTs, m3u8.ProxyTsLink},
-		// 代理 m3u8 字幕
+		// m3u8 字幕
 		{constant.Reg_ProxySubtitle, m3u8.ProxySubtitle},
-
 		// 资源下载, 重定向到直链
 		{constant.Reg_ItemDownload, emby.Redirect2AlistLink},
 
