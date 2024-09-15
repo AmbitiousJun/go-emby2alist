@@ -269,6 +269,7 @@ func loopMaintainPlaylist() {
 
 	// 定时维护一次内存中的数据
 	t := time.NewTicker(maintainDuration)
+	defer t.Stop()
 
 	for {
 		select {
