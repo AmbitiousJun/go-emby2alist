@@ -89,6 +89,11 @@ func (i *Item) Append(values ...*Item) {
 	}
 }
 
+// ValuesArr 获取数组中的所有值
+func (i *Item) ValuesArr() []*Item {
+	return i.arr
+}
+
 // Idx 获取数组属性的指定索引值
 func (i *Item) Idx(index int) *TempItem {
 	ti := &TempItem{item: i}

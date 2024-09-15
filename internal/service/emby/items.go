@@ -8,8 +8,10 @@ import (
 	"go-emby2alist/internal/util/jsons"
 	"go-emby2alist/internal/web/cache"
 	"io"
+	"math/rand"
 	"net/http"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -54,17 +56,47 @@ func ResortRandomItems(c *gin.Context) {
 		checkErr(c, errors.New("非预期响应"))
 		return
 	}
-	items.Shuffle()
+
+	// 准备一些子容器, 将原有的列表随机放入子容器中, 多线程排序后合并
+	containerCnt := 10
+	subItems := make([]*jsons.Item, containerCnt)
+	items.RangeArr(func(_ int, value *jsons.Item) error {
+		idx := rand.Intn(containerCnt)
+		item := subItems[idx]
+		if item == nil {
+			item = jsons.NewEmptyArr()
+			subItems[idx] = item
+		}
+		item.Append(value)
+		return nil
+	})
+	wg := sync.WaitGroup{}
+	wg.Add(containerCnt)
+	for _, subItem := range subItems {
+		si := subItem
+		go func() {
+			si.Shuffle()
+			wg.Done()
+		}()
+	}
+	wg.Wait()
+
+	// 组装结果
+	resItem := jsons.NewEmptyArr()
+	for _, subItem := range subItems {
+		resItem.Append(subItem.ValuesArr()...)
+	}
+	resJson.Put("Items", resItem)
 	c.JSON(http.StatusOK, resJson.Struct())
 }
 
 // RandomItemsWithLimit 代理原始的随机列表接口
-// 个数限制为 700
+// 个数限制为 2000
 func RandomItemsWithLimit(c *gin.Context) {
 	u := c.Request.URL
 	u.Path = strings.TrimSuffix(u.Path, "/no_limit")
 	q := u.Query()
-	q.Set("Limit", "700")
+	q.Set("Limit", "2000")
 	u.RawQuery = q.Encode()
 	res, ok := proxyAndSetRespHeader(c)
 	if ok {
