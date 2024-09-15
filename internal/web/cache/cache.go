@@ -3,6 +3,7 @@ package cache
 import (
 	"bytes"
 	"fmt"
+	"go-emby2alist/internal/constant"
 	"go-emby2alist/internal/util/colors"
 	"go-emby2alist/internal/util/encrypts"
 	"go-emby2alist/internal/util/https"
@@ -46,14 +47,10 @@ var CacheKeyIgnoreParams = map[string]struct{}{
 // 只有匹配上正则表达式的路由才会被缓存
 func CacheableRouteMarker() gin.HandlerFunc {
 	cacheablePatterns := []*regexp.Regexp{
-		// PlaybackInfo
-		regexp.MustCompile(`(?i)^/.*items/.*/playbackinfo\??`),
-		// 字幕
-		regexp.MustCompile(`(?i)^/.*videos/.*/subtitles`),
-		// 直链重定向
-		regexp.MustCompile(`(?i)^/.*(videos|audio)/.*/(stream|universal)(\.\w+)?\??`),
-		// 下载
-		regexp.MustCompile(`(?i)^/.*items/.*/download`),
+		regexp.MustCompile(constant.Reg_PlaybackInfo),
+		regexp.MustCompile(constant.Reg_VideoSubtitles),
+		regexp.MustCompile(constant.Reg_ResourceStream),
+		regexp.MustCompile(constant.Reg_ItemDownload),
 		// 其他静态资源
 		regexp.MustCompile(`(?i)^/.*(\.html|\.css|\.js|\.woff)`),
 	}
