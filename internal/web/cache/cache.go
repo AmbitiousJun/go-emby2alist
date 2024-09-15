@@ -7,6 +7,7 @@ import (
 	"go-emby2alist/internal/util/encrypts"
 	"go-emby2alist/internal/util/https"
 	"go-emby2alist/internal/util/strs"
+	"go-emby2alist/internal/util/urls"
 	"io"
 	"log"
 	"regexp"
@@ -172,8 +173,11 @@ func calcCacheKey(c *gin.Context) (string, error) {
 	}
 
 	// 为防止字典排序后, 不同的 uri 冲突, 这里在排序完的字符串前再加上原始的 uri
-	uriNoArgs := strings.ReplaceAll(uri, "?"+c.Request.URL.RawQuery, "")
-	uriNoArgs = strings.ReplaceAll(uriNoArgs, c.Request.URL.RawQuery, "")
+	uriNoArgs := urls.ReplaceAll(
+		uri,
+		"?"+c.Request.URL.RawQuery, "",
+		c.Request.URL.RawQuery, "",
+	)
 
 	hash := encrypts.Md5Hash(method + uriNoArgs + preEnc)
 	return hash, nil
