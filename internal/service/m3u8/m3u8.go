@@ -1,7 +1,7 @@
 package m3u8
 
 import (
-	"go-emby2alist/internal/util/color"
+	"go-emby2alist/internal/util/colors"
 	"log"
 	"sort"
 	"sync"
@@ -86,7 +86,7 @@ func loopMaintainPlaylist() {
 
 	// printErr 打印错误日志
 	printErr := func(info *Info, err error) {
-		log.Printf(color.ToRed("playlist 更新失败, path: %s, template: %s, err: %v"), info.AlistPath, info.TemplateId, err)
+		log.Printf(colors.ToRed("playlist 更新失败, path: %s, template: %s, err: %v"), info.AlistPath, info.TemplateId, err)
 	}
 
 	// calcMapKey 计算 info 在 map 中的 key
@@ -200,7 +200,7 @@ func loopMaintainPlaylist() {
 			// 长时间未读, 移除
 			if beforeNow(info.LastUpdate + removeTimeMillis) {
 				removeInfo(key)
-				log.Printf(color.ToGray("playlist 长时间未被更新, 已移除, alistPath: %s, templateId: %s"), info.AlistPath, info.TemplateId)
+				log.Printf(colors.ToGray("playlist 长时间未被更新, 已移除, alistPath: %s, templateId: %s"), info.AlistPath, info.TemplateId)
 				tot--
 				continue
 			}
@@ -221,7 +221,7 @@ func loopMaintainPlaylist() {
 		}
 
 		if len(cpArr) > 0 {
-			log.Printf(color.ToPurple("当前正在维护的 playlist 个数: %d, 活跃个数: %d"), tot, active)
+			log.Printf(colors.ToPurple("当前正在维护的 playlist 个数: %d, 活跃个数: %d"), tot, active)
 		}
 	}
 
@@ -263,7 +263,7 @@ func loopMaintainPlaylist() {
 		copy(toDeletes, infoArr)
 		for _, toDel := range toDeletes {
 			removeInfo(calcMapKey(Info{AlistPath: toDel.AlistPath, TemplateId: toDel.TemplateId}))
-			log.Printf(color.ToGray("playlist 被淘汰并从内存中移除, alistPath: %s, templateId: %s"), toDel.AlistPath, toDel.TemplateId)
+			log.Printf(colors.ToGray("playlist 被淘汰并从内存中移除, alistPath: %s, templateId: %s"), toDel.AlistPath, toDel.TemplateId)
 		}
 	}
 

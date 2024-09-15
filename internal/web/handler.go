@@ -1,7 +1,7 @@
 package web
 
 import (
-	"go-emby2alist/internal/util/color"
+	"go-emby2alist/internal/util/colors"
 	"log"
 	"regexp"
 
@@ -14,7 +14,7 @@ func globalDftHandler(c *gin.Context) {
 	for _, rule := range rules {
 		reg := rule[0].(*regexp.Regexp)
 		if reg.MatchString(c.Request.RequestURI) {
-			log.Printf(color.ToBlue("匹配路由: %s"), reg.String())
+			log.Printf(colors.ToBlue("匹配路由: %s"), reg.String())
 			rule[1].(gin.HandlerFunc)(c)
 			return
 		}

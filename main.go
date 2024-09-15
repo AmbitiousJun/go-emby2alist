@@ -2,7 +2,7 @@ package main
 
 import (
 	"go-emby2alist/internal/config"
-	"go-emby2alist/internal/util/color"
+	"go-emby2alist/internal/util/colors"
 	"go-emby2alist/internal/web"
 	"log"
 )
@@ -25,7 +25,7 @@ func main() {
 }
 
 func printBanner() {
-	log.Printf(color.ToYellow(`
+	log.Printf(colors.ToYellow(`
                                   _           ____       _ _     _   
   __ _  ___         ___ _ __ ___ | |__  _   _|___ \ __ _| (_)___| |_ 
  / _| |/ _ \ _____ / _ \ '_ | _ \| '_ \| | | | __) / _| | | / __| __|

@@ -7,7 +7,7 @@ import (
 	"go-emby2alist/internal/config"
 	"go-emby2alist/internal/model"
 	"go-emby2alist/internal/service/alist"
-	"go-emby2alist/internal/util/color"
+	"go-emby2alist/internal/util/colors"
 	"go-emby2alist/internal/util/https"
 	"io"
 	"log"
@@ -205,7 +205,7 @@ func (i *Info) UpdateContent() error {
 	if i.AlistPath == "" || i.TemplateId == "" {
 		return errors.New("参数为设置, 无法更新")
 	}
-	log.Printf(color.ToPurple("更新 playlist, alistPath: %s, templateId: %s"), i.AlistPath, i.TemplateId)
+	log.Printf(colors.ToPurple("更新 playlist, alistPath: %s, templateId: %s"), i.AlistPath, i.TemplateId)
 
 	// 1 如果有 remote 信息, 直接复用
 	var newInfo *Info

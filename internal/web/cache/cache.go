@@ -3,7 +3,7 @@ package cache
 import (
 	"bytes"
 	"fmt"
-	"go-emby2alist/internal/util/color"
+	"go-emby2alist/internal/util/colors"
 	"go-emby2alist/internal/util/encrypts"
 	"go-emby2alist/internal/util/https"
 	"go-emby2alist/internal/util/strs"
@@ -168,7 +168,7 @@ func calcCacheKey(c *gin.Context) (string, error) {
 	headerStr := header.String()
 	preEnc := strs.Sort(c.Request.URL.RawQuery + body + headerStr)
 	if headerStr != "" {
-		log.Println("headers to encode cacheKey: ", color.ToYellow(headerStr))
+		log.Println("headers to encode cacheKey: ", colors.ToYellow(headerStr))
 	}
 
 	// 为防止字典排序后, 不同的 uri 冲突, 这里在排序完的字符串前再加上原始的 uri

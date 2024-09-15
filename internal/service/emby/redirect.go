@@ -5,7 +5,7 @@ import (
 	"go-emby2alist/internal/config"
 	"go-emby2alist/internal/service/alist"
 	"go-emby2alist/internal/service/path"
-	"go-emby2alist/internal/util/color"
+	"go-emby2alist/internal/util/colors"
 	"go-emby2alist/internal/util/https"
 	"go-emby2alist/internal/util/jsons"
 	"go-emby2alist/internal/web/cache"
@@ -24,7 +24,7 @@ func Redirect2AlistLink(c *gin.Context) {
 	if checkErr(c, err) {
 		return
 	}
-	log.Printf(color.ToBlue("解析到的 itemInfo: %v"), jsons.NewByVal(itemInfo))
+	log.Printf(colors.ToBlue("解析到的 itemInfo: %v"), jsons.NewByVal(itemInfo))
 
 	// 2 如果请求的是转码资源, 重定向到本地的 m3u8 代理服务
 	msInfo := itemInfo.MsInfo
@@ -37,7 +37,7 @@ func Redirect2AlistLink(c *gin.Context) {
 		q.Set("alist_path", itemInfo.MsInfo.AlistPath)
 		u.RawQuery = q.Encode()
 		res := https.ClientRequestHost(c) + u.String()
-		log.Printf(color.ToGreen("重定向 playlist: %s"), res)
+		log.Printf(colors.ToGreen("重定向 playlist: %s"), res)
 		c.Redirect(http.StatusTemporaryRedirect, res)
 		return
 	}
@@ -53,19 +53,19 @@ func Redirect2AlistLink(c *gin.Context) {
 	fi.Header = c.Request.Header.Clone()
 	alistPathRes := path.Emby2Alist(embyPath)
 	if alistPathRes.Success {
-		log.Printf(color.ToBlue("尝试请求 Alist 资源: %s"), alistPathRes.Path)
+		log.Printf(colors.ToBlue("尝试请求 Alist 资源: %s"), alistPathRes.Path)
 		fi.Path = alistPathRes.Path
 		res := alist.FetchResource(fi)
 
 		if res.Code == http.StatusOK {
-			log.Printf(color.ToGreen("请求成功, 重定向到: %s"), res.Data.Url)
+			log.Printf(colors.ToGreen("请求成功, 重定向到: %s"), res.Data.Url)
 			c.Header(cache.HeaderKeyExpired, cache.Duration(time.Minute*10))
 			c.Redirect(http.StatusTemporaryRedirect, res.Data.Url)
 			return
 		}
 
 		if res.Code == http.StatusForbidden {
-			log.Printf(color.ToRed("请求 Alist 被阻止: %s"), res.Msg)
+			log.Printf(colors.ToRed("请求 Alist 被阻止: %s"), res.Msg)
 			c.String(http.StatusForbidden, res.Msg)
 		}
 	}
@@ -76,12 +76,12 @@ func Redirect2AlistLink(c *gin.Context) {
 	}
 
 	for _, path := range paths {
-		log.Printf(color.ToBlue("尝试请求 Alist 资源: %s"), path)
+		log.Printf(colors.ToBlue("尝试请求 Alist 资源: %s"), path)
 		fi.Path = path
 		res := alist.FetchResource(fi)
 
 		if res.Code == http.StatusOK {
-			log.Printf(color.ToGreen("请求成功, 重定向到: %s"), res.Data.Url)
+			log.Printf(colors.ToGreen("请求成功, 重定向到: %s"), res.Data.Url)
 			c.Header(cache.HeaderKeyExpired, cache.Duration(time.Minute*10))
 			c.Redirect(http.StatusTemporaryRedirect, res.Data.Url)
 			return
@@ -111,7 +111,7 @@ func checkErr(c *gin.Context, err error) bool {
 	}
 
 	u := config.C.Emby.Host + c.Request.URL.String()
-	log.Printf(color.ToRed("代理接口失败: %v, 重定向回源服务器处理\n"), err)
+	log.Printf(colors.ToRed("代理接口失败: %v, 重定向回源服务器处理\n"), err)
 	c.Redirect(http.StatusTemporaryRedirect, u)
 	return true
 }

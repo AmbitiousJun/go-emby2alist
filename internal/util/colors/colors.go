@@ -1,4 +1,4 @@
-package color
+package colors
 
 // 日志颜色输出常量
 const (

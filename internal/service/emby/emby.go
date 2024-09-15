@@ -3,7 +3,7 @@ package emby
 import (
 	"bytes"
 	"go-emby2alist/internal/config"
-	"go-emby2alist/internal/util/color"
+	"go-emby2alist/internal/util/colors"
 	"go-emby2alist/internal/util/https"
 	"go-emby2alist/internal/util/jsons"
 	"go-emby2alist/internal/web/cache"
@@ -115,7 +115,7 @@ func TestProxyUri(c *gin.Context) bool {
 
 	bodyBytes, err := io.ReadAll(c.Request.Body)
 	if err != nil {
-		log.Printf(color.ToRed("测试 uri 执行异常: %v"), err)
+		log.Printf(colors.ToRed("测试 uri 执行异常: %v"), err)
 		return false
 	}
 	infos.Body = string(bodyBytes)
@@ -123,7 +123,7 @@ func TestProxyUri(c *gin.Context) bool {
 	origin := config.C.Emby.Host
 	resp, err := https.Request(infos.Method, origin+infos.Uri, c.Request.Header, io.NopCloser(bytes.NewBuffer(bodyBytes)))
 	if err != nil {
-		log.Printf(color.ToRed("测试 uri 执行异常: %v"), err)
+		log.Printf(colors.ToRed("测试 uri 执行异常: %v"), err)
 		return false
 	}
 	defer resp.Body.Close()
@@ -137,12 +137,12 @@ func TestProxyUri(c *gin.Context) bool {
 
 	bodyBytes, err = io.ReadAll(resp.Body)
 	if err != nil {
-		log.Printf(color.ToRed("测试 uri 执行异常: %v"), err)
+		log.Printf(colors.ToRed("测试 uri 执行异常: %v"), err)
 		return false
 	}
 	infos.RespBody = string(bodyBytes)
 	infos.RespStatus = resp.StatusCode
-	log.Printf(color.ToYellow("测试 uri 代理信息: %s"), jsons.NewByVal(infos))
+	log.Printf(colors.ToYellow("测试 uri 代理信息: %s"), jsons.NewByVal(infos))
 
 	c.Status(infos.RespStatus)
 	c.Writer.Write(bodyBytes)

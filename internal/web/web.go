@@ -2,7 +2,7 @@ package web
 
 import (
 	"go-emby2alist/internal/config"
-	"go-emby2alist/internal/util/color"
+	"go-emby2alist/internal/util/colors"
 	"go-emby2alist/internal/web/cache"
 	"go-emby2alist/internal/web/webport"
 	"log"
@@ -52,7 +52,7 @@ func listenHTTP(errChan chan error) {
 		c.Set(webport.GinKey, webport.HTTP)
 	})
 	initRouter(r)
-	log.Printf(color.ToBlue("在端口【%s】上启动 HTTP 服务"), webport.HTTP)
+	log.Printf(colors.ToBlue("在端口【%s】上启动 HTTP 服务"), webport.HTTP)
 	err := r.Run("0.0.0.0:" + webport.HTTP)
 	errChan <- err
 	close(errChan)
@@ -67,7 +67,7 @@ func listenHTTPS(errChan chan error) {
 		c.Set(webport.GinKey, webport.HTTPS)
 	})
 	initRouter(r)
-	log.Printf(color.ToBlue("在端口【%s】上启动 HTTPS 服务"), webport.HTTPS)
+	log.Printf(colors.ToBlue("在端口【%s】上启动 HTTPS 服务"), webport.HTTPS)
 	ssl := config.C.Ssl
 	err := r.RunTLS("0.0.0.0:"+webport.HTTPS, ssl.CrtPath(), ssl.KeyPath())
 	errChan <- err

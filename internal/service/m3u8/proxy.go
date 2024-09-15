@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"go-emby2alist/internal/config"
-	"go-emby2alist/internal/util/color"
+	"go-emby2alist/internal/util/colors"
 	"log"
 	"net/http"
 	"net/url"
@@ -88,7 +88,7 @@ func ProxyTsLink(c *gin.Context) {
 	}
 
 	okRedirect := func(link string) {
-		log.Printf(color.ToGreen("重定向 ts: %s"), link)
+		log.Printf(colors.ToGreen("重定向 ts: %s"), link)
 		c.Redirect(http.StatusTemporaryRedirect, link)
 	}
 
@@ -124,7 +124,7 @@ func ProxySubtitle(c *gin.Context) {
 	}
 
 	okRedirect := func(link string) {
-		log.Printf(color.ToGreen("重定向字幕: %s"), link)
+		log.Printf(colors.ToGreen("重定向字幕: %s"), link)
 		c.Redirect(http.StatusTemporaryRedirect, link)
 	}
 
