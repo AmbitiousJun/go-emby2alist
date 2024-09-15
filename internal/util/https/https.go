@@ -75,18 +75,6 @@ func IsErrorResponse(c *gin.Context) bool {
 	return strings.HasPrefix(str, "4") || strings.HasPrefix(str, "5")
 }
 
-// FullReqUrl 获取 gin 接收请求的完整请求路径
-func FullReqUrl(c *gin.Context) string {
-	if c == nil {
-		return ""
-	}
-	scheme := "http"
-	if c.Request.TLS != nil {
-		scheme = "https"
-	}
-	return fmt.Sprintf("%s://%s%s", scheme, c.Request.Host, c.Request.URL.String())
-}
-
 // MapBody 将 map 转换为 ReadCloser 流
 func MapBody(body map[string]interface{}) io.ReadCloser {
 	if body == nil {
