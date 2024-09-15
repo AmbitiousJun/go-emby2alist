@@ -18,6 +18,9 @@ import (
 
 var client *http.Client
 
+// RedirectCodes 有重定向含义的 http 响应码
+var RedirectCodes = [4]int{http.StatusMovedPermanently, http.StatusFound, http.StatusTemporaryRedirect, http.StatusPermanentRedirect}
+
 func init() {
 	client = &http.Client{
 		Transport: &http.Transport{
@@ -52,8 +55,7 @@ func ClientRequestUrl(c *gin.Context) string {
 //
 // 301, 302, 307, 308
 func IsRedirectCode(code int) bool {
-	valids := []int{http.StatusMovedPermanently, http.StatusFound, http.StatusTemporaryRedirect, http.StatusPermanentRedirect}
-	for _, valid := range valids {
+	for _, valid := range RedirectCodes {
 		if code == valid {
 			return true
 		}
