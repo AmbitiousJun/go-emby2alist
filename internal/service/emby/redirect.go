@@ -33,7 +33,7 @@ func Redirect2AlistLink(c *gin.Context) {
 		u, _ := url.Parse("/videos/proxy_playlist")
 		q := u.Query()
 		q.Set("template_id", itemInfo.MsInfo.TemplateId)
-		q.Set("api_key", config.C.Emby.ApiKey)
+		q.Set(QueryApiKeyName, config.C.Emby.ApiKey)
 		q.Set("alist_path", itemInfo.MsInfo.AlistPath)
 		u.RawQuery = q.Encode()
 		res := https.ClientRequestHost(c) + u.String()

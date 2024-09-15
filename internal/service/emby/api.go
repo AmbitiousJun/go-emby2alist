@@ -23,10 +23,10 @@ func AddDefaultApiKey(c *gin.Context) {
 		return
 	}
 	q := c.Request.URL.Query()
-	if q.Get("api_key") != "" || q.Get("X-Emby-Token") != "" {
+	if q.Get(QueryApiKeyName) != "" || q.Get("QueryTokenName") != "" {
 		return
 	}
-	q.Set("api_key", config.C.Emby.ApiKey)
+	q.Set(QueryApiKeyName, config.C.Emby.ApiKey)
 	c.Request.URL.RawQuery = q.Encode()
 	c.Request.Header.Del("Authorization")
 }
@@ -47,8 +47,8 @@ func RawFetch(uri, method string, body io.ReadCloser) (model.HttpRes[*jsons.Item
 
 	// 1 检查 uri 中是否含有 token
 	u := host + uri
-	if !strings.Contains(uri, "api_key") && !strings.Contains(uri, "X-Emby-Token") {
-		u = urls.AppendArgs(u, "api_key", token)
+	if !strings.Contains(uri, QueryApiKeyName) && !strings.Contains(uri, "QueryTokenName") {
+		u = urls.AppendArgs(u, QueryApiKeyName, token)
 	}
 
 	// 2 构造请求头, 发出请求

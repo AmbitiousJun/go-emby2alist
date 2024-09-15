@@ -135,7 +135,7 @@ func findVideoPreviewInfos(source *jsons.Item, originName string, resChan chan [
 			q := tu.Query()
 			q.Set("alist_path", alistPathRes.Path)
 			q.Set("template_id", templateId)
-			q.Set("api_key", config.C.Emby.ApiKey)
+			q.Set(QueryApiKeyName, config.C.Emby.ApiKey)
 			q.Set("remote", playlistUrl)
 			tu.RawQuery = q.Encode()
 
@@ -191,10 +191,10 @@ func resolveItemInfo(c *gin.Context) (ItemInfo, error) {
 	if len(matches) < 2 {
 		return ItemInfo{}, fmt.Errorf("itemId 匹配失败, uri: %s", uri)
 	}
-	itemInfo := ItemInfo{Id: matches[1], ApiKey: c.Query("X-Emby-Token")}
+	itemInfo := ItemInfo{Id: matches[1], ApiKey: c.Query("QueryTokenName")}
 
 	if itemInfo.ApiKey == "" {
-		itemInfo.ApiKey = c.Query("api_key")
+		itemInfo.ApiKey = c.Query(QueryApiKeyName)
 	}
 	if itemInfo.ApiKey == "" {
 		itemInfo.ApiKey = config.C.Emby.ApiKey
@@ -211,7 +211,7 @@ func resolveItemInfo(c *gin.Context) (ItemInfo, error) {
 		return ItemInfo{}, fmt.Errorf("构建 PlaybackInfo uri 失败, err: %v", err)
 	}
 	q := u.Query()
-	q.Set("api_key", itemInfo.ApiKey)
+	q.Set(QueryApiKeyName, itemInfo.ApiKey)
 	if !msInfo.Empty {
 		q.Set("MediaSourceId", msInfo.OriginId)
 	}

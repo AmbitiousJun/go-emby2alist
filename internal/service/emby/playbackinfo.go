@@ -88,8 +88,8 @@ func TransferPlaybackInfo(c *gin.Context) {
 		source.Attr("SupportsDirectPlay").Set(true)
 		source.Attr("SupportsDirectStream").Set(true)
 		newUrl := fmt.Sprintf(
-			"/videos/%s/stream?MediaSourceId=%s&api_key=%s&Static=true",
-			itemInfo.Id, source.Attr("Id").Val(), config.C.Emby.ApiKey,
+			"/videos/%s/stream?MediaSourceId=%s&%s=%s&Static=true",
+			itemInfo.Id, source.Attr("Id").Val(), QueryApiKeyName, config.C.Emby.ApiKey,
 		)
 
 		// 简化资源名称
@@ -106,7 +106,7 @@ func TransferPlaybackInfo(c *gin.Context) {
 			tu, _ := url.Parse("/videos/proxy_playlist")
 			q := tu.Query()
 			q.Set("template_id", itemInfo.MsInfo.TemplateId)
-			q.Set("api_key", config.C.Emby.ApiKey)
+			q.Set(QueryApiKeyName, config.C.Emby.ApiKey)
 			q.Set("alist_path", itemInfo.MsInfo.AlistPath)
 			tu.RawQuery = q.Encode()
 

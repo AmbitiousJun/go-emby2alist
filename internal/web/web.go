@@ -2,6 +2,7 @@ package web
 
 import (
 	"go-emby2alist/internal/config"
+	"go-emby2alist/internal/service/emby"
 	"go-emby2alist/internal/util/colors"
 	"go-emby2alist/internal/web/cache"
 	"go-emby2alist/internal/web/webport"
@@ -36,6 +37,7 @@ func Listen() error {
 // initRouter 初始化路由引擎
 func initRouter(r *gin.Engine) {
 	r.Use(referrerPolicySetter())
+	r.Use(emby.ApiKeyChecker())
 	if config.C.Cache.Enable {
 		r.Use(cache.CacheableRouteMarker())
 		r.Use(cache.RequestCacher())

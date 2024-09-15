@@ -7,6 +7,7 @@ import (
 	"go-emby2alist/internal/config"
 	"go-emby2alist/internal/model"
 	"go-emby2alist/internal/service/alist"
+	"go-emby2alist/internal/service/emby"
 	"go-emby2alist/internal/util/colors"
 	"go-emby2alist/internal/util/https"
 	"go-emby2alist/internal/util/strs"
@@ -125,7 +126,7 @@ func (i *Info) MasterFunc(cntMapper func() string) string {
 		q.Set("alist_path", i.AlistPath)
 		q.Set("template_id", i.TemplateId)
 		q.Set("idx", strconv.Itoa(idx))
-		q.Set("api_key", config.C.Emby.ApiKey)
+		q.Set(emby.QueryApiKeyName, config.C.Emby.ApiKey)
 		u.RawQuery = q.Encode()
 		cmt := fmt.Sprintf(`#EXT-X-MEDIA:TYPE=SUBTITLES,GROUP-ID="subs",NAME="%s",LANGUAGE="%s",URI="%s"`, subInfo.Lang, subInfo.Lang, u.String())
 		sb.WriteString(cmt + "\n")
@@ -174,7 +175,7 @@ func (i *Info) ProxyContent(main bool) string {
 			q := u.Query()
 			q.Set("alist_path", i.AlistPath)
 			q.Set("template_id", i.TemplateId)
-			q.Set("api_key", config.C.Emby.ApiKey)
+			q.Set(emby.QueryApiKeyName, config.C.Emby.ApiKey)
 			q.Set("type", "main")
 			u.RawQuery = q.Encode()
 			return u.String()
@@ -186,7 +187,7 @@ func (i *Info) ProxyContent(main bool) string {
 		q.Set("idx", strconv.Itoa(idx))
 		q.Set("alist_path", i.AlistPath)
 		q.Set("template_id", i.TemplateId)
-		q.Set("api_key", config.C.Emby.ApiKey)
+		q.Set(emby.QueryApiKeyName, config.C.Emby.ApiKey)
 		u.RawQuery = q.Encode()
 		return u.String()
 	})
