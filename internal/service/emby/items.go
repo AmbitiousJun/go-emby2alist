@@ -58,12 +58,13 @@ func ResortRandomItems(c *gin.Context) {
 	c.JSON(http.StatusOK, resJson.Struct())
 }
 
-// RandomItemsNoLimit 代理原始的随机列表接口, 并去除个数限制
-func RandomItemsNoLimit(c *gin.Context) {
+// RandomItemsWithLimit 代理原始的随机列表接口
+// 个数限制为 700
+func RandomItemsWithLimit(c *gin.Context) {
 	u := c.Request.URL
 	u.Path = strings.TrimSuffix(u.Path, "/no_limit")
 	q := u.Query()
-	q.Del("Limit")
+	q.Set("Limit", "700")
 	u.RawQuery = q.Encode()
 	res, ok := proxyAndSetRespHeader(c)
 	if ok {

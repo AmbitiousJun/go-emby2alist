@@ -51,7 +51,7 @@ func CacheableRouteMarker() gin.HandlerFunc {
 		regexp.MustCompile(constant.Reg_VideoSubtitles),
 		regexp.MustCompile(constant.Reg_ResourceStream),
 		regexp.MustCompile(constant.Reg_ItemDownload),
-		regexp.MustCompile(constant.Reg_UserItemsRandomNoLimit),
+		regexp.MustCompile(constant.Reg_UserItemsRandomWithLimit),
 		// 其他静态资源
 		regexp.MustCompile(`(?i)^/.*(\.html|\.css|\.js|\.woff)`),
 	}
