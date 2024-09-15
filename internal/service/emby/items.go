@@ -11,7 +11,6 @@ import (
 	"math/rand"
 	"net/http"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -52,42 +51,31 @@ func ResortRandomItems(c *gin.Context) {
 
 	// 4 取出 Items 进行重排序
 	items, ok := resJson.Attr("Items").Done()
-	if !ok {
+	if !ok || items.Type() != jsons.JsonTypeArr {
 		checkErr(c, errors.New("非预期响应"))
 		return
 	}
+	defer func() {
+		c.JSON(http.StatusOK, resJson.Struct())
+	}()
+	if items.Empty() {
+		return
+	}
 
-	// 准备一些子容器, 将原有的列表随机放入子容器中, 多线程排序后合并
-	containerCnt := 10
-	subItems := make([]*jsons.Item, containerCnt)
-	items.RangeArr(func(_ int, value *jsons.Item) error {
-		idx := rand.Intn(containerCnt)
-		item := subItems[idx]
-		if item == nil {
-			item = jsons.NewEmptyArr()
-			subItems[idx] = item
-		}
-		item.Append(value)
-		return nil
+	// 准备一个相同大小的整型切片, 只存索引
+	// 对索引重排序后再依据新的索引位置调整 item 的位置
+	idxArr := make([]int, items.Len())
+	for idx := range idxArr {
+		idxArr[idx] = idx
+	}
+	rand.Shuffle(len(idxArr), func(i, j int) {
+		idxArr[i], idxArr[j] = idxArr[j], idxArr[i]
 	})
-	wg := sync.WaitGroup{}
-	wg.Add(containerCnt)
-	for _, subItem := range subItems {
-		si := subItem
-		go func() {
-			si.Shuffle()
-			wg.Done()
-		}()
+	newItems := jsons.NewEmptyArr()
+	for _, newIdx := range idxArr {
+		newItems.Append(items.ValuesArr()[newIdx])
 	}
-	wg.Wait()
-
-	// 组装结果
-	resItem := jsons.NewEmptyArr()
-	for _, subItem := range subItems {
-		resItem.Append(subItem.ValuesArr()...)
-	}
-	resJson.Put("Items", resItem)
-	c.JSON(http.StatusOK, resJson.Struct())
+	resJson.Put("Items", newItems)
 }
 
 // RandomItemsWithLimit 代理原始的随机列表接口
@@ -101,7 +89,7 @@ func RandomItemsWithLimit(c *gin.Context) {
 	res, ok := proxyAndSetRespHeader(c)
 	if ok {
 		c.Writer.Header().Del("Content-Length")
-		c.Header(cache.HeaderKeyExpired, cache.Duration(time.Hour*12))
+		c.Header(cache.HeaderKeyExpired, cache.Duration(time.Hour))
 		c.JSON(res.Code, res.Data.Struct())
 	}
 }
