@@ -6,15 +6,15 @@ import (
 	"go-emby2alist/internal/model"
 	"go-emby2alist/internal/util/https"
 	"go-emby2alist/internal/util/jsons"
+	"go-emby2alist/internal/util/strs"
 	"io"
 	"log"
 	"net/http"
-	"strings"
 )
 
 // FetchResource 请求 alist 资源 url 直链
 func FetchResource(fi FetchInfo) model.HttpRes[Resource] {
-	if fi.Path = strings.TrimSpace(fi.Path); fi.Path == "" {
+	if strs.AnyEmpty(fi.Path) {
 		return model.HttpRes[Resource]{Code: http.StatusBadRequest, Msg: "参数 path 不能为空"}
 	}
 
@@ -84,7 +84,7 @@ func FetchResource(fi FetchInfo) model.HttpRes[Resource] {
 //
 // 传入 path 与接口的 path 作用一致
 func FetchFsList(path string, header http.Header) model.HttpRes[*jsons.Item] {
-	if path = strings.TrimSpace(path); path == "" {
+	if strs.AnyEmpty(path) {
 		return model.HttpRes[*jsons.Item]{Code: http.StatusBadRequest, Msg: "参数 path 不能为空"}
 	}
 	return Fetch("/api/fs/list", http.MethodPost, header, map[string]interface{}{
@@ -98,7 +98,7 @@ func FetchFsList(path string, header http.Header) model.HttpRes[*jsons.Item] {
 //
 // 传入 path 与接口的 path 作用一致
 func FetchFsGet(path string, header http.Header) model.HttpRes[*jsons.Item] {
-	if path = strings.TrimSpace(path); path == "" {
+	if strs.AnyEmpty(path) {
 		return model.HttpRes[*jsons.Item]{Code: http.StatusBadRequest, Msg: "参数 path 不能为空"}
 	}
 
@@ -113,7 +113,7 @@ func FetchFsGet(path string, header http.Header) model.HttpRes[*jsons.Item] {
 //
 // 传入 path 与接口的 path 作用一致
 func FetchFsOther(path string, header http.Header) model.HttpRes[*jsons.Item] {
-	if path = strings.TrimSpace(path); path == "" {
+	if strs.AnyEmpty(path) {
 		return model.HttpRes[*jsons.Item]{Code: http.StatusBadRequest, Msg: "参数 path 不能为空"}
 	}
 

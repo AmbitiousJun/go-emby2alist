@@ -3,9 +3,9 @@ package config
 import (
 	"errors"
 	"fmt"
+	"go-emby2alist/internal/util/strs"
 	"os"
 	"path/filepath"
-	"strings"
 )
 
 // SslDir ssl 证书存放目录名称
@@ -28,10 +28,10 @@ func (s *Ssl) Init() error {
 	}
 
 	// 非空校验
-	if s.Crt = strings.TrimSpace(s.Crt); s.Crt == "" {
+	if strs.AnyEmpty(s.Crt) {
 		return errors.New("ssl.crt 配置不能为空")
 	}
-	if s.Key = strings.TrimSpace(s.Key); s.Key == "" {
+	if strs.AnyEmpty(s.Key) {
 		return errors.New("ssl.key 配置不能为空")
 	}
 

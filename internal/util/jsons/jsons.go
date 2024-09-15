@@ -3,6 +3,7 @@ package jsons
 import (
 	"encoding/json"
 	"fmt"
+	"go-emby2alist/internal/util/strs"
 	"reflect"
 	"strconv"
 	"strings"
@@ -97,7 +98,7 @@ func NewByVal(val interface{}) *Item {
 		if conv, err := strconv.Unquote(`"` + newVal + `"`); err == nil {
 			// 将字符串中的 unicode 字符转换为 utf8
 			newVal = conv
-		} 
+		}
 		item.val = newVal
 		return item
 	case *Item:
@@ -120,7 +121,7 @@ func NewByVal(val interface{}) *Item {
 
 // New 从 json 字符串中初始化成 item 对象
 func New(rawJson string) (*Item, error) {
-	if rawJson = strings.TrimSpace(rawJson); rawJson == "" {
+	if strs.AnyEmpty(rawJson) {
 		return NewByVal(rawJson), nil
 	}
 

@@ -2,7 +2,7 @@ package config
 
 import (
 	"errors"
-	"strings"
+	"go-emby2alist/internal/util/strs"
 )
 
 type Alist struct {
@@ -13,10 +13,10 @@ type Alist struct {
 }
 
 func (a *Alist) Init() error {
-	if a.Token = strings.TrimSpace(a.Token); a.Token == "" {
+	if strs.AnyEmpty(a.Token) {
 		return errors.New("alist.token 配置不能为空")
 	}
-	if a.Host = strings.TrimSpace(a.Host); a.Host == "" {
+	if strs.AnyEmpty(a.Host) {
 		return errors.New("alist.host 配置不能为空")
 	}
 	return nil

@@ -2,7 +2,7 @@ package config
 
 import (
 	"errors"
-	"strings"
+	"go-emby2alist/internal/util/strs"
 )
 
 // Emby 相关配置
@@ -18,13 +18,13 @@ type Emby struct {
 }
 
 func (e *Emby) Init() error {
-	if e.Host = strings.TrimSpace(e.Host); e.Host == "" {
+	if strs.AnyEmpty(e.Host) {
 		return errors.New("emby.host 配置不能为空")
 	}
-	if e.MountPath = strings.TrimSpace(e.MountPath); e.MountPath == "" {
+	if strs.AnyEmpty(e.MountPath) {
 		return errors.New("emby.mount-path 配置不能为空")
 	}
-	if e.ApiKey = strings.TrimSpace(e.ApiKey); e.ApiKey == "" {
+	if strs.AnyEmpty(e.ApiKey) {
 		return errors.New("emby.api-key 配置不能为空")
 	}
 	return nil

@@ -9,6 +9,7 @@ import (
 	"go-emby2alist/internal/service/alist"
 	"go-emby2alist/internal/util/colors"
 	"go-emby2alist/internal/util/https"
+	"go-emby2alist/internal/util/strs"
 	"io"
 	"log"
 	"net/http"
@@ -29,7 +30,7 @@ func NewByContent(baseUrl, content string) (*Info, error) {
 	lineComments := make([]string, 0)
 	for scanner.Scan() {
 		line := scanner.Text()
-		if line = strings.TrimSpace(line); line == "" {
+		if strs.AnyEmpty(line) {
 			continue
 		}
 

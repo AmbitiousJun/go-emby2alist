@@ -8,6 +8,7 @@ import (
 	"go-emby2alist/internal/service/alist"
 	"go-emby2alist/internal/service/path"
 	"go-emby2alist/internal/util/jsons"
+	"go-emby2alist/internal/util/strs"
 	"io"
 	"log"
 	"net/http"
@@ -229,7 +230,8 @@ func getRequestMediaSourceId(c *gin.Context) string {
 	}
 
 	// 1 从请求参数中获取
-	if q := strings.TrimSpace(c.Query("MediaSourceId")); q != "" {
+	q := c.Query("MediaSourceId")
+	if strs.AllNotEmpty(q) {
 		return q
 	}
 
