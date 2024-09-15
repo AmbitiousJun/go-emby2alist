@@ -7,7 +7,7 @@ import (
 	"log"
 )
 
-const CurrentVersion = "1.0.5-beta-v8"
+const CurrentVersion = "1.0.5-beta-v9"
 const RepoAddr = "https://github.com/AmbitiousJun/go-emby2alist"
 
 func main() {
