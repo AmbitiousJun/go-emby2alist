@@ -28,7 +28,7 @@ func ResortRandomItems(c *gin.Context) {
 	}
 
 	// 2 请求去除个数限制后的原始列表
-	u := strings.ReplaceAll(https.ClientRequestUrl(c), "/Items", "/Items/no_limit")
+	u := strings.ReplaceAll(https.ClientRequestUrl(c), "/Items", "/Items/with_limit")
 	resp, err := https.Request(http.MethodGet, u, c.Request.Header, c.Request.Body)
 	if checkErr(c, err) {
 		return
@@ -100,14 +100,14 @@ func ResortRandomItems(c *gin.Context) {
 // 个数限制为 700
 func RandomItemsWithLimit(c *gin.Context) {
 	u := c.Request.URL
-	u.Path = strings.TrimSuffix(u.Path, "/no_limit")
+	u.Path = strings.TrimSuffix(u.Path, "/with_limit")
 	q := u.Query()
 	q.Set("Limit", "700")
 	u.RawQuery = q.Encode()
 	res, ok := proxyAndSetRespHeader(c)
 	if ok {
 		c.Writer.Header().Del("Content-Length")
-		c.Header(cache.HeaderKeyExpired, cache.Duration(time.Hour))
+		c.Header(cache.HeaderKeyExpired, cache.Duration(time.Hour*3))
 		c.JSON(res.Code, res.Data.Struct())
 	}
 }

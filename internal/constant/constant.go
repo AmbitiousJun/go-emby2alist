@@ -5,7 +5,7 @@ const (
 	Reg_PlaybackInfo             = `(?i)^/.*items/.*/playbackinfo\??`
 	Reg_UserItems                = `(?i)^/.*users/.*/items/\d+($|\?)`
 	Reg_UserItemsRandomResort    = `(?i)^/.*users/.*/items\?.*SortBy=Random`
-	Reg_UserItemsRandomWithLimit = `(?i)^/.*users/.*/items/no_limit\?.*SortBy=Random`
+	Reg_UserItemsRandomWithLimit = `(?i)^/.*users/.*/items/with_limit\?.*SortBy=Random`
 	Reg_ShowEpisodes             = `(?i)^/.*shows/.*/episodes\??`
 	Reg_VideoSubtitles           = `(?i)^/.*videos/.*/subtitles`
 	Reg_ResourceStream           = `(?i)^/.*(videos|audio)/.*/(stream|universal)(\.\w+)?\??`
