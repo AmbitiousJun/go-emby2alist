@@ -2,7 +2,7 @@
 
 <div align="center">
   <img src="https://img.shields.io/github/v/tag/AmbitiousJun/go-emby2alist"></img>
-  <img src="https://img.shields.io/docker/image-size/ambitiousjun/go-emby2alist/1.0.4"></img>
+  <img src="https://img.shields.io/docker/image-size/ambitiousjun/go-emby2alist/1.0.5"></img>
   <img src="https://img.shields.io/docker/pulls/ambitiousjun/go-emby2alist"></img>
   <img src="https://img.shields.io/github/license/AmbitiousJun/go-emby2alist"></img>
 </div>
@@ -138,7 +138,7 @@
 1. 获取代码
 
 ```shell
-git clone --branch 1.0.4 --depth 1 https://ghproxy.cc/https://github.com/AmbitiousJun/go-emby2alist
+git clone --branch 1.0.5 --depth 1 https://ghproxy.cc/https://github.com/AmbitiousJun/go-emby2alist
 cd go-emby2alist
 ```
 
@@ -218,7 +218,7 @@ docker image prune -f
 version: "3.1"
 services:
   go-emby2alist:
-    image: ambitiousjun/go-emby2alist:1.0.4
+    image: ambitiousjun/go-emby2alist:1.0.5
     environment:
       - TZ=Asia/Shanghai
       - GIN_MODE=release
