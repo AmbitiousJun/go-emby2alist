@@ -15,7 +15,9 @@ import (
 const (
 
 	// MaxCacheSize 缓存最大大小 (Byte)
-	MaxCacheSize int64 = 128 * 1024 * 1024
+	//
+	// 这里的大小指的是响应体大小, 实际占用大小可能略大一些
+	MaxCacheSize int64 = 100 * 1024 * 1024
 
 	// MaxCacheNum 最多缓存多少个请求信息
 	MaxCacheNum = 8092
