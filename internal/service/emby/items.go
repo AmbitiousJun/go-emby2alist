@@ -17,6 +17,12 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+const (
+
+	// ItemsCacheSpace 专门存放 items 信息的缓存空间
+	ItemsCacheSpace = "UserItems"
+)
+
 // ResortRandomItems 对随机的 items 列表进行重排序
 func ResortRandomItems(c *gin.Context) {
 	// 1 如果没有开启配置, 代理原请求并返回
@@ -27,23 +33,37 @@ func ResortRandomItems(c *gin.Context) {
 		return
 	}
 
-	// 2 请求去除个数限制后的原始列表
-	u := strings.ReplaceAll(https.ClientRequestUrl(c), "/Items", "/Items/with_limit")
-	resp, err := https.Request(http.MethodGet, u, c.Request.Header, c.Request.Body)
-	if checkErr(c, err) {
-		return
-	}
-	defer resp.Body.Close()
+	// 2 从缓存空间中获取列表
+	var code int
+	var header http.Header
+	var bodyBytes []byte
+	spaceCache, ok := cache.GetSpaceCache(ItemsCacheSpace, calcRandomItemsCacheKey(c))
+	if ok {
+		bodyBytes = spaceCache.BodyBytes()
+		code = spaceCache.Code()
+		header = spaceCache.Headers()
+		log.Println(colors.ToBlue("使用缓存空间中的 random items 列表"))
+	} else {
+		// 请求原始列表
+		u := strings.ReplaceAll(https.ClientRequestUrl(c), "/Items", "/Items/with_limit")
+		resp, err := https.Request(http.MethodGet, u, c.Request.Header, c.Request.Body)
+		if checkErr(c, err) {
+			return
+		}
+		defer resp.Body.Close()
 
-	if resp.StatusCode != http.StatusOK {
-		checkErr(c, fmt.Errorf("错误的响应码: %d", resp.StatusCode))
-		return
-	}
+		if resp.StatusCode != http.StatusOK {
+			checkErr(c, fmt.Errorf("错误的响应码: %d", resp.StatusCode))
+			return
+		}
 
-	// 3 转换 json 响应
-	bodyBytes, err := io.ReadAll(resp.Body)
-	if checkErr(c, err) {
-		return
+		// 转换 json 响应
+		bodyBytes, err = io.ReadAll(resp.Body)
+		if checkErr(c, err) {
+			return
+		}
+		code = resp.StatusCode
+		header = resp.Header
 	}
 
 	// writeRespErr 响应客户端, 根据 err 自动判断
@@ -53,9 +73,9 @@ func ResortRandomItems(c *gin.Context) {
 			log.Printf(colors.ToRed("随机排序接口非预期响应, err: %v, 返回原始响应"), err)
 			respBody = bodyBytes
 		}
-		c.Status(resp.StatusCode)
-		resp.Header.Del("Content-Length")
-		https.CloneHeader(c, resp.Header)
+		c.Status(code)
+		header.Del("Content-Length")
+		https.CloneHeader(c, header)
 		c.Writer.Write(respBody)
 	}
 
@@ -108,6 +128,13 @@ func RandomItemsWithLimit(c *gin.Context) {
 	if ok {
 		c.Writer.Header().Del("Content-Length")
 		c.Header(cache.HeaderKeyExpired, cache.Duration(time.Hour*3))
+		c.Header(cache.HeaderKeySpace, ItemsCacheSpace)
+		c.Header(cache.HeaderKeySpaceKey, calcRandomItemsCacheKey(c))
 		c.JSON(res.Code, res.Data.Struct())
 	}
+}
+
+// calcRandomItemsCacheKey 计算 random items 在缓存空间中的 key 值
+func calcRandomItemsCacheKey(c *gin.Context) string {
+	return c.Query("IncludeItemTypes") + c.Query("Recursive") + c.Query("Fields")
 }

@@ -51,9 +51,14 @@ func (c *respCache) Code() int {
 	return c.code
 }
 
-// Body 克隆一个响应体
+// Body 克隆一个响应体, 转换为缓冲区
 func (c *respCache) Body() *bytes.Buffer {
-	return bytes.NewBuffer(append([]byte(nil), c.body...))
+	return bytes.NewBuffer(c.BodyBytes())
+}
+
+// BodyBytes 克隆一个响应体
+func (c *respCache) BodyBytes() []byte {
+	return append([]byte(nil), c.body...)
 }
 
 // JsonBody 将响应体转化成 json 返回
@@ -68,5 +73,5 @@ func (c *respCache) Header(key string) string {
 
 // Headers 获取响应头
 func (c *respCache) Headers() http.Header {
-	return c.header.header
+	return c.header.header.Clone()
 }
