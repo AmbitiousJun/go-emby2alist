@@ -1,13 +1,14 @@
 package emby
 
 import (
-	"errors"
+	"encoding/json"
 	"fmt"
 	"go-emby2alist/internal/config"
+	"go-emby2alist/internal/util/colors"
 	"go-emby2alist/internal/util/https"
-	"go-emby2alist/internal/util/jsons"
 	"go-emby2alist/internal/web/cache"
 	"io"
+	"log"
 	"math/rand"
 	"net/http"
 	"strings"
@@ -44,38 +45,55 @@ func ResortRandomItems(c *gin.Context) {
 	if checkErr(c, err) {
 		return
 	}
-	resJson, err := jsons.New(string(bodyBytes))
-	if checkErr(c, err) {
-		return
+
+	// writeRespErr 响应客户端, 根据 err 自动判断
+	// 如果 err 不为空, 直接使用原始 bodyBytes
+	writeRespErr := func(err error, respBody []byte) {
+		if err != nil {
+			log.Printf(colors.ToRed("随机排序接口非预期响应, err: %v, 返回原始响应"), err)
+			respBody = bodyBytes
+		}
+		c.Status(resp.StatusCode)
+		resp.Header.Del("Content-Length")
+		https.CloneHeader(c, resp.Header)
+		c.Writer.Write(respBody)
 	}
 
-	// 4 取出 Items 进行重排序
-	items, ok := resJson.Attr("Items").Done()
-	if !ok || items.Type() != jsons.JsonTypeArr {
-		checkErr(c, errors.New("非预期响应"))
+	// 对 item 内部结构不关心, 故使用原始的 json 序列化提高处理速度
+	var resMain map[string]json.RawMessage
+	if err := json.Unmarshal(bodyBytes, &resMain); err != nil {
+		writeRespErr(err, nil)
 		return
 	}
-	defer func() {
-		c.JSON(http.StatusOK, resJson.Struct())
-	}()
-	if items.Empty() {
+	var resItems []json.RawMessage
+	if err := json.Unmarshal(resMain["Items"], &resItems); err != nil {
+		writeRespErr(err, nil)
+		return
+	}
+	itemLen := len(resItems)
+	if itemLen == 0 {
+		writeRespErr(nil, bodyBytes)
 		return
 	}
 
 	// 准备一个相同大小的整型切片, 只存索引
 	// 对索引重排序后再依据新的索引位置调整 item 的位置
-	idxArr := make([]int, items.Len())
+	idxArr := make([]int, itemLen)
 	for idx := range idxArr {
 		idxArr[idx] = idx
 	}
 	rand.Shuffle(len(idxArr), func(i, j int) {
 		idxArr[i], idxArr[j] = idxArr[j], idxArr[i]
 	})
-	newItems := jsons.NewEmptyArr()
+	newItems := make([]json.RawMessage, 0)
 	for _, newIdx := range idxArr {
-		newItems.Append(items.ValuesArr()[newIdx])
+		newItems = append(newItems, resItems[newIdx])
 	}
-	resJson.Put("Items", newItems)
+
+	newItemsBytes, _ := json.Marshal(newItems)
+	resMain["Items"] = newItemsBytes
+	newBodyBytes, _ := json.Marshal(resMain)
+	writeRespErr(nil, newBodyBytes)
 }
 
 // RandomItemsWithLimit 代理原始的随机列表接口
