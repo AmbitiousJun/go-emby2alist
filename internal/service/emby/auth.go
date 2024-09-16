@@ -35,9 +35,10 @@ const (
 )
 
 const (
-	QueryApiKeyName = "api_key"
-	QueryTokenName  = "X-Emby-Token"
-	HeaderAuthName  = "Authorization"
+	QueryApiKeyName    = "api_key"
+	QueryTokenName     = "X-Emby-Token"
+	HeaderAuthName     = "Authorization"
+	HeaderFullAuthName = "X-Emby-Authorization"
 )
 
 // ApiKeyChecker 对指定的 api 进行鉴权
@@ -48,11 +49,14 @@ func ApiKeyChecker() gin.HandlerFunc {
 
 	patterns := []*regexp.Regexp{
 		regexp.MustCompile(constant.Reg_ResourceStream),
+		regexp.MustCompile(constant.Reg_PlaybackInfo),
 		regexp.MustCompile(constant.Reg_ItemDownload),
 		regexp.MustCompile(constant.Reg_VideoSubtitles),
 		regexp.MustCompile(constant.Reg_ProxyPlaylist),
 		regexp.MustCompile(constant.Reg_ProxyTs),
 		regexp.MustCompile(constant.Reg_ProxySubtitle),
+		regexp.MustCompile(constant.Reg_ShowEpisodes),
+		regexp.MustCompile(constant.Reg_UserItems),
 	}
 
 	return func(c *gin.Context) {
@@ -120,8 +124,16 @@ func getApiKey(c *gin.Context) (ApiKeyType, string) {
 	if strs.AllNotEmpty(apiKey) {
 		return Query, apiKey
 	}
+	apiKey = c.GetHeader(QueryTokenName)
+	if strs.AllNotEmpty(apiKey) {
+		return Query, apiKey
+	}
 
 	apiKey = c.GetHeader(HeaderAuthName)
+	if strs.AllNotEmpty(apiKey) {
+		return Header, apiKey
+	}
+	apiKey = c.GetHeader(HeaderFullAuthName)
 	if strs.AllNotEmpty(apiKey) {
 		return Header, apiKey
 	}
