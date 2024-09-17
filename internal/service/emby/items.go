@@ -106,7 +106,7 @@ func ResortRandomItems(c *gin.Context) {
 		tot := itemLen
 		for tot > 0 {
 			randomIdx := rand.Intn(tot)
-			idxChan <- randomIdx
+			idxChan <- idxArr[randomIdx]
 			// 将当前元素与最后一个元素交换, 总个数 -1
 			idxArr[tot-1], idxArr[randomIdx] = idxArr[randomIdx], idxArr[tot-1]
 			tot--
