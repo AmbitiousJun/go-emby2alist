@@ -134,9 +134,8 @@ func RandomItemsWithLimit(c *gin.Context) {
 	q.Set("Limit", "700")
 	u.RawQuery = q.Encode()
 	embyHost := config.C.Emby.Host
-	header := make(http.Header)
-	header.Add("Content-Type", "application/json;charset=utf-8")
-	resp, err := https.Request(c.Request.Method, embyHost+u.String(), header, c.Request.Body)
+	c.Request.Header.Del("Accept-Encoding")
+	resp, err := https.Request(c.Request.Method, embyHost+u.String(), c.Request.Header, c.Request.Body)
 	if checkErr(c, err) {
 		return
 	}
