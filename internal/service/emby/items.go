@@ -96,17 +96,26 @@ func ResortRandomItems(c *gin.Context) {
 		return
 	}
 
-	// 准备一个相同大小的整型切片, 只存索引
-	// 对索引重排序后再依据新的索引位置调整 item 的位置
-	idxArr := make([]int, itemLen)
-	for idx := range idxArr {
-		idxArr[idx] = idx
-	}
-	rand.Shuffle(len(idxArr), func(i, j int) {
-		idxArr[i], idxArr[j] = idxArr[j], idxArr[i]
-	})
+	// idxChan 使用异步的方式生成随机索引塞到通道中
+	idxChan := make(chan int, itemLen)
+	go func() {
+		idxArr := make([]int, itemLen)
+		for idx := range idxArr {
+			idxArr[idx] = idx
+		}
+		tot := itemLen
+		for tot > 0 {
+			randomIdx := rand.Intn(tot)
+			idxChan <- randomIdx
+			// 将当前元素与最后一个元素交换, 总个数 -1
+			idxArr[tot-1], idxArr[randomIdx] = idxArr[randomIdx], idxArr[tot-1]
+			tot--
+		}
+		close(idxChan)
+	}()
+
 	newItems := make([]json.RawMessage, 0)
-	for _, newIdx := range idxArr {
+	for newIdx := range idxChan {
 		newItems = append(newItems, resItems[newIdx])
 	}
 
@@ -124,14 +133,29 @@ func RandomItemsWithLimit(c *gin.Context) {
 	q := u.Query()
 	q.Set("Limit", "700")
 	u.RawQuery = q.Encode()
-	res, ok := proxyAndSetRespHeader(c)
-	if ok {
-		c.Writer.Header().Del("Content-Length")
-		c.Header(cache.HeaderKeyExpired, cache.Duration(time.Hour*3))
-		c.Header(cache.HeaderKeySpace, ItemsCacheSpace)
-		c.Header(cache.HeaderKeySpaceKey, calcRandomItemsCacheKey(c))
-		c.JSON(res.Code, res.Data.Struct())
+	embyHost := config.C.Emby.Host
+	header := make(http.Header)
+	header.Add("Content-Type", "application/json;charset=utf-8")
+	resp, err := https.Request(c.Request.Method, embyHost+u.String(), header, c.Request.Body)
+	if checkErr(c, err) {
+		return
 	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		checkErr(c, fmt.Errorf("错误的响应码: %v", resp.StatusCode))
+		return
+	}
+	bodyBytes, err := io.ReadAll(resp.Body)
+	if checkErr(c, err) {
+		return
+	}
+
+	https.CloneHeader(c, resp.Header)
+	c.Header(cache.HeaderKeyExpired, cache.Duration(time.Hour*3))
+	c.Header(cache.HeaderKeySpace, ItemsCacheSpace)
+	c.Header(cache.HeaderKeySpaceKey, calcRandomItemsCacheKey(c))
+	c.Status(resp.StatusCode)
+	c.Writer.Write(bodyBytes)
 }
 
 // calcRandomItemsCacheKey 计算 random items 在缓存空间中的 key 值
