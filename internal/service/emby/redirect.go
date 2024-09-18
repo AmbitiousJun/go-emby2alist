@@ -2,6 +2,7 @@ package emby
 
 import (
 	"errors"
+	"fmt"
 	"log"
 	"net/http"
 	"net/url"
@@ -13,10 +14,31 @@ import (
 	"github.com/AmbitiousJun/go-emby2alist/internal/util/colors"
 	"github.com/AmbitiousJun/go-emby2alist/internal/util/https"
 	"github.com/AmbitiousJun/go-emby2alist/internal/util/jsons"
+	"github.com/AmbitiousJun/go-emby2alist/internal/util/strs"
 	"github.com/AmbitiousJun/go-emby2alist/internal/web/cache"
 
 	"github.com/gin-gonic/gin"
 )
+
+// Redirect2Transcode 将 master 请求重定向到本地 ts 代理
+func Redirect2Transcode(c *gin.Context) {
+	// 只有三个必要的参数都获取到时, 才跳转到本地 ts 代理
+	templateId := c.Query("template_id")
+	apiKey := c.Query(QueryApiKeyName)
+	alistPath := c.Query("alist_path")
+	if strs.AnyEmpty(templateId, apiKey, alistPath) {
+		// 重定向回源
+		checkErr(c, fmt.Errorf("获取不到核心参数, templateId: %s, apiKey: %s, alistPath: %s", templateId, apiKey, alistPath))
+		return
+	}
+	tu, _ := url.Parse("/videos/proxy_playlist")
+	q := tu.Query()
+	q.Set("alist_path", alistPath)
+	q.Set(QueryApiKeyName, apiKey)
+	q.Set("template_id", templateId)
+	tu.RawQuery = q.Encode()
+	c.Redirect(http.StatusTemporaryRedirect, tu.String())
+}
 
 // Redirect2AlistLink 重定向资源到 alist 网盘直链
 func Redirect2AlistLink(c *gin.Context) {
