@@ -37,7 +37,6 @@ func ResortRandomItems(c *gin.Context) {
 	// 如果请求的个数较少, 认为不是随机播放列表, 代理原请求并返回
 	limit, err := strconv.Atoi(c.Query("Limit"))
 	if err == nil && limit < 300 {
-		log.Println(colors.ToYellow("Limit 太小"))
 		if res, ok := proxyAndSetRespHeader(c); ok {
 			c.JSON(res.Code, res.Data.Struct())
 		}
