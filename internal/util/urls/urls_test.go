@@ -1,9 +1,10 @@
 package urls_test
 
 import (
-	"go-emby2alist/internal/util/urls"
 	"log"
 	"testing"
+
+	"github.com/AmbitiousJun/go-emby2alist/internal/util/urls"
 )
 
 func TestAppendUrlArgs(t *testing.T) {

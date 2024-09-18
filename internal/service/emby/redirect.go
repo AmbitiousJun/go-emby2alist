@@ -2,17 +2,18 @@ package emby
 
 import (
 	"errors"
-	"go-emby2alist/internal/config"
-	"go-emby2alist/internal/service/alist"
-	"go-emby2alist/internal/service/path"
-	"go-emby2alist/internal/util/colors"
-	"go-emby2alist/internal/util/https"
-	"go-emby2alist/internal/util/jsons"
-	"go-emby2alist/internal/web/cache"
 	"log"
 	"net/http"
 	"net/url"
 	"time"
+
+	"github.com/AmbitiousJun/go-emby2alist/internal/config"
+	"github.com/AmbitiousJun/go-emby2alist/internal/service/alist"
+	"github.com/AmbitiousJun/go-emby2alist/internal/service/path"
+	"github.com/AmbitiousJun/go-emby2alist/internal/util/colors"
+	"github.com/AmbitiousJun/go-emby2alist/internal/util/https"
+	"github.com/AmbitiousJun/go-emby2alist/internal/util/jsons"
+	"github.com/AmbitiousJun/go-emby2alist/internal/web/cache"
 
 	"github.com/gin-gonic/gin"
 )

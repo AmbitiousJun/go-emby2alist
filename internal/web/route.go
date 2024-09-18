@@ -1,10 +1,11 @@
 package web
 
 import (
-	"go-emby2alist/internal/constant"
-	"go-emby2alist/internal/service/emby"
-	"go-emby2alist/internal/service/m3u8"
 	"log"
+
+	"github.com/AmbitiousJun/go-emby2alist/internal/constant"
+	"github.com/AmbitiousJun/go-emby2alist/internal/service/emby"
+	"github.com/AmbitiousJun/go-emby2alist/internal/service/m3u8"
 
 	"github.com/gin-gonic/gin"
 )

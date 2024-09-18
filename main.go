@@ -1,10 +1,11 @@
 package main
 
 import (
-	"go-emby2alist/internal/config"
-	"go-emby2alist/internal/util/colors"
-	"go-emby2alist/internal/web"
 	"log"
+
+	"github.com/AmbitiousJun/go-emby2alist/internal/config"
+	"github.com/AmbitiousJun/go-emby2alist/internal/util/colors"
+	"github.com/AmbitiousJun/go-emby2alist/internal/web"
 )
 
 const CurrentVersion = "1.0.6"

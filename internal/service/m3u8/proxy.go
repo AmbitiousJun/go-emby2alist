@@ -3,13 +3,14 @@ package m3u8
 import (
 	"errors"
 	"fmt"
-	"go-emby2alist/internal/config"
-	"go-emby2alist/internal/util/colors"
 	"log"
 	"net/http"
 	"net/url"
 	"strconv"
 	"strings"
+
+	"github.com/AmbitiousJun/go-emby2alist/internal/config"
+	"github.com/AmbitiousJun/go-emby2alist/internal/util/colors"
 
 	"github.com/gin-gonic/gin"
 )

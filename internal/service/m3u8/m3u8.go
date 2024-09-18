@@ -1,11 +1,12 @@
 package m3u8
 
 import (
-	"go-emby2alist/internal/util/colors"
 	"log"
 	"sort"
 	"sync"
 	"time"
+
+	"github.com/AmbitiousJun/go-emby2alist/internal/util/colors"
 )
 
 const (

@@ -2,11 +2,12 @@ package path
 
 import (
 	"fmt"
-	"go-emby2alist/internal/config"
-	"go-emby2alist/internal/service/alist"
-	"go-emby2alist/internal/util/jsons"
 	"net/http"
 	"strings"
+
+	"github.com/AmbitiousJun/go-emby2alist/internal/config"
+	"github.com/AmbitiousJun/go-emby2alist/internal/service/alist"
+	"github.com/AmbitiousJun/go-emby2alist/internal/util/jsons"
 )
 
 // AlistPathRes 路径转换结果

@@ -1,10 +1,11 @@
 package m3u8_test
 
 import (
-	"go-emby2alist/internal/config"
-	"go-emby2alist/internal/service/m3u8"
 	"log"
 	"testing"
+
+	"github.com/AmbitiousJun/go-emby2alist/internal/config"
+	"github.com/AmbitiousJun/go-emby2alist/internal/service/m3u8"
 )
 
 func TestPlaylistCache(t *testing.T) {

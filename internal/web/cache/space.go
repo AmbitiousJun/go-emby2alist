@@ -3,8 +3,9 @@
 package cache
 
 import (
-	"go-emby2alist/internal/util/strs"
 	"sync"
+
+	"github.com/AmbitiousJun/go-emby2alist/internal/util/strs"
 )
 
 const (

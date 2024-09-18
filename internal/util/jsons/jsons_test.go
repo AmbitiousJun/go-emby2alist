@@ -1,10 +1,11 @@
 package jsons_test
 
 import (
-	"go-emby2alist/internal/util/jsons"
 	"log"
 	"strconv"
 	"testing"
+
+	"github.com/AmbitiousJun/go-emby2alist/internal/util/jsons"
 )
 
 func TestMarshal(t *testing.T) {

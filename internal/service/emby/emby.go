@@ -2,12 +2,6 @@ package emby
 
 import (
 	"bytes"
-	"go-emby2alist/internal/config"
-	"go-emby2alist/internal/util/colors"
-	"go-emby2alist/internal/util/https"
-	"go-emby2alist/internal/util/jsons"
-	"go-emby2alist/internal/web/cache"
-	"go-emby2alist/internal/web/webport"
 	"io"
 	"log"
 	"net/http"
@@ -16,6 +10,13 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/AmbitiousJun/go-emby2alist/internal/config"
+	"github.com/AmbitiousJun/go-emby2alist/internal/util/colors"
+	"github.com/AmbitiousJun/go-emby2alist/internal/util/https"
+	"github.com/AmbitiousJun/go-emby2alist/internal/util/jsons"
+	"github.com/AmbitiousJun/go-emby2alist/internal/web/cache"
+	"github.com/AmbitiousJun/go-emby2alist/internal/web/webport"
 
 	"github.com/gin-gonic/gin"
 )

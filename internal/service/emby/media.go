@@ -4,11 +4,6 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"go-emby2alist/internal/config"
-	"go-emby2alist/internal/service/alist"
-	"go-emby2alist/internal/service/path"
-	"go-emby2alist/internal/util/jsons"
-	"go-emby2alist/internal/util/strs"
 	"io"
 	"log"
 	"net/http"
@@ -16,6 +11,12 @@ import (
 	"regexp"
 	"strings"
 	"sync"
+
+	"github.com/AmbitiousJun/go-emby2alist/internal/config"
+	"github.com/AmbitiousJun/go-emby2alist/internal/service/alist"
+	"github.com/AmbitiousJun/go-emby2alist/internal/service/path"
+	"github.com/AmbitiousJun/go-emby2alist/internal/util/jsons"
+	"github.com/AmbitiousJun/go-emby2alist/internal/util/strs"
 
 	"github.com/gin-gonic/gin"
 )

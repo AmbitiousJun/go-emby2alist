@@ -2,14 +2,15 @@ package emby
 
 import (
 	"errors"
-	"go-emby2alist/internal/config"
-	"go-emby2alist/internal/model"
-	"go-emby2alist/internal/util/https"
-	"go-emby2alist/internal/util/jsons"
-	"go-emby2alist/internal/util/urls"
 	"io"
 	"net/http"
 	"strings"
+
+	"github.com/AmbitiousJun/go-emby2alist/internal/config"
+	"github.com/AmbitiousJun/go-emby2alist/internal/model"
+	"github.com/AmbitiousJun/go-emby2alist/internal/util/https"
+	"github.com/AmbitiousJun/go-emby2alist/internal/util/jsons"
+	"github.com/AmbitiousJun/go-emby2alist/internal/util/urls"
 
 	"github.com/gin-gonic/gin"
 )

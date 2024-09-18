@@ -3,9 +3,10 @@ package config
 import (
 	"errors"
 	"fmt"
-	"go-emby2alist/internal/util/strs"
 	"os"
 	"path/filepath"
+
+	"github.com/AmbitiousJun/go-emby2alist/internal/util/strs"
 )
 
 // SslDir ssl 证书存放目录名称

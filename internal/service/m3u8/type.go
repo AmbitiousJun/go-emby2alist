@@ -1,6 +1,6 @@
 package m3u8
 
-import "go-emby2alist/internal/service/alist"
+import "github.com/AmbitiousJun/go-emby2alist/internal/service/alist"
 
 // ParentHeadComments 记录文件头注释
 var ParentHeadComments = map[string]struct{}{

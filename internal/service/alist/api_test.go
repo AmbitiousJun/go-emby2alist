@@ -1,11 +1,12 @@
 package alist_test
 
 import (
-	"go-emby2alist/internal/config"
-	"go-emby2alist/internal/service/alist"
 	"log"
 	"net/http"
 	"testing"
+
+	"github.com/AmbitiousJun/go-emby2alist/internal/config"
+	"github.com/AmbitiousJun/go-emby2alist/internal/service/alist"
 )
 
 func TestFetch(t *testing.T) {

@@ -4,13 +4,6 @@ import (
 	"bufio"
 	"errors"
 	"fmt"
-	"go-emby2alist/internal/config"
-	"go-emby2alist/internal/model"
-	"go-emby2alist/internal/service/alist"
-	"go-emby2alist/internal/service/emby"
-	"go-emby2alist/internal/util/colors"
-	"go-emby2alist/internal/util/https"
-	"go-emby2alist/internal/util/strs"
 	"io"
 	"log"
 	"net/http"
@@ -18,6 +11,14 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/AmbitiousJun/go-emby2alist/internal/config"
+	"github.com/AmbitiousJun/go-emby2alist/internal/model"
+	"github.com/AmbitiousJun/go-emby2alist/internal/service/alist"
+	"github.com/AmbitiousJun/go-emby2alist/internal/service/emby"
+	"github.com/AmbitiousJun/go-emby2alist/internal/util/colors"
+	"github.com/AmbitiousJun/go-emby2alist/internal/util/https"
+	"github.com/AmbitiousJun/go-emby2alist/internal/util/strs"
 )
 
 // NewByContent 根据 m3u8 文本初始化一个 info 对象

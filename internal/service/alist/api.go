@@ -2,14 +2,15 @@ package alist
 
 import (
 	"fmt"
-	"go-emby2alist/internal/config"
-	"go-emby2alist/internal/model"
-	"go-emby2alist/internal/util/https"
-	"go-emby2alist/internal/util/jsons"
-	"go-emby2alist/internal/util/strs"
 	"io"
 	"log"
 	"net/http"
+
+	"github.com/AmbitiousJun/go-emby2alist/internal/config"
+	"github.com/AmbitiousJun/go-emby2alist/internal/model"
+	"github.com/AmbitiousJun/go-emby2alist/internal/util/https"
+	"github.com/AmbitiousJun/go-emby2alist/internal/util/jsons"
+	"github.com/AmbitiousJun/go-emby2alist/internal/util/strs"
 )
 
 // FetchResource 请求 alist 资源 url 直链

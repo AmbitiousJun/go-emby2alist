@@ -1,9 +1,10 @@
 package web
 
 import (
-	"go-emby2alist/internal/util/colors"
 	"log"
 	"regexp"
+
+	"github.com/AmbitiousJun/go-emby2alist/internal/util/colors"
 
 	"github.com/gin-gonic/gin"
 )

@@ -1,12 +1,13 @@
 package web
 
 import (
-	"go-emby2alist/internal/config"
-	"go-emby2alist/internal/service/emby"
-	"go-emby2alist/internal/util/colors"
-	"go-emby2alist/internal/web/cache"
-	"go-emby2alist/internal/web/webport"
 	"log"
+
+	"github.com/AmbitiousJun/go-emby2alist/internal/config"
+	"github.com/AmbitiousJun/go-emby2alist/internal/service/emby"
+	"github.com/AmbitiousJun/go-emby2alist/internal/util/colors"
+	"github.com/AmbitiousJun/go-emby2alist/internal/web/cache"
+	"github.com/AmbitiousJun/go-emby2alist/internal/web/webport"
 
 	"github.com/gin-gonic/gin"
 )

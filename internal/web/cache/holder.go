@@ -2,12 +2,13 @@ package cache
 
 import (
 	"bytes"
-	"go-emby2alist/internal/config"
-	"go-emby2alist/internal/util/strs"
 	"log"
 	"strconv"
 	"sync"
 	"time"
+
+	"github.com/AmbitiousJun/go-emby2alist/internal/config"
+	"github.com/AmbitiousJun/go-emby2alist/internal/util/strs"
 
 	"github.com/gin-gonic/gin"
 )

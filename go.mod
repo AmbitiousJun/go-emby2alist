@@ -1,4 +1,4 @@
-module go-emby2alist
+module github.com/AmbitiousJun/go-emby2alist
 
 go 1.21.5
 

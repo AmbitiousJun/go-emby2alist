@@ -2,7 +2,8 @@ package config
 
 import (
 	"errors"
-	"go-emby2alist/internal/util/strs"
+
+	"github.com/AmbitiousJun/go-emby2alist/internal/util/strs"
 )
 
 // Emby 相关配置

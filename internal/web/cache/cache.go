@@ -3,17 +3,18 @@ package cache
 import (
 	"bytes"
 	"fmt"
-	"go-emby2alist/internal/constant"
-	"go-emby2alist/internal/util/colors"
-	"go-emby2alist/internal/util/encrypts"
-	"go-emby2alist/internal/util/https"
-	"go-emby2alist/internal/util/strs"
-	"go-emby2alist/internal/util/urls"
 	"io"
 	"log"
 	"regexp"
 	"strings"
 	"time"
+
+	"github.com/AmbitiousJun/go-emby2alist/internal/constant"
+	"github.com/AmbitiousJun/go-emby2alist/internal/util/colors"
+	"github.com/AmbitiousJun/go-emby2alist/internal/util/encrypts"
+	"github.com/AmbitiousJun/go-emby2alist/internal/util/https"
+	"github.com/AmbitiousJun/go-emby2alist/internal/util/strs"
+	"github.com/AmbitiousJun/go-emby2alist/internal/util/urls"
 
 	"github.com/gin-gonic/gin"
 )
