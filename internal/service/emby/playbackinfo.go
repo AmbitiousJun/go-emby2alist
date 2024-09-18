@@ -80,6 +80,7 @@ func TransferPlaybackInfo(c *gin.Context) {
 
 		if ir, ok := source.Attr("IsRemote").Bool(); ok && ir {
 			// 不阻塞远程资源
+			respHeader.Del("Content-Length")
 			https.CloneHeader(c, respHeader)
 			c.JSON(res.Code, resJson.Struct())
 			return haveReturned
