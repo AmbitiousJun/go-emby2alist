@@ -11,6 +11,7 @@ import (
 	"log"
 	"math/rand"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 
@@ -25,7 +26,7 @@ const (
 
 // ResortRandomItems 对随机的 items 列表进行重排序
 func ResortRandomItems(c *gin.Context) {
-	// 1 如果没有开启配置, 代理原请求并返回
+	// 如果没有开启配置, 代理原请求并返回
 	if !config.C.Emby.ResortRandomItems {
 		if res, ok := proxyAndSetRespHeader(c); ok {
 			c.JSON(res.Code, res.Data.Struct())
@@ -33,7 +34,17 @@ func ResortRandomItems(c *gin.Context) {
 		return
 	}
 
-	// 2 从缓存空间中获取列表
+	// 如果请求的个数较少, 认为不是随机播放列表, 代理原请求并返回
+	limit, err := strconv.Atoi(c.Query("Limit"))
+	if err == nil && limit < 300 {
+		log.Println(colors.ToYellow("Limit 太小"))
+		if res, ok := proxyAndSetRespHeader(c); ok {
+			c.JSON(res.Code, res.Data.Struct())
+		}
+		return
+	}
+
+	// 优先从缓存空间中获取列表
 	var code int
 	var header http.Header
 	var bodyBytes []byte
@@ -159,5 +170,12 @@ func RandomItemsWithLimit(c *gin.Context) {
 
 // calcRandomItemsCacheKey 计算 random items 在缓存空间中的 key 值
 func calcRandomItemsCacheKey(c *gin.Context) string {
-	return c.Query("IncludeItemTypes") + c.Query("Recursive") + c.Query("Fields")
+	return c.Query("IncludeItemTypes") +
+		c.Query("Recursive") +
+		c.Query("Fields") +
+		c.Query("EnableImageTypes") +
+		c.Query("ImageTypeLimit") +
+		c.Query("IsFavorite") +
+		c.Query("IsFolder") +
+		c.Query("ProjectToMedia")
 }
