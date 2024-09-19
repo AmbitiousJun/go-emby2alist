@@ -46,7 +46,8 @@ func baseCheck(c *gin.Context) (ProxyParams, error) {
 func ProxyPlaylist(c *gin.Context) {
 	params, err := baseCheck(c)
 	if err != nil {
-		c.String(http.StatusBadRequest, err.Error())
+		log.Printf(colors.ToRed("代理 m3u8 失败: %v"), err.Error())
+		c.String(http.StatusBadRequest, "代理 m3u8 失败, 请检查日志")
 		return
 	}
 	reqType := params.Type == "main"
@@ -78,7 +79,8 @@ func ProxyPlaylist(c *gin.Context) {
 func ProxyTsLink(c *gin.Context) {
 	params, err := baseCheck(c)
 	if err != nil {
-		c.String(http.StatusBadRequest, err.Error())
+		log.Printf(colors.ToRed("代理 ts 失败: %v"), err)
+		c.String(http.StatusBadRequest, "代理 ts 失败, 请检查日志")
 		return
 	}
 
@@ -114,7 +116,8 @@ func ProxyTsLink(c *gin.Context) {
 func ProxySubtitle(c *gin.Context) {
 	params, err := baseCheck(c)
 	if err != nil {
-		c.String(http.StatusBadRequest, err.Error())
+		log.Printf(colors.ToRed("代理字幕失败: %v"), err)
+		c.String(http.StatusBadRequest, "代理字幕失败, 请检查日志")
 		return
 	}
 

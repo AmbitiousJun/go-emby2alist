@@ -129,15 +129,14 @@ func checkErr(c *gin.Context, err error) bool {
 
 	// 请求参数中有忽略异常
 	if c.Query("ignore_error") == "true" {
-		c.String(http.StatusOK, "error has been ignored: "+err.Error())
+		c.String(http.StatusOK, "error has been ignored")
 		return true
 	}
 
 	// 采用拒绝策略, 直接返回错误
 	if config.C.Emby.ProxyErrorStrategy == config.StrategyReject {
-		errMsg := fmt.Sprintf("代理接口失败: %v", err)
-		log.Println(colors.ToRed(errMsg))
-		c.String(http.StatusInternalServerError, errMsg)
+		log.Printf(colors.ToRed("代理接口失败: %v"), err)
+		c.String(http.StatusInternalServerError, "代理接口失败, 请检查日志")
 		return true
 	}
 
