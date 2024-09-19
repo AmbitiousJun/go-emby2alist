@@ -25,6 +25,8 @@ type AlistPathRes struct {
 
 // Emby2Alist Emby 资源路径转 Alist 资源路径
 func Emby2Alist(embyPath string) AlistPathRes {
+	// 适配 windows
+	embyPath = strings.ReplaceAll(embyPath, `\`, `/`)
 	embyMount := config.C.Emby.MountPath
 	alistFilePath := strings.ReplaceAll(embyPath, embyMount, "")
 	if mapPath, ok := config.C.Path.MapEmby2Alist(alistFilePath); ok {
@@ -32,7 +34,7 @@ func Emby2Alist(embyPath string) AlistPathRes {
 	}
 
 	rangeFunc := func() ([]string, error) {
-		filePath, err := splitFromSecondSlash(alistFilePath)
+		filePath, err := SplitFromSecondSlash(alistFilePath)
 		if err != nil {
 			return nil, fmt.Errorf("alistFilePath 解析异常: %s, error: %v", alistFilePath, err)
 		}
@@ -67,9 +69,11 @@ func Emby2Alist(embyPath string) AlistPathRes {
 	}
 }
 
-// splitFromSecondSlash 找到给定字符串 str 中第二个 '/' 字符的位置
+// SplitFromSecondSlash 找到给定字符串 str 中第二个 '/' 字符的位置
 // 并以该位置为首字符切割剩余的子串返回
-func splitFromSecondSlash(str string) (string, error) {
+func SplitFromSecondSlash(str string) (string, error) {
+	// 适配 windows
+	str = strings.ReplaceAll(str, `\`, `/`)
 	firstIdx := strings.Index(str, "/")
 	if firstIdx == -1 {
 		return "", fmt.Errorf("字符串不包含 /: %s", str)
