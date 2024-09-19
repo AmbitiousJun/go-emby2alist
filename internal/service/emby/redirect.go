@@ -128,8 +128,17 @@ func checkErr(c *gin.Context, err error) bool {
 	// 异常接口, 不缓存
 	c.Header(cache.HeaderKeyExpired, "-1")
 
+	// 请求参数中有忽略异常
 	if c.Query("ignore_error") == "true" {
 		c.String(http.StatusOK, "error has been ignored: "+err.Error())
+		return true
+	}
+
+	// 采用拒绝策略, 直接返回错误
+	if config.C.Emby.ProxyErrorStrategy == config.StrategyReject {
+		errMsg := fmt.Sprintf("代理接口失败: %v", err)
+		log.Println(colors.ToRed(errMsg))
+		c.String(http.StatusInternalServerError, errMsg)
 		return true
 	}
 

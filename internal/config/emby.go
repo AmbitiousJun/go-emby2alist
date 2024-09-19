@@ -2,9 +2,22 @@ package config
 
 import (
 	"errors"
+	"strings"
 
 	"github.com/AmbitiousJun/go-emby2alist/internal/util/strs"
 )
+
+type PeStrategy string
+
+const (
+	StrategyOrigin PeStrategy = "origin" // 回源
+	StrategyReject PeStrategy = "reject" // 拒绝请求
+)
+
+// validPeStrategy 用于校验用户配置的策略是否合法
+var validPeStrategy = map[PeStrategy]struct{}{
+	StrategyOrigin: {}, StrategyReject: {},
+}
 
 // Emby 相关配置
 type Emby struct {
@@ -18,6 +31,8 @@ type Emby struct {
 	EpisodesUnplayPrior bool `yaml:"episodes-unplay-prior"`
 	// ResortRandomItems 是否对随机的 items 进行重排序
 	ResortRandomItems bool `yaml:"resort-random-items"`
+	// ProxyErrorStrategy 代理错误时的处理策略
+	ProxyErrorStrategy PeStrategy `yaml:"proxy-error-strategy"`
 }
 
 func (e *Emby) Init() error {
@@ -29,6 +44,10 @@ func (e *Emby) Init() error {
 	}
 	if strs.AnyEmpty(e.ApiKey) {
 		return errors.New("emby.api-key 配置不能为空")
+	}
+	e.ProxyErrorStrategy = PeStrategy(strings.TrimSpace(string(e.ProxyErrorStrategy)))
+	if _, ok := validPeStrategy[e.ProxyErrorStrategy]; !ok {
+		return errors.New("emby.proxy-error-strategy 配置错误")
 	}
 	return nil
 }

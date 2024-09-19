@@ -4,6 +4,10 @@ emby:
   api-key: 2f8sng5sjd5enm65df5e4s12q96324fwc # emby api key 可以在 emby 管理后台配置
   episodes-unplay-prior: true                # 是否修改剧集排序, 让未播的剧集靠前排列; 启用该配置时, 会忽略原接口的分页机制
   resort-random-items: true                  # 是否重排序随机列表, 对 emby 的排序结果进行二次重排序, 使得列表足够随机
+  # 代理异常处理策略
+  # origin: 重定向回源服务器
+  # reject: 拒绝处理
+  proxy-error-strategy: origin
 alist:
   host: http://192.168.0.109:5244            # alist 访问地址 (非 docker 内网)
   token: alist-xxxxx                         # alist api key 可以在 alist 管理后台查看
