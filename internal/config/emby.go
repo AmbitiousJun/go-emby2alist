@@ -45,6 +45,10 @@ func (e *Emby) Init() error {
 	if strs.AnyEmpty(e.ApiKey) {
 		return errors.New("emby.api-key 配置不能为空")
 	}
+	if strs.AnyEmpty(string(e.ProxyErrorStrategy)) {
+		// 失败默认回源
+		e.ProxyErrorStrategy = StrategyOrigin
+	}
 	e.ProxyErrorStrategy = PeStrategy(strings.TrimSpace(string(e.ProxyErrorStrategy)))
 	if _, ok := validPeStrategy[e.ProxyErrorStrategy]; !ok {
 		return errors.New("emby.proxy-error-strategy 配置错误")
