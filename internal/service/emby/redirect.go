@@ -27,7 +27,6 @@ func Redirect2Transcode(c *gin.Context) {
 	apiKey := c.Query(QueryApiKeyName)
 	alistPath := c.Query("alist_path")
 	if strs.AnyEmpty(templateId, apiKey, alistPath) {
-		// 重定向回源
 		checkErr(c, fmt.Errorf("获取不到核心参数, templateId: %s, apiKey: %s, alistPath: %s", templateId, apiKey, alistPath))
 		return
 	}
@@ -115,9 +114,9 @@ func Redirect2AlistLink(c *gin.Context) {
 }
 
 // checkErr 检查 err 是否为空
-// 不为空则重定向到源服务器
+// 不为空则根据错误处理策略返回响应
 //
-// 返回 true 表示已重定向
+// 返回 true 表示请求已经被处理
 //
 // 如果检测到 query 参数 ignore_error 为 true, 则不进行重定向
 func checkErr(c *gin.Context, err error) bool {
