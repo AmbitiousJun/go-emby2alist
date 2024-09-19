@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"net/url"
+	"strings"
 	"time"
 
 	"github.com/AmbitiousJun/go-emby2alist/internal/config"
@@ -52,7 +53,7 @@ func Redirect2AlistLink(c *gin.Context) {
 	msInfo := itemInfo.MsInfo
 	useTranscode := !msInfo.Empty && msInfo.Transcode
 	if useTranscode {
-		u, _ := url.Parse("/videos/proxy_playlist")
+		u, _ := url.Parse(strings.ReplaceAll(MasterM3U8UrlTemplate, "${itemId}", itemInfo.Id))
 		q := u.Query()
 		q.Set("template_id", itemInfo.MsInfo.TemplateId)
 		q.Set(QueryApiKeyName, config.C.Emby.ApiKey)

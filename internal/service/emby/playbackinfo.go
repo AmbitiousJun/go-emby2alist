@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"net/url"
+	"strings"
 	"time"
 
 	"github.com/AmbitiousJun/go-emby2alist/internal/config"
@@ -21,6 +22,9 @@ const (
 
 	// PlaybackCacheSpace PlaybackInfo 的缓存空间 key
 	PlaybackCacheSpace = "PlaybackInfo"
+
+	// MasterM3U8UrlTemplate 转码 m3u8 地址模板
+	MasterM3U8UrlTemplate = `/videos/${itemId}/master.m3u8?DeviceId=a690fc29-1f3e-423b-ba23-f03049361a3b\u0026MediaSourceId=83ed6e4e3d820864a3d07d2ef9efab2e\u0026PlaySessionId=9f01e60a22c74ad0847319175912663b\u0026api_key=f53f3bf34c0543ed81415b86576058f2\u0026LiveStreamId=06044cf0e6f93cdae5f285c9ecfaaeb4_01413a525b3a9622ce6fdf19f7dde354_83ed6e4e3d820864a3d07d2ef9efab2e\u0026VideoCodec=h264,h265,hevc,av1\u0026AudioCodec=mp3,aac\u0026VideoBitrate=6808000\u0026AudioBitrate=192000\u0026AudioStreamIndex=1\u0026TranscodingMaxAudioChannels=2\u0026SegmentContainer=ts\u0026MinSegments=1\u0026BreakOnNonKeyFrames=True\u0026SubtitleStreamIndexes=-1\u0026ManifestSubtitles=vtt\u0026h264-profile=high,main,baseline,constrainedbaseline,high10\u0026h264-level=62\u0026hevc-codectag=hvc1,hev1,hevc,hdmv`
 )
 
 // TransferPlaybackInfo 代理 PlaybackInfo 接口, 防止客户端转码
@@ -105,11 +109,12 @@ func TransferPlaybackInfo(c *gin.Context) {
 		if useTranscode {
 			// 客户端请求指定的转码资源
 			// 这里返回 emby 认得出的 master 响应
-			tu, _ := url.Parse("/videos/" + itemInfo.Id + "/master.m3u8?DeviceId=a690fc29-1f3e-423b-ba23-f03049361a3b\u0026MediaSourceId=83ed6e4e3d820864a3d07d2ef9efab2e\u0026PlaySessionId=9f01e60a22c74ad0847319175912663b\u0026api_key=f53f3bf34c0543ed81415b86576058f2\u0026LiveStreamId=06044cf0e6f93cdae5f285c9ecfaaeb4_01413a525b3a9622ce6fdf19f7dde354_83ed6e4e3d820864a3d07d2ef9efab2e\u0026VideoCodec=h264,h265,hevc,av1\u0026AudioCodec=mp3,aac\u0026VideoBitrate=6808000\u0026AudioBitrate=192000\u0026AudioStreamIndex=1\u0026TranscodingMaxAudioChannels=2\u0026SegmentContainer=ts\u0026MinSegments=1\u0026BreakOnNonKeyFrames=True\u0026SubtitleStreamIndexes=-1\u0026ManifestSubtitles=vtt\u0026h264-profile=high,main,baseline,constrainedbaseline,high10\u0026h264-level=62\u0026hevc-codectag=hvc1,hev1,hevc,hdmv")
+			tu, _ := url.Parse(strings.ReplaceAll(MasterM3U8UrlTemplate, "${itemId}", itemInfo.Id))
 			q := tu.Query()
 			q.Set("template_id", itemInfo.MsInfo.TemplateId)
 			q.Set(QueryApiKeyName, config.C.Emby.ApiKey)
 			q.Set("alist_path", itemInfo.MsInfo.AlistPath)
+			q.Set("MediaSourceId", source.Attr("Id").Val().(string))
 			tu.RawQuery = q.Encode()
 
 			source.Attr("Name").Set(fmt.Sprintf("(%s) %s", msInfo.SourceNamePrefix, name))
