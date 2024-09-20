@@ -16,7 +16,9 @@ import (
 	"github.com/AmbitiousJun/go-emby2alist/internal/service/alist"
 	"github.com/AmbitiousJun/go-emby2alist/internal/service/path"
 	"github.com/AmbitiousJun/go-emby2alist/internal/util/jsons"
+	"github.com/AmbitiousJun/go-emby2alist/internal/util/randoms"
 	"github.com/AmbitiousJun/go-emby2alist/internal/util/strs"
+	"github.com/AmbitiousJun/go-emby2alist/internal/util/urls"
 
 	"github.com/gin-gonic/gin"
 )
@@ -91,7 +93,7 @@ func findVideoPreviewInfos(source *jsons.Item, originName string, resChan chan [
 
 	// 转换 alist 绝对路径
 	alistPathRes := path.Emby2Alist(source.Attr("Path").Val().(string))
-	var transcodingList *jsons.Item
+	var transcodingList, subtitleList *jsons.Item
 	firstFetchSuccess := false
 	if alistPathRes.Success {
 		res := alist.FetchFsOther(alistPathRes.Path, nil)
@@ -100,6 +102,9 @@ func findVideoPreviewInfos(source *jsons.Item, originName string, resChan chan [
 			if list, ok := res.Data.Attr("video_preview_play_info").Attr("live_transcoding_task_list").Done(); ok {
 				firstFetchSuccess = true
 				transcodingList = list
+			}
+			if list, ok := res.Data.Attr("video_preview_play_info").Attr("live_transcoding_subtitle_task_list").Done(); ok {
+				subtitleList = list
 			}
 		}
 
@@ -124,6 +129,9 @@ func findVideoPreviewInfos(source *jsons.Item, originName string, resChan chan [
 				if list, ok := res.Data.Attr("video_preview_play_info").Attr("live_transcoding_task_list").Done(); ok {
 					transcodingList = list
 				}
+				if list, ok := res.Data.Attr("video_preview_play_info").Attr("live_transcoding_subtitle_task_list").Done(); ok {
+					subtitleList = list
+				}
 				break
 			}
 		}
@@ -138,6 +146,7 @@ func findVideoPreviewInfos(source *jsons.Item, originName string, resChan chan [
 
 	res := make([]*jsons.Item, transcodingList.Len())
 	wg := sync.WaitGroup{}
+	itemId, _ := source.Attr("ItemId").String()
 	transcodingList.RangeArr(func(idx int, transcode *jsons.Item) error {
 		wg.Add(1)
 		go func() {
@@ -146,7 +155,6 @@ func findVideoPreviewInfos(source *jsons.Item, originName string, resChan chan [
 			templateId, _ := transcode.Attr("template_id").String()
 			templateWidth, _ := transcode.Attr("template_width").Int()
 			templateHeight, _ := transcode.Attr("template_height").Int()
-			playlistUrl, _ := transcode.Attr("url").String()
 			format := fmt.Sprintf("%dx%d", templateWidth, templateHeight)
 			copySource.Attr("Name").Set(fmt.Sprintf("(%s_%s) %s", templateId, format, originName))
 
@@ -161,12 +169,11 @@ func findVideoPreviewInfos(source *jsons.Item, originName string, resChan chan [
 			copySource.Attr("Id").Set(newId)
 
 			// 设置转码代理播放链接
-			tu, _ := url.Parse("/videos/proxy_playlist")
+			tu, _ := url.Parse(strings.ReplaceAll(MasterM3U8UrlTemplate, "${itemId}", itemId))
 			q := tu.Query()
 			q.Set("alist_path", alistPathRes.Path)
 			q.Set("template_id", templateId)
 			q.Set(QueryApiKeyName, config.C.Emby.ApiKey)
-			q.Set("remote", playlistUrl)
 			tu.RawQuery = q.Encode()
 
 			// 标记转码资源使用转码容器
@@ -178,6 +185,9 @@ func findVideoPreviewInfos(source *jsons.Item, originName string, resChan chan [
 			copySource.Put("SupportsDirectPlay", jsons.NewByVal(false))
 			copySource.Put("SupportsDirectStream", jsons.NewByVal(false))
 
+			// 设置转码字幕
+			addSubtitles2MediaStreams(copySource, subtitleList, alistPathRes.Path, templateId)
+
 			res[idx] = copySource
 		}()
 		return nil
@@ -185,6 +195,62 @@ func findVideoPreviewInfos(source *jsons.Item, originName string, resChan chan [
 	wg.Wait()
 
 	resChan <- res
+}
+
+// addSubtitles2MediaStreams 添加转码字幕到 PlaybackInfo 的 MediaStreams 项中
+//
+// subtitleList 是请求 alist 转码信息接口获取到的字幕列表
+func addSubtitles2MediaStreams(source, subtitleList *jsons.Item, alistPath, templateId string) {
+	// 1 json 参数类型校验
+	if source == nil || subtitleList == nil || subtitleList.Empty() {
+		return
+	}
+	mediaStreams, ok := source.Attr("MediaStreams").Done()
+	if !ok || mediaStreams.Type() != jsons.JsonTypeArr {
+		return
+	}
+	if true {
+		// TODO: 当前函数无法生效, 仅作为 demo 调试代码
+		return
+	}
+
+	// 2 生成 MediaStream
+	itemId, _ := source.Attr("ItemId").String()
+	curMediaStreamsSize := mediaStreams.Len()
+	fakeId := randoms.RandomHex(32)
+	subtitleList.RangeArr(func(index int, sub *jsons.Item) error {
+		subStream, _ := jsons.New(`{"Codec":"","DisplayLanguage":"","DisplayTitle":"","Index":3,"IsExternal":true,"IsTextSubtitleStream":true,"Language":"chi","Protocol":"File","SupportsExternalStream":true,"Title":"","Type":"Subtitle"}`)
+		subStream.Put("Codec", jsons.NewByVal("vtt"))
+
+		lang, _ := sub.Attr("language").String()
+		subStream.Put("DisplayLanguage", jsons.NewByVal(lang))
+		subStream.Put("Language", jsons.NewByVal(lang))
+
+		subName := urls.ResolveResourceName(sub.Attr("url").Val().(string))
+		subStream.Put("DisplayTitle", jsons.NewByVal(fmt.Sprintf("%s(%s)", subName, lang)))
+		subStream.Put("Title", jsons.NewByVal(fmt.Sprintf("%s(%s)", subName, lang)))
+
+		idx := curMediaStreamsSize + index
+		subStream.Put("Index", jsons.NewByVal(idx))
+
+		u, _ := url.Parse(fmt.Sprintf("/Videos/%s/%s/Subtitles/%d/0/Stream.vtt", itemId, fakeId, idx))
+		q := u.Query()
+		q.Set("alist_path", alistPath)
+		q.Set("template_id", templateId)
+		q.Set("sub_name", subName)
+		q.Set(QueryApiKeyName, config.C.Emby.ApiKey)
+		u.RawQuery = q.Encode()
+		subStream.Put("DeliveryUrl", jsons.NewByVal(u.String()))
+
+		subStream.Put("DeliveryMethod", jsons.NewByVal("External"))
+		subStream.Put("IsExternalUrl", jsons.NewByVal(false))
+		subStream.Put("IsExternal", jsons.NewByVal(true))
+		subStream.Put("IsTextSubtitleStream", jsons.NewByVal(true))
+		subStream.Put("SupportsExternalStream", jsons.NewByVal(true))
+		subStream.Put("Protocol", jsons.NewByVal("File"))
+		mediaStreams.Append(subStream)
+		return nil
+	})
 }
 
 // findMediaSourceName 查找 MediaSource 中的视频名称, 如 '1080p HEVC'
