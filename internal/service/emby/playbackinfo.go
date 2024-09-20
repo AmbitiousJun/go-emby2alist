@@ -3,10 +3,10 @@ package emby
 import (
 	"errors"
 	"fmt"
+	"io"
 	"log"
 	"net/http"
 	"net/url"
-	"strings"
 	"time"
 
 	"github.com/AmbitiousJun/go-emby2alist/internal/config"
@@ -36,21 +36,20 @@ func TransferPlaybackInfo(c *gin.Context) {
 		return
 	}
 
+	msInfo := itemInfo.MsInfo
+	// 如果是指定 MediaSourceId 的 PlaybackInfo 信息, 就从缓存空间中获取
+	if useCacheSpacePlaybackInfo(c, itemInfo) {
+		c.Header(cache.HeaderKeyExpired, "-1")
+		return
+	}
+
 	defer func() {
 		// 缓存 12h
 		c.Header(cache.HeaderKeyExpired, cache.Duration(time.Hour*12))
 		// 将请求结果缓存到指定缓存空间下
 		c.Header(cache.HeaderKeySpace, PlaybackCacheSpace)
-		c.Header(cache.HeaderKeySpaceKey, itemInfo.Id+itemInfo.MsInfo.RawId)
+		c.Header(cache.HeaderKeySpaceKey, itemInfo.Id)
 	}()
-
-	msInfo := itemInfo.MsInfo
-	useTranscode := !msInfo.Empty && msInfo.Transcode
-	if useTranscode {
-		q := c.Request.URL.Query()
-		q.Set("MediaSourceId", msInfo.OriginId)
-		c.Request.URL.RawQuery = q.Encode()
-	}
 
 	// 2 请求 emby 源服务器的 PlaybackInfo 信息
 	res, respHeader := RawFetch(c.Request.URL.String(), c.Request.Method, c.Request.Body)
@@ -106,28 +105,6 @@ func TransferPlaybackInfo(c *gin.Context) {
 		name = source.Attr("Name").Val().(string)
 		source.Attr("Name").Set(fmt.Sprintf("(原画) %s", name))
 
-		if useTranscode {
-			// 客户端请求指定的转码资源
-			// 这里返回 emby 认得出的 master 响应
-			tu, _ := url.Parse(strings.ReplaceAll(MasterM3U8UrlTemplate, "${itemId}", itemInfo.Id))
-			q := tu.Query()
-			q.Set("template_id", itemInfo.MsInfo.TemplateId)
-			q.Set(QueryApiKeyName, config.C.Emby.ApiKey)
-			q.Set("alist_path", itemInfo.MsInfo.AlistPath)
-			q.Set("MediaSourceId", source.Attr("Id").Val().(string))
-			tu.RawQuery = q.Encode()
-
-			source.Attr("Name").Set(fmt.Sprintf("(%s) %s", msInfo.SourceNamePrefix, name))
-			source.Put("SupportsTranscoding", jsons.NewByVal(true))
-			source.Put("TranscodingUrl", jsons.NewByVal(tu.String()))
-			source.Put("TranscodingSubProtocol", jsons.NewByVal("hls"))
-			source.Put("TranscodingContainer", jsons.NewByVal("ts"))
-			source.Put("SupportsDirectPlay", jsons.NewByVal(false))
-			source.Put("SupportsDirectStream", jsons.NewByVal(false))
-			source.DelKey("DirectStreamUrl")
-			log.Printf(colors.ToBlue("设置转码播放链接为: %s"), tu.String())
-			return nil
-		}
 		source.Attr("DirectStreamUrl").Set(newUrl)
 		log.Printf(colors.ToBlue("设置直链播放链接为: %s"), newUrl)
 
@@ -164,6 +141,81 @@ func TransferPlaybackInfo(c *gin.Context) {
 	respHeader.Del("Content-Length")
 	https.CloneHeader(c, respHeader)
 	c.JSON(res.Code, resJson.Struct())
+}
+
+// useCacheSpacePlaybackInfo 请求缓存空间的 PlaybackInfo 信息
+//
+// 如果请求携带 MediaSourceId，则优先从缓存空间中的数据进行匹配
+//
+// 如果缓存空间为空, 会先全量请求 PlaybackInfo 信息, 更新缓存空间后再处理
+//
+// 如果在缓存空间中匹配不到数据, 返回 false
+func useCacheSpacePlaybackInfo(c *gin.Context, itemInfo ItemInfo) bool {
+	if c == nil || itemInfo.MsInfo.Empty {
+		return false
+	}
+	reqId, err := url.QueryUnescape(itemInfo.MsInfo.RawId)
+	if err != nil {
+		return false
+	}
+
+	// findMediaSourceAndReturn 从全量 PlaybackInfo 信息中查询指定 MediaSourceId 信息
+	// 处理成功返回 true
+	findMediaSourceAndReturn := func(jsonInfo *jsons.Item) bool {
+		if jsonInfo == nil {
+			return false
+		}
+		mediaSources, ok := jsonInfo.Attr("MediaSources").Done()
+		if !ok || mediaSources.Type() != jsons.JsonTypeArr || mediaSources.Empty() {
+			return false
+		}
+		newMediaSources := jsons.NewEmptyArr()
+		mediaSources.RangeArr(func(index int, value *jsons.Item) error {
+			cacheId, err := url.QueryUnescape(value.Attr("Id").Val().(string))
+			if err == nil && cacheId == reqId {
+				newMediaSources.Append(value)
+				return jsons.ErrBreakRange
+			}
+			return nil
+		})
+		if newMediaSources.Empty() {
+			return false
+		}
+		jsonInfo.Put("MediaSources", newMediaSources)
+		c.JSON(http.StatusOK, jsonInfo.Struct())
+		return true
+	}
+
+	// 1 查询缓存空间
+	cacheInfo, ok := getPlaybackInfoByCacheSpace(itemInfo)
+	if ok && findMediaSourceAndReturn(cacheInfo) {
+		return true
+	}
+
+	// 2 移除 MediaSourceId, 手动请求一遍全量的 PlaybackInfo 信息
+	q := c.Request.URL.Query()
+	q.Del("MediaSourceId")
+	c.Request.URL.RawQuery = q.Encode()
+	u := https.ClientRequestHost(c) + c.Request.URL.String()
+	resp, err := https.Request(c.Request.Method, u, c.Request.Header, c.Request.Body)
+	if checkErr(c, err) {
+		return true
+	}
+	defer resp.Body.Close()
+
+	// 3 将请求结果解析为 json
+	bodyBytes, err := io.ReadAll(resp.Body)
+	if checkErr(c, err) {
+		return true
+	}
+	resJson, err := jsons.New(string(bodyBytes))
+	if checkErr(c, err) {
+		return true
+	}
+	if !findMediaSourceAndReturn(resJson) {
+		return checkErr(c, errors.New("查找不到该 MediaSourceId: "+reqId))
+	}
+	return true
 }
 
 // LoadCacheItems 拦截并代理 items 接口
@@ -214,12 +266,12 @@ func LoadCacheItems(c *gin.Context) {
 
 // getPlaybackInfoByCacheSpace 从缓存空间中获取 PlaybackInfo 信息
 func getPlaybackInfoByCacheSpace(itemInfo ItemInfo) (*jsons.Item, bool) {
-	spaceCache, ok := cache.GetSpaceCache(PlaybackCacheSpace, itemInfo.Id+itemInfo.MsInfo.RawId)
+	spaceCache, ok := cache.GetSpaceCache(PlaybackCacheSpace, itemInfo.Id)
 	if !ok {
 		return nil, false
 	}
 
-	// 5 获取缓存响应体内容
+	// 获取缓存响应体内容
 	cacheBody, err := spaceCache.JsonBody()
 	if err != nil {
 		return nil, false
