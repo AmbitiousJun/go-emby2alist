@@ -20,7 +20,7 @@ import (
 //
 // 如果请求是失败的响应, 会直接返回客户端, 并在第二个参数中返回 false
 func proxyAndSetRespHeader(c *gin.Context) (model.HttpRes[*jsons.Item], bool) {
-	res, respHeader := RawFetch(c.Request.URL.String(), c.Request.Method, c.Request.Body)
+	res, respHeader := RawFetch(c.Request.URL.String(), c.Request.Method, nil, c.Request.Body)
 	if res.Code != http.StatusOK {
 		checkErr(c, errors.New(res.Msg))
 		return res, false
@@ -50,14 +50,14 @@ func AddDefaultApiKey(c *gin.Context) {
 // Fetch 请求 emby api 接口, 使用 map 请求体
 //
 // 如果 uri 中不包含 token, 自动从配置中取 token 进行拼接
-func Fetch(uri, method string, body map[string]interface{}) (model.HttpRes[*jsons.Item], http.Header) {
-	return RawFetch(uri, method, https.MapBody(body))
+func Fetch(uri, method string, header http.Header, body map[string]interface{}) (model.HttpRes[*jsons.Item], http.Header) {
+	return RawFetch(uri, method, header, https.MapBody(body))
 }
 
 // RawFetch 请求 emby api 接口, 使用流式请求体
 //
 // 如果 uri 中不包含 token, 自动从配置中取 token 进行拼接
-func RawFetch(uri, method string, body io.ReadCloser) (model.HttpRes[*jsons.Item], http.Header) {
+func RawFetch(uri, method string, header http.Header, body io.ReadCloser) (model.HttpRes[*jsons.Item], http.Header) {
 	host := config.C.Emby.Host
 	token := config.C.Emby.ApiKey
 
@@ -68,8 +68,12 @@ func RawFetch(uri, method string, body io.ReadCloser) (model.HttpRes[*jsons.Item
 	}
 
 	// 2 构造请求头, 发出请求
-	header := make(http.Header)
-	header.Add("Content-Type", "application/json;charset=utf-8")
+	if header == nil {
+		header = make(http.Header)
+	}
+	if header.Get("Content-Type") == "" {
+		header.Set("Content-Type", "application/json;charset=utf-8")
+	}
 
 	resp, err := https.Request(method, u, header, body)
 	if err != nil {

@@ -1,6 +1,7 @@
 package emby
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"io"
@@ -25,6 +26,9 @@ const (
 
 	// MasterM3U8UrlTemplate 转码 m3u8 地址模板
 	MasterM3U8UrlTemplate = `/videos/${itemId}/master.m3u8?DeviceId=a690fc29-1f3e-423b-ba23-f03049361a3b\u0026MediaSourceId=83ed6e4e3d820864a3d07d2ef9efab2e\u0026PlaySessionId=9f01e60a22c74ad0847319175912663b\u0026api_key=f53f3bf34c0543ed81415b86576058f2\u0026LiveStreamId=06044cf0e6f93cdae5f285c9ecfaaeb4_01413a525b3a9622ce6fdf19f7dde354_83ed6e4e3d820864a3d07d2ef9efab2e\u0026VideoCodec=h264,h265,hevc,av1\u0026AudioCodec=mp3,aac\u0026VideoBitrate=6808000\u0026AudioBitrate=192000\u0026AudioStreamIndex=1\u0026TranscodingMaxAudioChannels=2\u0026SegmentContainer=ts\u0026MinSegments=1\u0026BreakOnNonKeyFrames=True\u0026SubtitleStreamIndexes=-1\u0026ManifestSubtitles=vtt\u0026h264-profile=high,main,baseline,constrainedbaseline,high10\u0026h264-level=62\u0026hevc-codectag=hvc1,hev1,hevc,hdmv`
+
+	// PlaybackCommonPayload 请求 PlaybackInfo 的通用请求体
+	PlaybackCommonPayload = `{"DeviceProfile":{"MaxStaticBitrate":140000000,"MaxStreamingBitrate":140000000,"MusicStreamingTranscodingBitrate":192000,"DirectPlayProfiles":[{"Container":"mp4,m4v","Type":"Video","VideoCodec":"h264,h265,hevc,av1,vp8,vp9","AudioCodec":"mp3,aac,opus,flac,vorbis"},{"Container":"mkv","Type":"Video","VideoCodec":"h264,h265,hevc,av1,vp8,vp9","AudioCodec":"mp3,aac,opus,flac,vorbis"},{"Container":"flv","Type":"Video","VideoCodec":"h264","AudioCodec":"aac,mp3"},{"Container":"3gp","Type":"Video","VideoCodec":"","AudioCodec":"mp3,aac,opus,flac,vorbis"},{"Container":"mov","Type":"Video","VideoCodec":"h264","AudioCodec":"mp3,aac,opus,flac,vorbis"},{"Container":"opus","Type":"Audio"},{"Container":"mp3","Type":"Audio","AudioCodec":"mp3"},{"Container":"mp2,mp3","Type":"Audio","AudioCodec":"mp2"},{"Container":"m4a","AudioCodec":"aac","Type":"Audio"},{"Container":"mp4","AudioCodec":"aac","Type":"Audio"},{"Container":"flac","Type":"Audio"},{"Container":"webma,webm","Type":"Audio"},{"Container":"wav","Type":"Audio","AudioCodec":"PCM_S16LE,PCM_S24LE"},{"Container":"ogg","Type":"Audio"},{"Container":"webm","Type":"Video","AudioCodec":"vorbis,opus","VideoCodec":"av1,VP8,VP9"}],"TranscodingProfiles":[{"Container":"aac","Type":"Audio","AudioCodec":"aac","Context":"Streaming","Protocol":"hls","MaxAudioChannels":"2","MinSegments":"1","BreakOnNonKeyFrames":true},{"Container":"aac","Type":"Audio","AudioCodec":"aac","Context":"Streaming","Protocol":"http","MaxAudioChannels":"2"},{"Container":"mp3","Type":"Audio","AudioCodec":"mp3","Context":"Streaming","Protocol":"http","MaxAudioChannels":"2"},{"Container":"opus","Type":"Audio","AudioCodec":"opus","Context":"Streaming","Protocol":"http","MaxAudioChannels":"2"},{"Container":"wav","Type":"Audio","AudioCodec":"wav","Context":"Streaming","Protocol":"http","MaxAudioChannels":"2"},{"Container":"opus","Type":"Audio","AudioCodec":"opus","Context":"Static","Protocol":"http","MaxAudioChannels":"2"},{"Container":"mp3","Type":"Audio","AudioCodec":"mp3","Context":"Static","Protocol":"http","MaxAudioChannels":"2"},{"Container":"aac","Type":"Audio","AudioCodec":"aac","Context":"Static","Protocol":"http","MaxAudioChannels":"2"},{"Container":"wav","Type":"Audio","AudioCodec":"wav","Context":"Static","Protocol":"http","MaxAudioChannels":"2"},{"Container":"mkv","Type":"Video","AudioCodec":"mp3,aac,opus,flac,vorbis","VideoCodec":"h264,h265,hevc,av1,vp8,vp9","Context":"Static","MaxAudioChannels":"2","CopyTimestamps":true},{"Container":"ts","Type":"Video","AudioCodec":"mp3,aac","VideoCodec":"h264,h265,hevc,av1","Context":"Streaming","Protocol":"hls","MaxAudioChannels":"2","MinSegments":"1","BreakOnNonKeyFrames":true,"ManifestSubtitles":"vtt"},{"Container":"webm","Type":"Video","AudioCodec":"vorbis","VideoCodec":"vpx","Context":"Streaming","Protocol":"http","MaxAudioChannels":"2"},{"Container":"mp4","Type":"Video","AudioCodec":"mp3,aac,opus,flac,vorbis","VideoCodec":"h264","Context":"Static","Protocol":"http"}],"ContainerProfiles":[],"CodecProfiles":[{"Type":"VideoAudio","Codec":"aac","Conditions":[{"Condition":"Equals","Property":"IsSecondaryAudio","Value":"false","IsRequired":"false"}]},{"Type":"VideoAudio","Conditions":[{"Condition":"Equals","Property":"IsSecondaryAudio","Value":"false","IsRequired":"false"}]},{"Type":"Video","Codec":"h264","Conditions":[{"Condition":"EqualsAny","Property":"VideoProfile","Value":"high|main|baseline|constrained baseline|high 10","IsRequired":false},{"Condition":"LessThanEqual","Property":"VideoLevel","Value":"62","IsRequired":false}]},{"Type":"Video","Codec":"hevc","Conditions":[{"Condition":"EqualsAny","Property":"VideoCodecTag","Value":"hvc1|hev1|hevc|hdmv","IsRequired":false}]}],"SubtitleProfiles":[{"Format":"vtt","Method":"Hls"},{"Format":"eia_608","Method":"VideoSideData","Protocol":"hls"},{"Format":"eia_708","Method":"VideoSideData","Protocol":"hls"},{"Format":"vtt","Method":"External"},{"Format":"ass","Method":"External"},{"Format":"ssa","Method":"External"}],"ResponseProfiles":[{"Type":"Video","Container":"m4v","MimeType":"video/mp4"}]}}`
 )
 
 // TransferPlaybackInfo 代理 PlaybackInfo 接口, 防止客户端转码
@@ -52,7 +56,8 @@ func TransferPlaybackInfo(c *gin.Context) {
 	}()
 
 	// 2 请求 emby 源服务器的 PlaybackInfo 信息
-	res, respHeader := RawFetch(c.Request.URL.String(), c.Request.Method, c.Request.Body)
+	c.Request.Header.Del("Accept-Encoding")
+	res, respHeader := RawFetch(c.Request.URL.String(), c.Request.Method, c.Request.Header, c.Request.Body)
 	if res.Code != http.StatusOK {
 		checkErr(c, errors.New(res.Msg))
 		return
@@ -90,23 +95,22 @@ func TransferPlaybackInfo(c *gin.Context) {
 		}
 
 		// 转换直链链接
-		source.Attr("SupportsDirectPlay").Set(true)
-		source.Attr("SupportsDirectStream").Set(true)
+		source.Put("SupportsDirectPlay", jsons.NewByVal(true))
+		source.Put("SupportsDirectStream", jsons.NewByVal(true))
 		newUrl := fmt.Sprintf(
 			"/videos/%s/stream?MediaSourceId=%s&%s=%s&Static=true",
 			itemInfo.Id, source.Attr("Id").Val(), QueryApiKeyName, config.C.Emby.ApiKey,
 		)
+		source.Put("DirectStreamUrl", jsons.NewByVal(newUrl))
+		log.Printf(colors.ToBlue("设置直链播放链接为: %s"), newUrl)
 
 		// 简化资源名称
 		name := findMediaSourceName(source)
 		if name != "" {
-			source.Attr("Name").Set(name)
+			source.Put("Name", jsons.NewByVal(name))
 		}
 		name = source.Attr("Name").Val().(string)
 		source.Attr("Name").Set(fmt.Sprintf("(原画) %s", name))
-
-		source.Attr("DirectStreamUrl").Set(newUrl)
-		log.Printf(colors.ToBlue("设置直链播放链接为: %s"), newUrl)
 
 		source.Put("SupportsTranscoding", jsons.NewByVal(false))
 		source.DelKey("TranscodingUrl")
@@ -145,13 +149,16 @@ func TransferPlaybackInfo(c *gin.Context) {
 
 // useCacheSpacePlaybackInfo 请求缓存空间的 PlaybackInfo 信息
 //
-// 如果请求携带 MediaSourceId，则优先从缓存空间中的数据进行匹配
+// ① 请求携带 MediaSourceId:
 //
-// 如果缓存空间为空, 会先全量请求 PlaybackInfo 信息, 更新缓存空间后再处理
+//	优先返回缓存空间中的值, 没有缓存返回 false
 //
-// 如果在缓存空间中匹配不到数据, 返回 false
+// ② 请求不携带 MediaSourceId:
+//
+//	先判断缓存空间是否有缓存, 没有缓存返回 false
+//	有缓存则从缓存中匹配 MediaSourceId, 匹配成功与否都会返回 true
 func useCacheSpacePlaybackInfo(c *gin.Context, itemInfo ItemInfo) bool {
-	if c == nil || itemInfo.MsInfo.Empty {
+	if c == nil {
 		return false
 	}
 	reqId, err := url.QueryUnescape(itemInfo.MsInfo.RawId)
@@ -188,8 +195,22 @@ func useCacheSpacePlaybackInfo(c *gin.Context, itemInfo ItemInfo) bool {
 
 	// 1 查询缓存空间
 	cacheInfo, ok := getPlaybackInfoByCacheSpace(itemInfo)
-	if ok && findMediaSourceAndReturn(cacheInfo) {
-		return true
+	if ok {
+		// 未传递 MediaSourceId, 返回整个缓存数据
+		if itemInfo.MsInfo.Empty {
+			log.Printf(colors.ToBlue("复用缓存空间中的 PlaybackInfo 信息, itemId: %s"), itemInfo.Id)
+			c.JSON(http.StatusOK, cacheInfo.Struct())
+			return true
+		}
+		// 尝试从缓存中匹配指定的 MediaSourceId 信息
+		if findMediaSourceAndReturn(cacheInfo) {
+			return true
+		}
+	}
+
+	// 如果是全量查询, 从缓存中拿不到数据, 就不继续查了
+	if itemInfo.MsInfo.Empty {
+		return false
 	}
 
 	// 2 移除 MediaSourceId, 手动请求一遍全量的 PlaybackInfo 信息
@@ -225,7 +246,7 @@ func useCacheSpacePlaybackInfo(c *gin.Context, itemInfo ItemInfo) bool {
 //
 // 防止转码资源信息丢失
 func LoadCacheItems(c *gin.Context) {
-	// 1 代理请求
+	// 代理请求
 	res, ok := proxyAndSetRespHeader(c)
 	if !ok {
 		return
@@ -235,33 +256,68 @@ func LoadCacheItems(c *gin.Context) {
 		c.JSON(res.Code, resJson.Struct())
 	}()
 
-	// 2 未开启转码资源获取功能
+	// 未开启转码资源获取功能
 	if !config.C.VideoPreview.Enable {
 		return
 	}
 
-	// 3 解析出 ItemId
+	// 只处理剧集类型的 Items 响应
+	if resJson.Attr("Type").Val() != "Episode" {
+		return
+	}
+
+	// 解析出 ItemId
 	itemInfo, err := resolveItemInfo(c)
 	if err != nil {
 		return
 	}
 	log.Printf(colors.ToBlue("itemInfo 解析结果: %s"), jsons.NewByVal(itemInfo))
 
-	// 4 获取附带转码信息的 PlaybackInfo 数据
-	cacheBody, ok := getPlaybackInfoByCacheSpace(itemInfo)
-	if !ok {
+	// coverMediaSources 解析 PlaybackInfo 中的 MediaSources 属性
+	// 并覆盖到当前请求的响应中
+	// 成功覆盖时, 返回 true
+	coverMediaSources := func(info *jsons.Item) bool {
+		cacheMs, ok := info.Attr("MediaSources").Done()
+		if !ok || cacheMs.Type() != jsons.JsonTypeArr {
+			return false
+		}
+		log.Printf(colors.ToBlue("使用 PlaybackInfo 的 MediaSources 覆盖 Items 接口响应, itemId: %s"), itemInfo.Id)
+		resJson.Put("MediaSources", cacheMs)
+		c.Writer.Header().Del("Content-Length")
+		return true
+	}
+
+	// 获取附带转码信息的 PlaybackInfo 数据
+	if cacheBody, ok := getPlaybackInfoByCacheSpace(itemInfo); ok && coverMediaSources(cacheBody) {
 		return
 	}
-	log.Println(colors.ToBlue("使用缓存空间中的 MediaSources 覆盖原始响应"))
 
-	cacheMs, ok := cacheBody.Attr("MediaSources").Done()
-	if !ok || cacheMs.Type() != jsons.JsonTypeArr {
+	// 缓存空间中没有当前 Item 的 PlaybackInfo 数据, 手动请求
+	u := https.ClientRequestHost(c) + itemInfo.PlaybackInfoUri
+	reqBody := io.NopCloser(bytes.NewBufferString(PlaybackCommonPayload))
+	header := make(http.Header)
+	header.Set("Content-Type", "text/plain")
+	resp, err := https.Request(http.MethodPost, u, header, reqBody)
+	if err != nil {
+		log.Printf(colors.ToRed("手动请求 PlaybackInfo 失败: %v, 不更新 Items 信息"), err)
 		return
 	}
-
-	// 5 覆盖原始响应
-	resJson.Put("MediaSources", cacheMs)
-	c.Writer.Header().Del("Content-Length")
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		log.Printf(colors.ToRed("手动请求 PlaybackInfo 失败, code: %d, 不更新 Items 信息"), resp.StatusCode)
+		return
+	}
+	bodyBytes, err := io.ReadAll(resp.Body)
+	if err != nil {
+		log.Printf(colors.ToRed("手动请求 PlaybackInfo 失败: %v, 不更新 Items 信息"), err)
+		return
+	}
+	bodyJson, err := jsons.New(string(bodyBytes))
+	if err != nil {
+		log.Printf(colors.ToRed("手动请求 PlaybackInfo 失败: %v, 不更新 Items 信息"), err)
+		return
+	}
+	coverMediaSources(bodyJson)
 }
 
 // getPlaybackInfoByCacheSpace 从缓存空间中获取 PlaybackInfo 信息

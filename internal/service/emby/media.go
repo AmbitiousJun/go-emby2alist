@@ -38,7 +38,7 @@ func getEmbyFileLocalPath(itemInfo ItemInfo) (string, error) {
 	if cacheBody, ok := getPlaybackInfoByCacheSpace(itemInfo); ok {
 		body = cacheBody
 	} else {
-		res, _ := Fetch(itemInfo.PlaybackInfoUri, http.MethodPost, nil)
+		res, _ := Fetch(itemInfo.PlaybackInfoUri, http.MethodPost, nil, nil)
 		if res.Code != http.StatusOK {
 			return "", fmt.Errorf("请求 Emby 接口异常, error: %s", res.Msg)
 		}
@@ -287,7 +287,7 @@ func resolveItemInfo(c *gin.Context) (ItemInfo, error) {
 	if len(matches) < 2 {
 		return ItemInfo{}, fmt.Errorf("itemId 匹配失败, uri: %s", uri)
 	}
-	itemInfo := ItemInfo{Id: matches[1], ApiKey: c.Query("QueryTokenName")}
+	itemInfo := ItemInfo{Id: matches[1], ApiKey: c.Query(QueryTokenName)}
 
 	if itemInfo.ApiKey == "" {
 		itemInfo.ApiKey = c.Query(QueryApiKeyName)
@@ -308,6 +308,7 @@ func resolveItemInfo(c *gin.Context) (ItemInfo, error) {
 	}
 	q := u.Query()
 	q.Set(QueryApiKeyName, itemInfo.ApiKey)
+	q.Set("reqformat", "json")
 	if !msInfo.Empty {
 		q.Set("MediaSourceId", msInfo.OriginId)
 	}
