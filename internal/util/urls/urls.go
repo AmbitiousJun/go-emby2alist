@@ -3,8 +3,20 @@ package urls
 import (
 	"log"
 	"net/url"
+	"path/filepath"
 	"strings"
 )
+
+// ResolveResourceName 解析一个资源 url 的名称
+//
+// 比如 http://example.com/a.txt?a=1&b=2 会返回 a.txt
+func ResolveResourceName(resUrl string) string {
+	u, err := url.Parse(resUrl)
+	if err != nil {
+		return resUrl
+	}
+	return filepath.Base(u.Path)
+}
 
 // ReplaceAll 类似于 strings.ReplaceAll
 //
