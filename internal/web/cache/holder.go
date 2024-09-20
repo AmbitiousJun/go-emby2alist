@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/AmbitiousJun/go-emby2alist/internal/config"
+	"github.com/AmbitiousJun/go-emby2alist/internal/util/colors"
 	"github.com/AmbitiousJun/go-emby2alist/internal/util/strs"
 
 	"github.com/gin-gonic/gin"
@@ -84,7 +85,7 @@ func loopMaintainCache() {
 		space, spaceKey := rc.header.space, rc.header.spaceKey
 		if strs.AllNotEmpty(space, spaceKey) {
 			putSpaceCache(space, spaceKey, rc)
-			log.Printf("刷新缓存空间, space: %s, spaceKey: %s", space, spaceKey)
+			log.Printf(colors.ToGreen("刷新缓存空间, space: %s, spaceKey: %s"), space, spaceKey)
 		}
 	}
 
