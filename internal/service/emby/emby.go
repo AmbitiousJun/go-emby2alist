@@ -63,7 +63,6 @@ func ProxyOrigin(c *gin.Context) {
 	origin := config.C.Emby.Host
 	if err := https.ProxyRequest(c, origin, true); err != nil {
 		log.Printf(colors.ToRed("代理异常: %v"), err)
-		c.String(http.StatusBadRequest, "代理异常, 请检查日志")
 	}
 }
 
