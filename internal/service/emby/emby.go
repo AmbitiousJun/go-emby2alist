@@ -9,13 +9,11 @@ import (
 	"net/url"
 	"strings"
 	"sync"
-	"time"
 
 	"github.com/AmbitiousJun/go-emby2alist/internal/config"
 	"github.com/AmbitiousJun/go-emby2alist/internal/util/colors"
 	"github.com/AmbitiousJun/go-emby2alist/internal/util/https"
 	"github.com/AmbitiousJun/go-emby2alist/internal/util/jsons"
-	"github.com/AmbitiousJun/go-emby2alist/internal/web/cache"
 	"github.com/AmbitiousJun/go-emby2alist/internal/web/webport"
 
 	"github.com/gin-gonic/gin"
@@ -52,15 +50,6 @@ func ProxySocket() func(*gin.Context) {
 		once.Do(initFunc)
 		proxy.ServeHTTP(c.Writer, c.Request)
 	}
-}
-
-// ProxySubtitles 字幕代理, 过期时间设置为 30 天
-func ProxySubtitles(c *gin.Context) {
-	if c == nil {
-		return
-	}
-	c.Header(cache.HeaderKeyExpired, cache.Duration(time.Hour*24*30))
-	ProxyOrigin(c)
 }
 
 // ProxyOrigin 将请求代理到源服务器
