@@ -1,7 +1,9 @@
 package web
 
 import (
+	"crypto/tls"
 	"log"
+	"net/http"
 
 	"github.com/AmbitiousJun/go-emby2alist/internal/config"
 	"github.com/AmbitiousJun/go-emby2alist/internal/service/emby"
@@ -72,7 +74,15 @@ func listenHTTPS(errChan chan error) {
 	initRouter(r)
 	log.Printf(colors.ToBlue("在端口【%s】上启动 HTTPS 服务"), webport.HTTPS)
 	ssl := config.C.Ssl
-	err := r.RunTLS("0.0.0.0:"+webport.HTTPS, ssl.CrtPath(), ssl.KeyPath())
+
+	srv := &http.Server{
+		Addr:    "0.0.0.0:" + webport.HTTPS,
+		Handler: r,
+	}
+	// 禁用 HTTP/2
+	srv.TLSNextProto = map[string]func(*http.Server, *tls.Conn, http.Handler){}
+
+	err := srv.ListenAndServeTLS(ssl.CrtPath(), ssl.KeyPath())
 	errChan <- err
 	close(errChan)
 }
