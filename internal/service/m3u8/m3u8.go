@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/AmbitiousJun/go-emby2alist/internal/util/colors"
+	"github.com/AmbitiousJun/go-emby2alist/internal/util/urls"
 )
 
 const (
@@ -30,7 +31,7 @@ var GetPlaylist func(alistPath, templateId string, proxy, main bool) (string, bo
 var GetTsLink func(alistPath, templateId string, idx int) (string, bool)
 
 // GetSubtitleLink 获取字幕链接
-var GetSubtitleLink func(alistPath, templateId string, idx int) (string, bool)
+var GetSubtitleLink func(alistPath, templateId, subName string) (string, bool)
 
 // preMaintainInfoChan 预处理通道
 //
@@ -48,7 +49,7 @@ func PushPlaylistAsync(info Info) {
 	if info.AlistPath == "" || info.TemplateId == "" {
 		return
 	}
-	info = Info{AlistPath: info.AlistPath, TemplateId: info.TemplateId, Remote: info.Remote}
+	info = Info{AlistPath: info.AlistPath, TemplateId: info.TemplateId}
 	preChanHandlingGroup.Add(1)
 	doneOnce := sync.OnceFunc(preChanHandlingGroup.Done)
 	go func() {
@@ -161,15 +162,18 @@ func loopMaintainPlaylist() {
 		return info.GetTsLink(idx)
 	}
 
-	GetSubtitleLink = func(alistPath, templateId string, idx int) (string, bool) {
+	GetSubtitleLink = func(alistPath, templateId, subName string) (string, bool) {
 		info := queryInfo(alistPath, templateId)
 		if info == nil {
 			return "", false
 		}
-		if idx < 0 || idx >= len(info.Subtitles) {
-			return "", false
+		for _, subInfo := range info.Subtitles {
+			curSubName := urls.ResolveResourceName(subInfo.Url)
+			if curSubName == subName {
+				return subInfo.Url, true
+			}
 		}
-		return info.Subtitles[idx].Url, true
+		return "", false
 	}
 
 	// removeInfo 删除内存中的 info 信息

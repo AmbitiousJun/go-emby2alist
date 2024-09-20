@@ -13,12 +13,12 @@ import (
 	"time"
 
 	"github.com/AmbitiousJun/go-emby2alist/internal/config"
-	"github.com/AmbitiousJun/go-emby2alist/internal/model"
 	"github.com/AmbitiousJun/go-emby2alist/internal/service/alist"
 	"github.com/AmbitiousJun/go-emby2alist/internal/service/emby"
 	"github.com/AmbitiousJun/go-emby2alist/internal/util/colors"
 	"github.com/AmbitiousJun/go-emby2alist/internal/util/https"
 	"github.com/AmbitiousJun/go-emby2alist/internal/util/strs"
+	"github.com/AmbitiousJun/go-emby2alist/internal/util/urls"
 )
 
 // NewByContent 根据 m3u8 文本初始化一个 info 对象
@@ -113,7 +113,7 @@ func (i *Info) GetTsLink(idx int) (string, bool) {
 	return i.RemoteBase + i.RemoteTsInfos[idx].Url, true
 }
 
-// MasterFunc 获取变体 m3u8
+// Deprecated: MasterFunc 获取变体 m3u8
 //
 // 当 info 包含有字幕时, 需要调用这个方法返回
 func (i *Info) MasterFunc(cntMapper func() string) string {
@@ -121,12 +121,12 @@ func (i *Info) MasterFunc(cntMapper func() string) string {
 	sb.WriteString("#EXTM3U\n")
 	sb.WriteString("#EXT-X-VERSION:3\n")
 	// 写入字幕信息
-	for idx, subInfo := range i.Subtitles {
+	for _, subInfo := range i.Subtitles {
 		u, _ := url.Parse("proxy_subtitle")
 		q := u.Query()
 		q.Set("alist_path", i.AlistPath)
 		q.Set("template_id", i.TemplateId)
-		q.Set("idx", strconv.Itoa(idx))
+		q.Set("sub_name", urls.ResolveResourceName(subInfo.Url))
 		q.Set(emby.QueryApiKeyName, config.C.Emby.ApiKey)
 		u.RawQuery = q.Encode()
 		cmt := fmt.Sprintf(`#EXT-X-MEDIA:TYPE=SUBTITLES,GROUP-ID="subs",NAME="%s",LANGUAGE="%s",URI="%s"`, subInfo.Lang, subInfo.Lang, u.String())
@@ -210,38 +210,23 @@ func (i *Info) UpdateContent() error {
 	}
 	log.Printf(colors.ToPurple("更新 playlist, alistPath: %s, templateId: %s"), i.AlistPath, i.TemplateId)
 
-	// 1 如果有 remote 信息, 直接复用
-	var newInfo *Info
-	var err error
-	if i.Remote != "" {
-		newInfo, err = NewByRemote(i.Remote, nil)
-		if err != nil {
-			newInfo = nil
-		}
-		// remote 信息只使用一次
-		i.Remote = ""
+	// 请求 alist 资源
+	res := alist.FetchResource(alist.FetchInfo{
+		Path:         i.AlistPath,
+		UseTranscode: true,
+		Format:       i.TemplateId,
+	})
+	if res.Code != http.StatusOK {
+		return errors.New("请求 alist 失败: " + res.Msg)
 	}
 
-	var res model.HttpRes[alist.Resource]
-	if newInfo == nil {
-		// 2 请求 alist 资源
-		res = alist.FetchResource(alist.FetchInfo{
-			Path:         i.AlistPath,
-			UseTranscode: true,
-			Format:       i.TemplateId,
-		})
-		if res.Code != http.StatusOK {
-			return errors.New("请求 alist 失败: " + res.Msg)
-		}
-
-		// 3 解析地址
-		newInfo, err = NewByRemote(res.Data.Url, nil)
-		if err != nil {
-			return fmt.Errorf("解析远程 m3u8 失败, url: %s, err: %v", res.Data, err)
-		}
+	// 解析地址
+	newInfo, err := NewByRemote(res.Data.Url, nil)
+	if err != nil {
+		return fmt.Errorf("解析远程 m3u8 失败, url: %s, err: %v", res.Data, err)
 	}
 
-	// 4 拷贝最新数据
+	// 拷贝最新数据
 	i.RemoteBase = newInfo.RemoteBase
 	i.HeadComments = append(([]string)(nil), newInfo.HeadComments...)
 	i.TailComments = append(([]string)(nil), newInfo.TailComments...)

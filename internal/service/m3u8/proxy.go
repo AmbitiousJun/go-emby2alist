@@ -3,6 +3,7 @@ package m3u8
 import (
 	"errors"
 	"fmt"
+	"io"
 	"log"
 	"net/http"
 	"net/url"
@@ -11,6 +12,8 @@ import (
 
 	"github.com/AmbitiousJun/go-emby2alist/internal/config"
 	"github.com/AmbitiousJun/go-emby2alist/internal/util/colors"
+	"github.com/AmbitiousJun/go-emby2alist/internal/util/https"
+	"github.com/AmbitiousJun/go-emby2alist/internal/util/strs"
 
 	"github.com/gin-gonic/gin"
 )
@@ -50,24 +53,23 @@ func ProxyPlaylist(c *gin.Context) {
 		c.String(http.StatusBadRequest, "代理 m3u8 失败, 请检查日志")
 		return
 	}
-	reqType := params.Type == "main"
 
 	okContent := func(content string) {
 		c.Header("Content-Type", "application/vnd.apple.mpegurl")
 		c.String(http.StatusOK, content)
 	}
 
-	m3uContent, ok := GetPlaylist(params.AlistPath, params.TemplateId, true, reqType)
+	m3uContent, ok := GetPlaylist(params.AlistPath, params.TemplateId, true, true)
 	if ok {
 		okContent(m3uContent)
 		return
 	}
 
 	// 获取失败, 将当前请求的地址加入到预处理通道
-	PushPlaylistAsync(Info{AlistPath: params.AlistPath, TemplateId: params.TemplateId, Remote: params.Remote})
+	PushPlaylistAsync(Info{AlistPath: params.AlistPath, TemplateId: params.TemplateId})
 
 	// 重新获取一次
-	m3uContent, ok = GetPlaylist(params.AlistPath, params.TemplateId, true, reqType)
+	m3uContent, ok = GetPlaylist(params.AlistPath, params.TemplateId, true, true)
 	if ok {
 		okContent(m3uContent)
 		return
@@ -121,29 +123,43 @@ func ProxySubtitle(c *gin.Context) {
 		return
 	}
 
-	idx, err := strconv.Atoi(params.IdxStr)
-	if err != nil || idx < 0 {
-		c.String(http.StatusBadRequest, "无效 idx")
+	subName := c.Query("sub_name")
+	if strs.AnyEmpty(subName) {
+		c.String(http.StatusBadRequest, "代理字幕失败, 缺少 sub_name 参数")
 		return
 	}
 
-	okRedirect := func(link string) {
-		log.Printf(colors.ToGreen("重定向字幕: %s"), link)
-		c.Redirect(http.StatusTemporaryRedirect, link)
+	proxySubtitle := func(link string) {
+		log.Printf(colors.ToGreen("代理字幕: %s"), link)
+		resp, err := https.Request(http.MethodGet, link, nil, nil)
+		if err != nil {
+			log.Printf(colors.ToRed("代理字幕失败: %v"), err)
+			c.String(http.StatusInternalServerError, "代理字幕失败, 请检查日志")
+			return
+		}
+		defer resp.Body.Close()
+		https.CloneHeader(c, resp.Header)
+		c.Header("Content-Type", "text/vtt")
+		c.Status(resp.StatusCode)
+		if _, err = io.Copy(c.Writer, resp.Body); err != nil {
+			log.Printf(colors.ToRed("代理字幕失败: %v"), err)
+			c.String(http.StatusInternalServerError, "代理字幕失败, 请检查日志")
+			return
+		}
 	}
 
-	subtitleLink, ok := GetSubtitleLink(params.AlistPath, params.TemplateId, idx)
+	subtitleLink, ok := GetSubtitleLink(params.AlistPath, params.TemplateId, subName)
 	if ok {
-		okRedirect(subtitleLink)
+		proxySubtitle(subtitleLink)
 		return
 	}
 
 	// 获取失败, 将当前请求的地址加入到预处理通道
 	PushPlaylistAsync(Info{AlistPath: params.AlistPath, TemplateId: params.TemplateId})
 
-	subtitleLink, ok = GetSubtitleLink(params.AlistPath, params.TemplateId, idx)
+	subtitleLink, ok = GetSubtitleLink(params.AlistPath, params.TemplateId, subName)
 	if ok {
-		okRedirect(subtitleLink)
+		proxySubtitle(subtitleLink)
 		return
 	}
 	c.String(http.StatusBadRequest, "获取不到字幕")

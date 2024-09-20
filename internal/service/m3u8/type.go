@@ -27,7 +27,6 @@ type Info struct {
 	AlistPath     string               // 资源在 alist 中的绝对路径
 	TemplateId    string               // 转码资源模板 id
 	Subtitles     []alist.SubtitleInfo // 字幕信息, 如果一个资源是含有字幕的, 会返回变体 m3u8
-	Remote        string               // 请求 m3u8 的原始地址
 	RemoteBase    string               // 远程 m3u8 地址前缀
 	HeadComments  []string             // 头注释信息
 	TailComments  []string             // 尾注释信息
