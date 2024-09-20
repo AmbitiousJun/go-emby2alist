@@ -43,12 +43,41 @@ func getEmbyFileLocalPath(itemInfo ItemInfo) (string, error) {
 		body = res.Data
 	}
 
-	path, ok := body.Attr("MediaSources").Idx(0).Attr("Path").String()
+	mediaSources, ok := body.Attr("MediaSources").Done()
 	if !ok {
-		return "", fmt.Errorf("获取不到 Path 参数, 原始响应: %v", body)
+		return "", fmt.Errorf("获取不到 MediaSources, 原始响应: %v", body)
 	}
 
-	return path, nil
+	var path string
+	var defaultPath string
+
+	reqId, _ := url.QueryUnescape(itemInfo.MsInfo.RawId)
+	// 获取指定 MediaSourceId 的 Path
+	mediaSources.RangeArr(func(_ int, value *jsons.Item) error {
+		if strs.AnyEmpty(defaultPath) {
+			// 默认选择第一个路径
+			defaultPath, _ = value.Attr("Path").String()
+		}
+		if itemInfo.MsInfo.Empty {
+			// 如果没有传递 MediaSourceId, 就使用默认的 Path
+			return jsons.ErrBreakRange
+		}
+
+		curId, _ := url.QueryUnescape(value.Attr("Id").Val().(string))
+		if curId == reqId {
+			path, _ = value.Attr("Path").String()
+			return jsons.ErrBreakRange
+		}
+		return nil
+	})
+
+	if strs.AllNotEmpty(path) {
+		return path, nil
+	}
+	if strs.AllNotEmpty(defaultPath) {
+		return defaultPath, nil
+	}
+	return "", fmt.Errorf("获取不到 Path 参数, 原始响应: %v", body)
 }
 
 // findVideoPreviewInfos 查找 source 的所有转码资源
