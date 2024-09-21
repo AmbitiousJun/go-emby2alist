@@ -175,9 +175,12 @@ func ProxyRequest(c *gin.Context, remote string, withUri bool) error {
 	}
 
 	// 7 回写响应体
-	c.Status(resp.StatusCode)
-	if _, err := io.Copy(c.Writer, resp.Body); err != nil {
-		return fmt.Errorf("回写响应体失败: %v", err)
+	bodyBytes, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return fmt.Errorf("读取响应体失败: %v", err)
 	}
+	c.Status(resp.StatusCode)
+	c.Writer.Write(bodyBytes)
+	c.Writer.Flush()
 	return nil
 }
