@@ -151,8 +151,13 @@ func findVideoPreviewInfos(source *jsons.Item, originName string, resChan chan [
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			copySource := jsons.NewByVal(source.Struct())
 			templateId, _ := transcode.Attr("template_id").String()
+			if config.C.VideoPreview.IsTemplateIgnore(templateId) {
+				// 当前清晰度被忽略
+				return
+			}
+
+			copySource := jsons.NewByVal(source.Struct())
 			templateWidth, _ := transcode.Attr("template_width").Int()
 			templateHeight, _ := transcode.Attr("template_height").Int()
 			format := fmt.Sprintf("%dx%d", templateWidth, templateHeight)
@@ -193,6 +198,15 @@ func findVideoPreviewInfos(source *jsons.Item, originName string, resChan chan [
 		return nil
 	})
 	wg.Wait()
+
+	// 移除 res 中的空值项
+	for i := 0; i < len(res); {
+		if res[i] != nil {
+			i++
+			continue
+		}
+		res = append(res[:i], res[i+1:]...)
+	}
 
 	resChan <- res
 }
