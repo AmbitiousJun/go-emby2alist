@@ -3,7 +3,7 @@
 <div align="center">
   <img src="https://goreportcard.com/badge/github.com/AmbitiousJun/go-emby2alist"></img>
   <img src="https://img.shields.io/github/v/tag/AmbitiousJun/go-emby2alist"></img>
-  <img src="https://img.shields.io/docker/image-size/ambitiousjun/go-emby2alist/1.0.6"></img>
+  <img src="https://img.shields.io/docker/image-size/ambitiousjun/go-emby2alist/v1.0.7"></img>
   <img src="https://img.shields.io/docker/pulls/ambitiousjun/go-emby2alist"></img>
   <img src="https://img.shields.io/github/license/AmbitiousJun/go-emby2alist"></img>
 </div>
@@ -172,7 +172,7 @@
 1. 获取代码
 
 ```shell
-git clone --branch 1.0.6 --depth 1 https://ghproxy.cc/https://github.com/AmbitiousJun/go-emby2alist
+git clone --branch v1.0.7 --depth 1 https://ghproxy.cc/https://github.com/AmbitiousJun/go-emby2alist
 cd go-emby2alist
 ```
 
@@ -242,7 +242,7 @@ docker image prune -f
 
 1. 准备配置
 
-参考[示例配置](https://github.com/AmbitiousJun/go-emby2alist/blob/1.0.6/config-example.yml)，配置好自己的服务器信息，保存并命名为 `config.yml`
+参考[示例配置](https://github.com/AmbitiousJun/go-emby2alist/blob/v1.0.7/config-example.yml)，配置好自己的服务器信息，保存并命名为 `config.yml`
 
 2. 创建 docker-compose 文件
 
@@ -252,7 +252,7 @@ docker image prune -f
 version: "3.1"
 services:
   go-emby2alist:
-    image: ambitiousjun/go-emby2alist:1.0.6
+    image: ambitiousjun/go-emby2alist:v1.0.7
     environment:
       - TZ=Asia/Shanghai
       - GIN_MODE=release
@@ -283,6 +283,10 @@ docker-compose up -d --build
 在容器内部，已经将 https 端口写死为 `8094`，将 http 端口写死为 `8095`
 
 如果需要自定义端口，仍然是在 `docker-compose.yml` 中将宿主机的端口映射到这两个端口上即可
+
+**已知问题：**
+
+可能有部分客户端会出现首次用 https 成功连上了，下次再打开客户端时，就自动变回到 http 连接，目前不太清楚具体的原因
 
 ## 关于 Emby 的 api_key
 
