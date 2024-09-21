@@ -23,24 +23,23 @@ const (
 
 	// ItemsCacheSpace 专门存放 items 信息的缓存空间
 	ItemsCacheSpace = "UserItems"
+
+	// ResortMinNum 至少请求多少个 item 时才会走重排序逻辑
+	ResortMinNum = 300
 )
 
 // ResortRandomItems 对随机的 items 列表进行重排序
 func ResortRandomItems(c *gin.Context) {
 	// 如果没有开启配置, 代理原请求并返回
 	if !config.C.Emby.ResortRandomItems {
-		if res, ok := proxyAndSetRespHeader(c); ok {
-			c.JSON(res.Code, res.Data.Struct())
-		}
+		ProxyOrigin(c)
 		return
 	}
 
 	// 如果请求的个数较少, 认为不是随机播放列表, 代理原请求并返回
 	limit, err := strconv.Atoi(c.Query("Limit"))
-	if err == nil && limit < 300 {
-		if res, ok := proxyAndSetRespHeader(c); ok {
-			c.JSON(res.Code, res.Data.Struct())
-		}
+	if err == nil && limit < ResortMinNum {
+		ProxyOrigin(c)
 		return
 	}
 
@@ -137,12 +136,12 @@ func ResortRandomItems(c *gin.Context) {
 }
 
 // RandomItemsWithLimit 代理原始的随机列表接口
-// 个数限制为 700
 func RandomItemsWithLimit(c *gin.Context) {
 	u := c.Request.URL
 	u.Path = strings.TrimSuffix(u.Path, "/with_limit")
 	q := u.Query()
-	q.Set("Limit", "700")
+	q.Set("Limit", strconv.Itoa(ResortMinNum))
+	q.Del("SortOrder")
 	u.RawQuery = q.Encode()
 	embyHost := config.C.Emby.Host
 	c.Request.Header.Del("Accept-Encoding")
@@ -161,7 +160,7 @@ func RandomItemsWithLimit(c *gin.Context) {
 	}
 
 	https.CloneHeader(c, resp.Header)
-	c.Header(cache.HeaderKeyExpired, cache.Duration(time.Hour*3))
+	c.Header(cache.HeaderKeyExpired, cache.Duration(time.Minute*15))
 	c.Header(cache.HeaderKeySpace, ItemsCacheSpace)
 	c.Header(cache.HeaderKeySpaceKey, calcRandomItemsCacheKey(c))
 	c.Status(resp.StatusCode)
