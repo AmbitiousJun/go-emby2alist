@@ -39,7 +39,7 @@ func AddDefaultApiKey(c *gin.Context) {
 		return
 	}
 	q := c.Request.URL.Query()
-	if q.Get(QueryApiKeyName) != "" || q.Get("QueryTokenName") != "" {
+	if q.Get(QueryApiKeyName) != "" || q.Get(QueryTokenName) != "" {
 		return
 	}
 	q.Set(QueryApiKeyName, config.C.Emby.ApiKey)
