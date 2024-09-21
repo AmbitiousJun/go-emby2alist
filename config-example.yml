@@ -16,6 +16,9 @@ video-preview:
   containers:                                # 对哪些视频容器获取转码资源信息
     - mp4
     - mkv
+  ignore-template-ids:                       # 忽略哪些转码清晰度
+    - LD
+    - SD
 path:
   # emby 挂载路径和 alist 真实路径之间的前缀映射
   # 冒号左边表示本地挂载路径, 冒号右边表示 alist 的真实路径
