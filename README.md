@@ -313,9 +313,8 @@ Object reference not set to an instance of an object.
    >
    > 仍然存在的问题：
    >
-   > - `Emby Web`、`Emby for AndroidTV` 无法播放
    > - 对于内封字幕的视频，即使在 Alist 接口能获取到转码字幕直链，在代码中也将链接嵌入 m3u8 里边了，但是播放器就是无法识别
-
+   
 2. - [ ] ~~电视直播直链反代（实现真直链反代，不需要经过 emby 内部对源地址可用性的校验）~~
 
 3. - [x] 适配 ssl
