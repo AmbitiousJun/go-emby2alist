@@ -70,9 +70,11 @@ func FetchResource(fi FetchInfo) model.HttpRes[Resource] {
 	subList, ok := res.Data.Attr("video_preview_play_info").Attr("live_transcoding_subtitle_task_list").Done()
 	if ok {
 		subList.RangeArr(func(_ int, value *jsons.Item) error {
+			lang, _ := value.Attr("language").String()
+			url, _ := value.Attr("url").String()
 			subtitles = append(subtitles, SubtitleInfo{
-				Lang: value.Attr("language").Val().(string),
-				Url:  value.Attr("url").Val().(string),
+				Lang: lang,
+				Url:  url,
 			})
 			return nil
 		})
