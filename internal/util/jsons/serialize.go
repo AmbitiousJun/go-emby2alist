@@ -3,6 +3,7 @@ package jsons
 import (
 	"fmt"
 	"strings"
+	"sync"
 )
 
 // Struct 将 item 转换为结构体对象
@@ -12,15 +13,32 @@ func (i *Item) Struct() interface{} {
 		return i.val
 	case JsonTypeObj:
 		m := make(map[string]interface{})
+		wg := sync.WaitGroup{}
+		mu := sync.Mutex{}
 		for key, value := range i.obj {
-			m[key] = value.Struct()
+			ck, cv := key, value
+			wg.Add(1)
+			go func() {
+				defer wg.Done()
+				mu.Lock()
+				defer mu.Unlock()
+				m[ck] = cv.Struct()
+			}()
 		}
+		wg.Wait()
 		return m
 	case JsonTypeArr:
-		a := make([]interface{}, 0)
-		for _, value := range i.arr {
-			a = append(a, value.Struct())
+		a := make([]interface{}, i.Len())
+		wg := sync.WaitGroup{}
+		for idx, value := range i.arr {
+			ci, cv := idx, value
+			wg.Add(1)
+			go func() {
+				defer wg.Done()
+				a[ci] = cv.Struct()
+			}()
 		}
+		wg.Wait()
 		return a
 	default:
 		return "Error jType"

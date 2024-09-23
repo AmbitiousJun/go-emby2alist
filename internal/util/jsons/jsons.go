@@ -6,6 +6,7 @@ import (
 	"reflect"
 	"strconv"
 	"strings"
+	"sync"
 
 	"github.com/AmbitiousJun/go-emby2alist/internal/util/strs"
 )
@@ -39,11 +40,16 @@ func NewByObj(obj interface{}) *Item {
 	}
 
 	item := NewEmptyObj()
+	wg := sync.WaitGroup{}
 	if v.Kind() == reflect.Struct {
 		for i := 0; i < v.NumField(); i++ {
 			fieldVal := v.Field(i)
 			fieldType := v.Type().Field(i)
-			item.obj[fieldType.Name] = NewByVal(fieldVal.Interface())
+			wg.Add(1)
+			go func() {
+				defer wg.Done()
+				item.Put(fieldType.Name, NewByVal(fieldVal.Interface()))
+			}()
 		}
 	}
 
@@ -52,10 +58,16 @@ func NewByObj(obj interface{}) *Item {
 			panic("不支持的 map 类型")
 		}
 		for _, key := range v.MapKeys() {
-			item.obj[key.Interface().(string)] = NewByVal(v.MapIndex(key).Interface())
+			ck := key
+			wg.Add(1)
+			go func() {
+				defer wg.Done()
+				item.Put(ck.Interface().(string), NewByVal(v.MapIndex(ck).Interface()))
+			}()
 		}
 	}
 
+	wg.Wait()
 	return item
 }
 
@@ -77,10 +89,17 @@ func NewByArr(arr interface{}) *Item {
 		return NewByVal(arr)
 	}
 
-	item := NewEmptyArr()
+	item := &Item{arr: make([]*Item, v.Len()), jType: JsonTypeArr}
+	wg := sync.WaitGroup{}
 	for i := 0; i < v.Len(); i++ {
-		item.arr = append(item.arr, NewByVal(v.Index(i).Interface()))
+		ci := i
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			item.PutIdx(ci, NewByVal(v.Index(ci).Interface()))
+		}()
 	}
+	wg.Wait()
 	return item
 }
 
@@ -139,13 +158,27 @@ func New(rawJson string) (*Item, error) {
 		if err := json.Unmarshal([]byte(rawJson), &data); err != nil {
 			return nil, err
 		}
+
 		item := NewEmptyObj()
+		wg := sync.WaitGroup{}
+		var handleErr error
 		for key, value := range data {
-			subI, err := New(string(value))
-			if err != nil {
-				return nil, err
-			}
-			item.Put(key, subI)
+			ck, cv := key, value
+			wg.Add(1)
+			go func() {
+				defer wg.Done()
+				subI, err := New(string(cv))
+				if err != nil {
+					handleErr = err
+					return
+				}
+				item.Put(ck, subI)
+			}()
+		}
+		wg.Wait()
+
+		if handleErr != nil {
+			return nil, handleErr
 		}
 		return item, nil
 	}
@@ -155,13 +188,27 @@ func New(rawJson string) (*Item, error) {
 		if err := json.Unmarshal([]byte(rawJson), &data); err != nil {
 			return nil, err
 		}
-		item := NewEmptyArr()
-		for _, value := range data {
-			subI, err := New(string(value))
-			if err != nil {
-				return nil, err
-			}
-			item.Append(subI)
+
+		item := &Item{arr: make([]*Item, len(data)), jType: JsonTypeArr}
+		wg := sync.WaitGroup{}
+		var handleErr error
+		for idx, value := range data {
+			ci, cv := idx, value
+			wg.Add(1)
+			go func() {
+				defer wg.Done()
+				subI, err := New(string(cv))
+				if err != nil {
+					handleErr = err
+					return
+				}
+				item.PutIdx(ci, subI)
+			}()
+		}
+		wg.Wait()
+
+		if handleErr != nil {
+			return nil, handleErr
 		}
 		return item, nil
 	}

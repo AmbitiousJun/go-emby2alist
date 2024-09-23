@@ -3,6 +3,7 @@ package jsons
 import (
 	"errors"
 	"math/rand"
+	"sync"
 )
 
 // JsonType json 属性值类型
@@ -31,6 +32,9 @@ type Item struct {
 
 	// jType 当前数据项类型
 	jType JsonType
+
+	// mu 并发控制
+	mu sync.Mutex
 }
 
 // Type 获取 json 项类型
@@ -43,6 +47,8 @@ func (i *Item) Put(key string, value *Item) {
 	if i.jType != JsonTypeObj || value == nil {
 		return
 	}
+	i.mu.Lock()
+	defer i.mu.Unlock()
 	i.obj[key] = value
 }
 
@@ -73,6 +79,8 @@ func (i *Item) DelKey(key string) {
 	if i.jType != JsonTypeObj {
 		return
 	}
+	i.mu.Lock()
+	defer i.mu.Unlock()
 	delete(i.obj, key)
 }
 
@@ -81,6 +89,8 @@ func (i *Item) Append(values ...*Item) {
 	if i.jType != JsonTypeArr || len(values) == 0 {
 		return
 	}
+	i.mu.Lock()
+	defer i.mu.Unlock()
 	for _, value := range values {
 		if value == nil {
 			continue
@@ -108,6 +118,8 @@ func (i *Item) PutIdx(index int, newItem *Item) {
 	if index < 0 || index >= len(i.arr) {
 		return
 	}
+	i.mu.Lock()
+	defer i.mu.Unlock()
 	i.arr[index] = newItem
 }
 
@@ -163,6 +175,8 @@ func (i *Item) Shuffle() {
 	if i.jType != JsonTypeArr {
 		return
 	}
+	i.mu.Lock()
+	defer i.mu.Unlock()
 	rand.Shuffle(i.Len(), func(j, k int) {
 		i.arr[j], i.arr[k] = i.arr[k], i.arr[j]
 	})
@@ -176,6 +190,8 @@ func (i *Item) DelIdx(index int) {
 	if index < 0 || index >= len(i.arr) {
 		return
 	}
+	i.mu.Lock()
+	defer i.mu.Unlock()
 	i.arr = append(i.arr[:index], i.arr[index+1:]...)
 }
 
