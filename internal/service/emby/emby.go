@@ -59,6 +59,8 @@ func ProxySocket() func(*gin.Context) {
 // 然后执行重定向
 func HandleImages(c *gin.Context) {
 	q := c.Request.URL.Query()
+	q.Del("quality")
+	q.Del("Quality")
 	q.Set("Quality", strconv.Itoa(config.C.Emby.ImagesQuality))
 	c.Request.URL.RawQuery = q.Encode()
 	RedirectOrigin(c)
