@@ -2,6 +2,7 @@ package config
 
 import (
 	"errors"
+	"fmt"
 	"strings"
 
 	"github.com/AmbitiousJun/go-emby2alist/internal/util/strs"
@@ -33,6 +34,8 @@ type Emby struct {
 	ResortRandomItems bool `yaml:"resort-random-items"`
 	// ProxyErrorStrategy 代理错误时的处理策略
 	ProxyErrorStrategy PeStrategy `yaml:"proxy-error-strategy"`
+	// ImagesQuality 图片质量
+	ImagesQuality int `yaml:"images-quality"`
 }
 
 func (e *Emby) Init() error {
@@ -49,9 +52,18 @@ func (e *Emby) Init() error {
 		// 失败默认回源
 		e.ProxyErrorStrategy = StrategyOrigin
 	}
+
 	e.ProxyErrorStrategy = PeStrategy(strings.TrimSpace(string(e.ProxyErrorStrategy)))
 	if _, ok := validPeStrategy[e.ProxyErrorStrategy]; !ok {
 		return errors.New("emby.proxy-error-strategy 配置错误")
+	}
+
+	if e.ImagesQuality == 0 {
+		// 不允许配置零值
+		e.ImagesQuality = 70
+	}
+	if e.ImagesQuality < 0 || e.ImagesQuality > 100 {
+		return fmt.Errorf("emby.images-quality 配置错误: %d, 允许配置范围: [1, 100]", e.ImagesQuality)
 	}
 	return nil
 }

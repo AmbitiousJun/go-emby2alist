@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/http/httputil"
 	"net/url"
+	"strconv"
 	"strings"
 	"sync"
 
@@ -50,6 +51,17 @@ func ProxySocket() func(*gin.Context) {
 		once.Do(initFunc)
 		proxy.ServeHTTP(c.Writer, c.Request)
 	}
+}
+
+// HandleImages 处理图片请求
+//
+// 首先修改图片质量参数为配置值
+// 然后执行重定向
+func HandleImages(c *gin.Context) {
+	q := c.Request.URL.Query()
+	q.Set("Quality", strconv.Itoa(config.C.Emby.ImagesQuality))
+	c.Request.URL.RawQuery = q.Encode()
+	RedirectOrigin(c)
 }
 
 // ProxyOrigin 将请求代理到源服务器
@@ -140,7 +152,7 @@ func TestProxyUri(c *gin.Context) bool {
 	return true
 }
 
-// RedirectOrigin 将 GET 请求 301 重定向到源服务器
+// RedirectOrigin 将 GET 请求 308 重定向到源服务器
 // 其他请求走本地代理
 func RedirectOrigin(c *gin.Context) {
 	if c == nil {

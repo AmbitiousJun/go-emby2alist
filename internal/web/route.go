@@ -50,6 +50,9 @@ func initRulePatterns() {
 		// 资源下载, 重定向到直链
 		{constant.Reg_ItemDownload, emby.Redirect2AlistLink},
 
+		// 处理图片请求
+		{constant.Reg_Images, emby.HandleImages},
+
 		// 特定资源走代理
 		//
 		// ^/$: 根路径不允许重定向
