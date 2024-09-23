@@ -15,6 +15,7 @@ import (
 	"github.com/AmbitiousJun/go-emby2alist/internal/util/colors"
 	"github.com/AmbitiousJun/go-emby2alist/internal/util/https"
 	"github.com/AmbitiousJun/go-emby2alist/internal/util/jsons"
+	"github.com/AmbitiousJun/go-emby2alist/internal/util/strs"
 	"github.com/AmbitiousJun/go-emby2alist/internal/web/cache"
 
 	"github.com/gin-gonic/gin"
@@ -54,7 +55,7 @@ func TransferPlaybackInfo(c *gin.Context) {
 
 	msInfo := itemInfo.MsInfo
 	// 如果是指定 MediaSourceId 的 PlaybackInfo 信息, 就从缓存空间中获取
-	if useCacheSpacePlaybackInfo(c, itemInfo) {
+	if canCoverPlaybackInfo(c, "") && useCacheSpacePlaybackInfo(c, itemInfo) {
 		c.Header(cache.HeaderKeyExpired, "-1")
 		return
 	}
@@ -268,7 +269,8 @@ func LoadCacheItems(c *gin.Context) {
 		c.JSON(res.Code, resJson.Struct())
 	}()
 
-	if !canCoverItemsPlaybackInfo(c, resJson) {
+	itemType, _ := resJson.Attr("Type").String()
+	if !canCoverPlaybackInfo(c, itemType) {
 		return
 	}
 
@@ -326,15 +328,15 @@ func LoadCacheItems(c *gin.Context) {
 	coverMediaSources(bodyJson)
 }
 
-// canCoverItemsPlaybackInfo 判断一个 Items 请求是否能够使用 PlaybackInfo 的响应覆盖
-func canCoverItemsPlaybackInfo(c *gin.Context, originJson *jsons.Item) bool {
+// canCoverPlaybackInfo 判断是否能够使用缓存空间的通用 PlaybackInfo 进行响应覆盖
+func canCoverPlaybackInfo(c *gin.Context, itemType string) bool {
 	// 未开启转码资源获取功能
 	if !config.C.VideoPreview.Enable {
 		return false
 	}
 
 	// 只处理特定类型的 Items 响应
-	if !ValidCacheItemsTypeRegex.MatchString(originJson.Attr("Type").Val().(string)) {
+	if strs.AllNotEmpty(itemType) && !ValidCacheItemsTypeRegex.MatchString(itemType) {
 		return false
 	}
 
