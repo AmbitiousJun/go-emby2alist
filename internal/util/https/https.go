@@ -32,6 +32,20 @@ func init() {
 	}
 }
 
+// ExtractReqBody 克隆并提取请求体
+// 不影响 c 对象之后再次读取请求体
+func ExtractReqBody(c *gin.Context) ([]byte, error) {
+	if c == nil {
+		return nil, nil
+	}
+	bodyBytes, err := io.ReadAll(c.Request.Body)
+	if err != nil {
+		return nil, err
+	}
+	c.Request.Body = io.NopCloser(bytes.NewBuffer(bodyBytes))
+	return bodyBytes, nil
+}
+
 // ClientRequestHost 获取客户端请求的 Host
 func ClientRequestHost(c *gin.Context) string {
 	if c == nil {

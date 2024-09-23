@@ -35,7 +35,7 @@ const MediaSourceIdSegment = "[[_]]"
 func getEmbyFileLocalPath(itemInfo ItemInfo) (string, error) {
 	var body *jsons.Item
 
-	if cacheBody, ok := getPlaybackInfoByCacheSpace(itemInfo); ok {
+	if cacheBody, _, ok := getPlaybackInfoByCacheSpace(itemInfo); ok {
 		body = cacheBody
 	} else {
 		res, _ := Fetch(itemInfo.PlaybackInfoUri, http.MethodPost, nil, nil)

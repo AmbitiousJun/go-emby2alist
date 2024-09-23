@@ -15,7 +15,6 @@ import (
 	"github.com/AmbitiousJun/go-emby2alist/internal/util/colors"
 	"github.com/AmbitiousJun/go-emby2alist/internal/util/https"
 	"github.com/AmbitiousJun/go-emby2alist/internal/util/jsons"
-	"github.com/AmbitiousJun/go-emby2alist/internal/util/strs"
 	"github.com/AmbitiousJun/go-emby2alist/internal/web/cache"
 
 	"github.com/gin-gonic/gin"
@@ -37,11 +36,6 @@ var (
 
 	// ValidCacheItemsTypeRegex 校验 Items 的 Type 参数, 通过正则才覆盖 PlaybackInfo 缓存
 	ValidCacheItemsTypeRegex = regexp.MustCompile(`(?i)(movie|episode)`)
-
-	// ValidCacheItemsReqUARegex 校验 Items 请求的 User-Agent, 通过正则才覆盖 PlaybackInfo 缓存
-	ValidCacheItemsReqUARegex = regexp.MustCompile(`(?i)(fileball)`)
-	// ValidCacheItemsMbCliRegex 校验 Items 请求的 X-Emby-Client, 通过正则才覆盖 PlaybackInfo 缓存
-	ValidCacheItemsMbCliRegex = regexp.MustCompile(`(?i)(androidtv)`)
 )
 
 // TransferPlaybackInfo 代理 PlaybackInfo 接口, 防止客户端转码
@@ -181,7 +175,7 @@ func useCacheSpacePlaybackInfo(c *gin.Context, itemInfo ItemInfo) bool {
 
 	// findMediaSourceAndReturn 从全量 PlaybackInfo 信息中查询指定 MediaSourceId 信息
 	// 处理成功返回 true
-	findMediaSourceAndReturn := func(jsonInfo *jsons.Item) bool {
+	findMediaSourceAndReturn := func(jsonInfo *jsons.Item, respHeader http.Header) bool {
 		if jsonInfo == nil {
 			return false
 		}
@@ -202,21 +196,24 @@ func useCacheSpacePlaybackInfo(c *gin.Context, itemInfo ItemInfo) bool {
 			return false
 		}
 		jsonInfo.Put("MediaSources", newMediaSources)
+		respHeader.Del("Content-Length")
+		https.CloneHeader(c, respHeader)
 		c.JSON(http.StatusOK, jsonInfo.Struct())
 		return true
 	}
 
 	// 1 查询缓存空间
-	cacheInfo, ok := getPlaybackInfoByCacheSpace(itemInfo)
+	cacheInfo, cacheRespHeader, ok := getPlaybackInfoByCacheSpace(itemInfo)
 	if ok {
 		// 未传递 MediaSourceId, 返回整个缓存数据
-		if itemInfo.MsInfo.Empty && canCoverPlaybackInfo(c, "") {
+		if itemInfo.MsInfo.Empty {
 			log.Printf(colors.ToBlue("复用缓存空间中的 PlaybackInfo 信息, itemId: %s"), itemInfo.Id)
+			https.CloneHeader(c, cacheRespHeader)
 			c.JSON(http.StatusOK, cacheInfo.Struct())
 			return true
 		}
 		// 尝试从缓存中匹配指定的 MediaSourceId 信息
-		if findMediaSourceAndReturn(cacheInfo) {
+		if findMediaSourceAndReturn(cacheInfo, cacheRespHeader) {
 			return true
 		}
 	}
@@ -246,7 +243,7 @@ func useCacheSpacePlaybackInfo(c *gin.Context, itemInfo ItemInfo) bool {
 	if checkErr(c, err) {
 		return true
 	}
-	if !findMediaSourceAndReturn(resJson) {
+	if !findMediaSourceAndReturn(resJson, cacheRespHeader) {
 		return checkErr(c, errors.New("查找不到该 MediaSourceId: "+reqId))
 	}
 	return true
@@ -269,8 +266,14 @@ func LoadCacheItems(c *gin.Context) {
 		c.JSON(res.Code, resJson.Struct())
 	}()
 
+	// 未开启转码资源获取功能
+	if !config.C.VideoPreview.Enable {
+		return
+	}
+
+	// 只处理特定类型的 Items 响应
 	itemType, _ := resJson.Attr("Type").String()
-	if !canCoverPlaybackInfo(c, itemType) {
+	if !ValidCacheItemsTypeRegex.MatchString(itemType) {
 		return
 	}
 
@@ -296,7 +299,7 @@ func LoadCacheItems(c *gin.Context) {
 	}
 
 	// 获取附带转码信息的 PlaybackInfo 数据
-	if cacheBody, ok := getPlaybackInfoByCacheSpace(itemInfo); ok && coverMediaSources(cacheBody) {
+	if cacheBody, _, ok := getPlaybackInfoByCacheSpace(itemInfo); ok && coverMediaSources(cacheBody) {
 		return
 	}
 
@@ -328,43 +331,17 @@ func LoadCacheItems(c *gin.Context) {
 	coverMediaSources(bodyJson)
 }
 
-// canCoverPlaybackInfo 判断是否能够使用缓存空间的通用 PlaybackInfo 进行响应覆盖
-func canCoverPlaybackInfo(c *gin.Context, itemType string) bool {
-	// 未开启转码资源获取功能
-	if !config.C.VideoPreview.Enable {
-		return false
-	}
-
-	// 只处理特定类型的 Items 响应
-	if strs.AllNotEmpty(itemType) && !ValidCacheItemsTypeRegex.MatchString(itemType) {
-		return false
-	}
-
-	// UA 和 Client 标识至少有一个通过校验才能继续被处理
-	flag := false
-	if ValidCacheItemsReqUARegex.MatchString(c.Request.Header.Get("User-Agent")) {
-		flag = true
-	}
-	if ValidCacheItemsMbCliRegex.MatchString(c.Query("X-Emby-Client")) {
-		flag = true
-	}
-	if ValidCacheItemsMbCliRegex.MatchString(c.Request.Header.Get("X-Emby-Client")) {
-		flag = true
-	}
-	return flag
-}
-
 // getPlaybackInfoByCacheSpace 从缓存空间中获取 PlaybackInfo 信息
-func getPlaybackInfoByCacheSpace(itemInfo ItemInfo) (*jsons.Item, bool) {
+func getPlaybackInfoByCacheSpace(itemInfo ItemInfo) (*jsons.Item, http.Header, bool) {
 	spaceCache, ok := cache.GetSpaceCache(PlaybackCacheSpace, itemInfo.Id)
 	if !ok {
-		return nil, false
+		return nil, nil, false
 	}
 
 	// 获取缓存响应体内容
 	cacheBody, err := spaceCache.JsonBody()
 	if err != nil {
-		return nil, false
+		return nil, nil, false
 	}
-	return cacheBody, true
+	return cacheBody, spaceCache.Headers(), true
 }
