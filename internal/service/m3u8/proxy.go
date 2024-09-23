@@ -139,7 +139,6 @@ func ProxySubtitle(c *gin.Context) {
 		}
 		defer resp.Body.Close()
 		https.CloneHeader(c, resp.Header)
-		c.Header("Content-Type", "text/vtt")
 		c.Status(resp.StatusCode)
 		if _, err = io.Copy(c.Writer, resp.Body); err != nil {
 			log.Printf(colors.ToRed("代理字幕失败: %v"), err)

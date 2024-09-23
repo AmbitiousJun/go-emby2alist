@@ -223,18 +223,13 @@ func addSubtitles2MediaStreams(source, subtitleList *jsons.Item, alistPath, temp
 	if !ok || mediaStreams.Type() != jsons.JsonTypeArr {
 		return
 	}
-	if true {
-		// TODO: 当前函数无法生效, 仅作为 demo 调试代码
-		return
-	}
 
 	// 2 生成 MediaStream
 	itemId, _ := source.Attr("ItemId").String()
 	curMediaStreamsSize := mediaStreams.Len()
 	fakeId := randoms.RandomHex(32)
 	subtitleList.RangeArr(func(index int, sub *jsons.Item) error {
-		subStream, _ := jsons.New(`{"Codec":"","DisplayLanguage":"","DisplayTitle":"","Index":3,"IsExternal":true,"IsTextSubtitleStream":true,"Language":"chi","Protocol":"File","SupportsExternalStream":true,"Title":"","Type":"Subtitle"}`)
-		subStream.Put("Codec", jsons.NewByVal("vtt"))
+		subStream, _ := jsons.New(`{"AttachmentSize":0,"Codec":"vtt","DeliveryMethod":"External","DeliveryUrl":"/Videos/6066/4ce9f37fe8567a3898e66517b92cf2af/Subtitles/14/0/Stream.vtt?api_key=964a56845f6a4c4a8ba42204ec6f775c","DisplayTitle":"(VTT)","ExtendedVideoSubType":"None","ExtendedVideoSubTypeDescription":"None","ExtendedVideoType":"None","Index":14,"IsDefault":false,"IsExternal":true,"IsExternalUrl":false,"IsForced":false,"IsHearingImpaired":false,"IsInterlaced":false,"IsTextSubtitleStream":true,"Protocol":"File","SupportsExternalStream":true,"Type":"Subtitle"}`)
 
 		lang, _ := sub.Attr("language").String()
 		subStream.Put("DisplayLanguage", jsons.NewByVal(lang))
@@ -256,12 +251,6 @@ func addSubtitles2MediaStreams(source, subtitleList *jsons.Item, alistPath, temp
 		u.RawQuery = q.Encode()
 		subStream.Put("DeliveryUrl", jsons.NewByVal(u.String()))
 
-		subStream.Put("DeliveryMethod", jsons.NewByVal("External"))
-		subStream.Put("IsExternalUrl", jsons.NewByVal(false))
-		subStream.Put("IsExternal", jsons.NewByVal(true))
-		subStream.Put("IsTextSubtitleStream", jsons.NewByVal(true))
-		subStream.Put("SupportsExternalStream", jsons.NewByVal(true))
-		subStream.Put("Protocol", jsons.NewByVal("File"))
 		mediaStreams.Append(subStream)
 		return nil
 	})
