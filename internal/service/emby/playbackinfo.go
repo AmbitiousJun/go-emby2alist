@@ -36,6 +36,11 @@ var (
 
 	// ValidCacheItemsTypeRegex 校验 Items 的 Type 参数, 通过正则才覆盖 PlaybackInfo 缓存
 	ValidCacheItemsTypeRegex = regexp.MustCompile(`(?i)(movie|episode)`)
+
+	// ValidCacheItemsReqUARegex 校验 Items 请求的 User-Agent, 通过正则才覆盖 PlaybackInfo 缓存
+	ValidCacheItemsReqUARegex = regexp.MustCompile(`(?i)(fileball)`)
+	// ValidCacheItemsMbCliRegex 校验 Items 请求的 X-Emby-Client, 通过正则才覆盖 PlaybackInfo 缓存
+	ValidCacheItemsMbCliRegex = regexp.MustCompile(`(?i)(androidtv)`)
 )
 
 // TransferPlaybackInfo 代理 PlaybackInfo 接口, 防止客户端转码
@@ -263,13 +268,7 @@ func LoadCacheItems(c *gin.Context) {
 		c.JSON(res.Code, resJson.Struct())
 	}()
 
-	// 未开启转码资源获取功能
-	if !config.C.VideoPreview.Enable {
-		return
-	}
-
-	// 只处理剧集类型的 Items 响应
-	if !ValidCacheItemsTypeRegex.MatchString(resJson.Attr("Type").Val().(string)) {
+	if !canCoverItemsPlaybackInfo(c, resJson) {
 		return
 	}
 
@@ -325,6 +324,32 @@ func LoadCacheItems(c *gin.Context) {
 		return
 	}
 	coverMediaSources(bodyJson)
+}
+
+// canCoverItemsPlaybackInfo 判断一个 Items 请求是否能够使用 PlaybackInfo 的响应覆盖
+func canCoverItemsPlaybackInfo(c *gin.Context, originJson *jsons.Item) bool {
+	// 未开启转码资源获取功能
+	if !config.C.VideoPreview.Enable {
+		return false
+	}
+
+	// 只处理特定类型的 Items 响应
+	if !ValidCacheItemsTypeRegex.MatchString(originJson.Attr("Type").Val().(string)) {
+		return false
+	}
+
+	// UA 和 Client 标识至少有一个通过校验才能继续被处理
+	flag := false
+	if ValidCacheItemsReqUARegex.MatchString(c.Request.Header.Get("User-Agent")) {
+		flag = true
+	}
+	if ValidCacheItemsMbCliRegex.MatchString(c.Query("X-Emby-Client")) {
+		flag = true
+	}
+	if ValidCacheItemsMbCliRegex.MatchString(c.Request.Header.Get("X-Emby-Client")) {
+		flag = true
+	}
+	return flag
 }
 
 // getPlaybackInfoByCacheSpace 从缓存空间中获取 PlaybackInfo 信息
