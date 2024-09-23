@@ -55,7 +55,7 @@ func TransferPlaybackInfo(c *gin.Context) {
 
 	msInfo := itemInfo.MsInfo
 	// 如果是指定 MediaSourceId 的 PlaybackInfo 信息, 就从缓存空间中获取
-	if canCoverPlaybackInfo(c, "") && useCacheSpacePlaybackInfo(c, itemInfo) {
+	if useCacheSpacePlaybackInfo(c, itemInfo) {
 		c.Header(cache.HeaderKeyExpired, "-1")
 		return
 	}
@@ -210,7 +210,7 @@ func useCacheSpacePlaybackInfo(c *gin.Context, itemInfo ItemInfo) bool {
 	cacheInfo, ok := getPlaybackInfoByCacheSpace(itemInfo)
 	if ok {
 		// 未传递 MediaSourceId, 返回整个缓存数据
-		if itemInfo.MsInfo.Empty {
+		if itemInfo.MsInfo.Empty && canCoverPlaybackInfo(c, "") {
 			log.Printf(colors.ToBlue("复用缓存空间中的 PlaybackInfo 信息, itemId: %s"), itemInfo.Id)
 			c.JSON(http.StatusOK, cacheInfo.Struct())
 			return true
