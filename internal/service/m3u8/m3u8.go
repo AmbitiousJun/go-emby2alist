@@ -14,7 +14,7 @@ const (
 
 	// MaxPlaylistNum 在内存中最多维护的 m3u8 列表个数
 	// 超出则淘汰最久没有读取的一个
-	MaxPlaylistNum = 5
+	MaxPlaylistNum = 10
 
 	// PreChanSize 预处理通道大小, 塞满时从头部开始淘汰
 	PreChanSize = 1000
