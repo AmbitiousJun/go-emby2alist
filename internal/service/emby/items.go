@@ -140,7 +140,7 @@ func RandomItemsWithLimit(c *gin.Context) {
 	u := c.Request.URL
 	u.Path = strings.TrimSuffix(u.Path, "/with_limit")
 	q := u.Query()
-	q.Set("Limit", strconv.Itoa(ResortMinNum))
+	q.Set("Limit", "500")
 	q.Del("SortOrder")
 	u.RawQuery = q.Encode()
 	embyHost := config.C.Emby.Host
