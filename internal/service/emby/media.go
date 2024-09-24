@@ -35,9 +35,14 @@ const MediaSourceIdSegment = "[[_]]"
 func getEmbyFileLocalPath(itemInfo ItemInfo) (string, error) {
 	var body *jsons.Item
 
-	if cacheBody, _, ok := getPlaybackInfoByCacheSpace(itemInfo); ok {
-		body = cacheBody
-	} else {
+	if spaceCache, ok := getPlaybackInfoByCacheSpace(itemInfo); ok {
+		cacheBody, err := spaceCache.JsonBody()
+		if err == nil {
+			body = cacheBody
+		}
+	}
+
+	if body == nil {
 		res, _ := Fetch(itemInfo.PlaybackInfoUri, http.MethodPost, nil, nil)
 		if res.Code != http.StatusOK {
 			return "", fmt.Errorf("请求 Emby 接口异常, error: %s", res.Msg)

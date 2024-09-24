@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"net/url"
 	"regexp"
+	"strconv"
 	"time"
 
 	"github.com/AmbitiousJun/go-emby2alist/internal/config"
@@ -49,7 +50,7 @@ func TransferPlaybackInfo(c *gin.Context) {
 
 	msInfo := itemInfo.MsInfo
 	// 如果是指定 MediaSourceId 的 PlaybackInfo 信息, 就从缓存空间中获取
-	if useCacheSpacePlaybackInfo(c, itemInfo) {
+	if useCacheSpacePlaybackInfo(c, itemInfo, true) {
 		c.Header(cache.HeaderKeyExpired, "-1")
 		return
 	}
@@ -164,7 +165,11 @@ func TransferPlaybackInfo(c *gin.Context) {
 //
 //	先判断缓存空间是否有缓存, 没有缓存返回 false
 //	有缓存则从缓存中匹配 MediaSourceId, 匹配成功与否都会返回 true
-func useCacheSpacePlaybackInfo(c *gin.Context, itemInfo ItemInfo) bool {
+//
+// autoRequestAll 为 false 时, 只要缓存空间中查不到缓存, 就立即返回 false
+//
+// autoRequestAll 为 true 时, 当缓存空间中查不到缓存时, 会手动请求一次全量的 PlaybackInfo 信息
+func useCacheSpacePlaybackInfo(c *gin.Context, itemInfo ItemInfo, autoRequestAll bool) bool {
 	if c == nil {
 		return false
 	}
@@ -173,13 +178,83 @@ func useCacheSpacePlaybackInfo(c *gin.Context, itemInfo ItemInfo) bool {
 		return false
 	}
 
+	// updateCache 刷新缓存空间的缓存
+	// 当客户端发起 IsPlayback = true 的请求时, 需要对缓存进行赠两个更新
+	//
+	// 1 将 targetIdx 的 MediaSource 移至最前
+	// 2 更新所有与 target 一致 ItemId 的 DefaultAudioStreamIndex 和 DefaultSubtitleStreamIndex
+	updateCache := func(spaceCache *cache.RespCache, jsonBody *jsons.Item, targetIdx int) {
+		// 校验请求
+		if c.Query("IsPlayback") != "true" {
+			return
+		}
+
+		// 获取所有的 MediaSources
+		mediaSources, ok := jsonBody.Attr("MediaSources").Done()
+		if !ok {
+			return
+		}
+
+		// 获取目标 MediaSource
+		targetMs, ok := mediaSources.Idx(targetIdx).Done()
+		if !ok {
+			return
+		}
+
+		// 更新 MediaSource
+		newAdoIdx, err := strconv.Atoi(c.Query("AudioStreamIndex"))
+		var newAdoVal *jsons.Item
+		if err == nil {
+			newAdoVal = jsons.NewByVal(newAdoIdx)
+			targetMs.Put("DefaultAudioStreamIndex", newAdoVal)
+		}
+		var newSubVal *jsons.Item
+		newSubIdx, err := strconv.Atoi(c.Query("SubtitleStreamIndex"))
+		if err == nil {
+			newSubVal = jsons.NewByVal(newSubIdx)
+			targetMs.Put("DefaultSubtitleStreamIndex", newSubVal)
+		}
+
+		// 准备一个新的 MediaSources 数组
+		newMediaSources := jsons.NewEmptyArr()
+		newMediaSources.Append(targetMs)
+		targetItemId, _ := targetMs.Attr("ItemId").String()
+		mediaSources.RangeArr(func(index int, value *jsons.Item) error {
+			if index == targetIdx {
+				return nil
+			}
+			curItemId, _ := value.Attr("ItemId").String()
+			if curItemId == targetItemId {
+				if newAdoVal != nil {
+					value.Put("DefaultAudioStreamIndex", newAdoVal)
+				}
+				if newSubVal != nil {
+					value.Put("DefaultSubtitleStreamIndex", newSubVal)
+				}
+			}
+			newMediaSources.Append(value)
+			return nil
+		})
+		jsonBody.Put("MediaSources", newMediaSources)
+
+		// 更新缓存
+		newBody := []byte(jsonBody.String())
+		newHeader := spaceCache.Headers()
+		newHeader.Set("Content-Length", strconv.Itoa(len(newBody)))
+		spaceCache.Update(0, newBody, newHeader)
+		log.Printf(colors.ToPurple("刷新缓存空间 PlaybackInfo 信息, space: %s, spaceKey: %s"), spaceCache.Space(), spaceCache.SpaceKey())
+	}
+
 	// findMediaSourceAndReturn 从全量 PlaybackInfo 信息中查询指定 MediaSourceId 信息
 	// 处理成功返回 true
-	findMediaSourceAndReturn := func(jsonInfo *jsons.Item, respHeader http.Header) bool {
-		if jsonInfo == nil {
+	findMediaSourceAndReturn := func(spaceCache *cache.RespCache) bool {
+		jsonBody, err := spaceCache.JsonBody()
+		if err != nil {
+			log.Printf(colors.ToRed("解析缓存响应体失败: %v"), err)
 			return false
 		}
-		mediaSources, ok := jsonInfo.Attr("MediaSources").Done()
+
+		mediaSources, ok := jsonBody.Attr("MediaSources").Done()
 		if !ok || mediaSources.Type() != jsons.JsonTypeArr || mediaSources.Empty() {
 			return false
 		}
@@ -188,6 +263,7 @@ func useCacheSpacePlaybackInfo(c *gin.Context, itemInfo ItemInfo) bool {
 			cacheId, err := url.QueryUnescape(value.Attr("Id").Val().(string))
 			if err == nil && cacheId == reqId {
 				newMediaSources.Append(value)
+				updateCache(spaceCache, jsonBody, index)
 				return jsons.ErrBreakRange
 			}
 			return nil
@@ -195,31 +271,40 @@ func useCacheSpacePlaybackInfo(c *gin.Context, itemInfo ItemInfo) bool {
 		if newMediaSources.Empty() {
 			return false
 		}
-		jsonInfo.Put("MediaSources", newMediaSources)
+
+		jsonBody.Put("MediaSources", newMediaSources)
+		respHeader := spaceCache.Headers()
 		respHeader.Del("Content-Length")
 		https.CloneHeader(c, respHeader)
-		c.JSON(http.StatusOK, jsonInfo.Struct())
+		c.JSON(http.StatusOK, jsonBody.Struct())
 		return true
 	}
 
 	// 1 查询缓存空间
-	cacheInfo, cacheRespHeader, ok := getPlaybackInfoByCacheSpace(itemInfo)
+	spaceCache, ok := getPlaybackInfoByCacheSpace(itemInfo)
 	if ok {
 		// 未传递 MediaSourceId, 返回整个缓存数据
 		if itemInfo.MsInfo.Empty {
 			log.Printf(colors.ToBlue("复用缓存空间中的 PlaybackInfo 信息, itemId: %s"), itemInfo.Id)
-			https.CloneHeader(c, cacheRespHeader)
-			c.JSON(http.StatusOK, cacheInfo.Struct())
+			c.Status(spaceCache.Code())
+			https.CloneHeader(c, spaceCache.Headers())
+			c.Writer.Write(spaceCache.BodyBytes())
+			c.Writer.Flush()
 			return true
 		}
 		// 尝试从缓存中匹配指定的 MediaSourceId 信息
-		if findMediaSourceAndReturn(cacheInfo, cacheRespHeader) {
+		if findMediaSourceAndReturn(spaceCache) {
 			return true
 		}
 	}
 
 	// 如果是全量查询, 从缓存中拿不到数据, 就不继续查了
 	if itemInfo.MsInfo.Empty {
+		return false
+	}
+
+	// 判断是否需要手动请求
+	if !autoRequestAll {
 		return false
 	}
 
@@ -234,19 +319,8 @@ func useCacheSpacePlaybackInfo(c *gin.Context, itemInfo ItemInfo) bool {
 	}
 	defer resp.Body.Close()
 
-	// 3 将请求结果解析为 json
-	bodyBytes, err := io.ReadAll(resp.Body)
-	if checkErr(c, err) {
-		return true
-	}
-	resJson, err := jsons.New(string(bodyBytes))
-	if checkErr(c, err) {
-		return true
-	}
-	if !findMediaSourceAndReturn(resJson, cacheRespHeader) {
-		return checkErr(c, errors.New("查找不到该 MediaSourceId: "+reqId))
-	}
-	return true
+	// 3 再次尝试从缓存空间中获取数据
+	return useCacheSpacePlaybackInfo(c, itemInfo, false)
 }
 
 // LoadCacheItems 拦截并代理 items 接口
@@ -299,8 +373,12 @@ func LoadCacheItems(c *gin.Context) {
 	}
 
 	// 获取附带转码信息的 PlaybackInfo 数据
-	if cacheBody, _, ok := getPlaybackInfoByCacheSpace(itemInfo); ok && coverMediaSources(cacheBody) {
-		return
+	spaceCache, ok := getPlaybackInfoByCacheSpace(itemInfo)
+	if ok {
+		cacheBody, err := spaceCache.JsonBody()
+		if err != nil && coverMediaSources(cacheBody) {
+			return
+		}
 	}
 
 	// 缓存空间中没有当前 Item 的 PlaybackInfo 数据, 手动请求
@@ -332,16 +410,10 @@ func LoadCacheItems(c *gin.Context) {
 }
 
 // getPlaybackInfoByCacheSpace 从缓存空间中获取 PlaybackInfo 信息
-func getPlaybackInfoByCacheSpace(itemInfo ItemInfo) (*jsons.Item, http.Header, bool) {
+func getPlaybackInfoByCacheSpace(itemInfo ItemInfo) (*cache.RespCache, bool) {
 	spaceCache, ok := cache.GetSpaceCache(PlaybackCacheSpace, itemInfo.Id)
 	if !ok {
-		return nil, nil, false
+		return nil, false
 	}
-
-	// 获取缓存响应体内容
-	cacheBody, err := spaceCache.JsonBody()
-	if err != nil {
-		return nil, nil, false
-	}
-	return cacheBody, spaceCache.Headers(), true
+	return spaceCache, true
 }

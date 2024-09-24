@@ -22,28 +22,21 @@ const (
 // 三层结构: map[string]map[string]*respCache
 var spaceMap = sync.Map{}
 
-// GetSpaceCache 获取缓存空间的缓存对象数组
-func GetSpaceCache(space, spaceKey string) (respCache, bool) {
+// GetSpaceCache 获取缓存空间的缓存对象
+func GetSpaceCache(space, spaceKey string) (*RespCache, bool) {
 	if strs.AnyEmpty(space, spaceKey) {
-		return respCache{}, false
+		return nil, false
 	}
-
 	s := getSpace(space)
 	rc, ok := getSpaceCache(s, spaceKey)
 	if !ok {
-		return respCache{}, false
+		return nil, false
 	}
-
-	res := *rc
-	newHeader := rc.header
-	newHeader.header = rc.header.header.Clone()
-	res.header = newHeader
-	res.body = append([]byte(nil), rc.body...)
-	return res, true
+	return rc, true
 }
 
 // putSpaceCache 设置缓存到缓存空间中
-func putSpaceCache(space, spaceKey string, cache *respCache) {
+func putSpaceCache(space, spaceKey string, cache *RespCache) {
 	if strs.AnyEmpty(space, spaceKey) {
 		return
 	}
@@ -69,12 +62,12 @@ func getSpace(space string) *sync.Map {
 }
 
 // getSpaceCache 获取缓存空间中的某个缓存
-func getSpaceCache(space *sync.Map, spaceKey string) (*respCache, bool) {
+func getSpaceCache(space *sync.Map, spaceKey string) (*RespCache, bool) {
 	if space == nil || strs.AnyEmpty(spaceKey) {
 		return nil, false
 	}
 	if cache, ok := space.Load(spaceKey); ok {
-		return cache.(*respCache), true
+		return cache.(*RespCache), true
 	}
 	return nil, false
 }

@@ -44,7 +44,7 @@ var cacheMap = sync.Map{}
 // 缓存数据先暂存在通道中, 再由专门的 goroutine 单线程处理
 //
 // preCacheChan 的淘汰规则是先入先淘汰, 不管缓存对象的过期时间
-var preCacheChan = make(chan *respCache, MaxCacheNum)
+var preCacheChan = make(chan *RespCache, MaxCacheNum)
 
 func init() {
 	go loopMaintainCache()
@@ -57,10 +57,10 @@ func loopMaintainCache() {
 	cleanCache := func() {
 		validCnt := 0
 		nowMillis := time.Now().UnixMilli()
-		toDelete := make([]*respCache, 0)
+		toDelete := make([]*RespCache, 0)
 
 		cacheMap.Range(func(key, value any) bool {
-			rc := value.(*respCache)
+			rc := value.(*RespCache)
 			if nowMillis > rc.expired || validCnt == MaxCacheNum || currentCacheSize > MaxCacheSize {
 				toDelete = append(toDelete, rc)
 			} else {
@@ -79,7 +79,7 @@ func loopMaintainCache() {
 	// putRespCache 将缓存对象维护到 cacheMap 中
 	//
 	// 同时淘汰掉过期缓存
-	putRespCache := func(rc *respCache) {
+	putRespCache := func(rc *RespCache) {
 		cacheMap.Store(rc.cacheKey, rc)
 		currentCacheSize += int64(len(rc.body))
 		space, spaceKey := rc.header.space, rc.header.spaceKey
@@ -102,9 +102,9 @@ func loopMaintainCache() {
 }
 
 // getCache 根据 cacheKey 获取缓存
-func getCache(cacheKey string) (*respCache, bool) {
+func getCache(cacheKey string) (*RespCache, bool) {
 	if c, ok := cacheMap.Load(cacheKey); ok {
-		return c.(*respCache), true
+		return c.(*RespCache), true
 	}
 	return nil, false
 }
@@ -131,7 +131,7 @@ func putCache(cacheKey string, c *gin.Context, respBody *bytes.Buffer, respHeade
 		}
 	}
 
-	rc := &respCache{
+	rc := &RespCache{
 		code:     c.Writer.Status(),
 		body:     respBody.Bytes(),
 		cacheKey: cacheKey,
