@@ -46,6 +46,9 @@ var cacheMap = sync.Map{}
 // preCacheChan 的淘汰规则是先入先淘汰, 不管缓存对象的过期时间
 var preCacheChan = make(chan *respCache, MaxCacheNum)
 
+// cacheHandleWaitGroup 允许等待预缓存通道处理完毕后再获取数据
+var cacheHandleWaitGroup = sync.WaitGroup{}
+
 func init() {
 	go loopMaintainCache()
 }
@@ -95,6 +98,7 @@ func loopMaintainCache() {
 		select {
 		case rc := <-preCacheChan:
 			putrespCache(rc)
+			cacheHandleWaitGroup.Done()
 		case <-timer.C:
 			cleanCache()
 		}
@@ -140,6 +144,8 @@ func putCache(cacheKey string, c *gin.Context, respBody *bytes.Buffer, respHeade
 	}
 
 	// 依据先进先淘汰原则, 将最新缓存放入预缓存通道中
+	cacheHandleWaitGroup.Add(1)
+	doneOnce := sync.OnceFunc(cacheHandleWaitGroup.Done)
 	for {
 		select {
 		case preCacheChan <- rc:
@@ -147,6 +153,7 @@ func putCache(cacheKey string, c *gin.Context, respBody *bytes.Buffer, respHeade
 		default:
 			log.Println("预缓存通道已满, 淘汰旧缓存")
 			<-preCacheChan
+			doneOnce()
 		}
 	}
 }

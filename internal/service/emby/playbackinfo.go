@@ -16,6 +16,7 @@ import (
 	"github.com/AmbitiousJun/go-emby2alist/internal/util/colors"
 	"github.com/AmbitiousJun/go-emby2alist/internal/util/https"
 	"github.com/AmbitiousJun/go-emby2alist/internal/util/jsons"
+	"github.com/AmbitiousJun/go-emby2alist/internal/util/locks"
 	"github.com/AmbitiousJun/go-emby2alist/internal/web/cache"
 
 	"github.com/gin-gonic/gin"
@@ -54,9 +55,15 @@ func TransferPlaybackInfo(c *gin.Context) {
 	// 如果是指定 MediaSourceId 的 PlaybackInfo 信息, 就从缓存空间中获取
 	msInfo := itemInfo.MsInfo
 	internalReq := c.Query(InternalPlaybackReqQueryKey)
-	if internalReq != "true" && useCacheSpacePlaybackInfo(c, itemInfo, true) {
-		c.Header(cache.HeaderKeyExpired, "-1")
-		return
+	// 并发控制, 防止多次请求时, 缓存空间没有值
+	mu := locks.Mutex(PlaybackCacheSpace + ":" + itemInfo.Id)
+	if internalReq != "true" {
+		mu.Lock()
+		defer mu.Unlock()
+		if useCacheSpacePlaybackInfo(c, itemInfo, true) {
+			c.Header(cache.HeaderKeyExpired, "-1")
+			return
+		}
 	}
 
 	defer func() {
@@ -282,6 +289,8 @@ func useCacheSpacePlaybackInfo(c *gin.Context, itemInfo ItemInfo, autoRequestAll
 	// 1 查询缓存空间
 	spaceCache, ok := getPlaybackInfoByCacheSpace(itemInfo)
 	if ok {
+		// 缓存空间已经有值, 移除当前 Item 的锁对象
+		locks.Del(PlaybackCacheSpace + ":" + itemInfo.Id)
 		// 未传递 MediaSourceId, 返回整个缓存数据
 		if itemInfo.MsInfo.Empty {
 			log.Printf(colors.ToBlue("复用缓存空间中的 PlaybackInfo 信息, itemId: %s"), itemInfo.Id)
@@ -304,6 +313,7 @@ func useCacheSpacePlaybackInfo(c *gin.Context, itemInfo ItemInfo, autoRequestAll
 
 	// 判断是否需要手动请求
 	if !autoRequestAll {
+		log.Println("走到这里了")
 		return false
 	}
 
@@ -318,7 +328,8 @@ func useCacheSpacePlaybackInfo(c *gin.Context, itemInfo ItemInfo, autoRequestAll
 	if checkErr(c, err) {
 		return true
 	}
-	defer resp.Body.Close()
+	resp.Body.Close()
+	cache.WaitingForHandleChan()
 
 	// 3 再次尝试从缓存空间中获取数据
 	return useCacheSpacePlaybackInfo(c, itemInfo, false)

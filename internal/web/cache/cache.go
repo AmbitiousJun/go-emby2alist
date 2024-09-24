@@ -131,6 +131,11 @@ func Duration(d time.Duration) string {
 	return fmt.Sprintf("%v", expired)
 }
 
+// WaitingForHandleChan 等待预缓存通道被处理完毕
+func WaitingForHandleChan() {
+	cacheHandleWaitGroup.Wait()
+}
+
 // calcCacheKey 计算缓存 key
 //
 // 计算方式: 取出 请求方法, 请求路径, 请求体, 请求头 转换成字符串之后字典排序,
