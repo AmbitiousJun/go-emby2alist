@@ -60,6 +60,7 @@ func TransferPlaybackInfo(c *gin.Context) {
 	if internalReq != "true" {
 		mu.Lock()
 		defer mu.Unlock()
+		cache.WaitingForHandleChan()
 		if useCacheSpacePlaybackInfo(c, itemInfo, true) {
 			c.Header(cache.HeaderKeyExpired, "-1")
 			return
