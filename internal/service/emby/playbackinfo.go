@@ -187,7 +187,7 @@ func useCacheSpacePlaybackInfo(c *gin.Context, itemInfo ItemInfo, autoRequestAll
 	//
 	// 1 将 targetIdx 的 MediaSource 移至最前
 	// 2 更新所有与 target 一致 ItemId 的 DefaultAudioStreamIndex 和 DefaultSubtitleStreamIndex
-	updateCache := func(spaceCache *cache.RespCache, jsonBody *jsons.Item, targetIdx int) {
+	updateCache := func(spaceCache cache.RespCache, jsonBody *jsons.Item, targetIdx int) {
 		// 校验请求
 		if c.Query("IsPlayback") != "true" {
 			return
@@ -251,7 +251,7 @@ func useCacheSpacePlaybackInfo(c *gin.Context, itemInfo ItemInfo, autoRequestAll
 
 	// findMediaSourceAndReturn 从全量 PlaybackInfo 信息中查询指定 MediaSourceId 信息
 	// 处理成功返回 true
-	findMediaSourceAndReturn := func(spaceCache *cache.RespCache) bool {
+	findMediaSourceAndReturn := func(spaceCache cache.RespCache) bool {
 		jsonBody, err := spaceCache.JsonBody()
 		if err != nil {
 			log.Printf(colors.ToRed("解析缓存响应体失败: %v"), err)
@@ -415,7 +415,7 @@ func LoadCacheItems(c *gin.Context) {
 }
 
 // getPlaybackInfoByCacheSpace 从缓存空间中获取 PlaybackInfo 信息
-func getPlaybackInfoByCacheSpace(itemInfo ItemInfo) (*cache.RespCache, bool) {
+func getPlaybackInfoByCacheSpace(itemInfo ItemInfo) (cache.RespCache, bool) {
 	spaceCache, ok := cache.GetSpaceCache(PlaybackCacheSpace, itemInfo.Id)
 	if !ok {
 		return nil, false

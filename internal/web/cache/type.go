@@ -21,8 +21,8 @@ func (rcw *respCacheWriter) Write(b []byte) (int, error) {
 	return rcw.ResponseWriter.Write(b)
 }
 
-// RespCache 存放请求的响应信息
-type RespCache struct {
+// respCache 存放请求的响应信息
+type respCache struct {
 
 	// code 响应码
 	code int
@@ -52,56 +52,56 @@ type respHeader struct {
 }
 
 // Code 响应码
-func (c *RespCache) Code() int {
+func (c *respCache) Code() int {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
 	return c.code
 }
 
 // Body 克隆一个响应体, 转换为缓冲区
-func (c *RespCache) Body() *bytes.Buffer {
+func (c *respCache) Body() *bytes.Buffer {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
 	return bytes.NewBuffer(c.BodyBytes())
 }
 
 // BodyBytes 克隆一个响应体
-func (c *RespCache) BodyBytes() []byte {
+func (c *respCache) BodyBytes() []byte {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
 	return append([]byte(nil), c.body...)
 }
 
 // JsonBody 将响应体转化成 json 返回
-func (c *RespCache) JsonBody() (*jsons.Item, error) {
+func (c *respCache) JsonBody() (*jsons.Item, error) {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
 	return jsons.New(string(c.body))
 }
 
 // Header 获取响应头属性
-func (c *RespCache) Header(key string) string {
+func (c *respCache) Header(key string) string {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
 	return c.header.header.Get(key)
 }
 
 // Headers 获取克隆响应头
-func (c *RespCache) Headers() http.Header {
+func (c *respCache) Headers() http.Header {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
 	return c.header.header.Clone()
 }
 
 // Space 获取缓存空间名称
-func (c *RespCache) Space() string {
+func (c *respCache) Space() string {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
 	return c.header.space
 }
 
 // SpaceKey 获取缓存空间 key
-func (c *RespCache) SpaceKey() string {
+func (c *respCache) SpaceKey() string {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
 	return c.header.spaceKey
@@ -116,7 +116,7 @@ func (c *RespCache) SpaceKey() string {
 //
 // header 传递 nil 时, 会自动忽略更新,
 // 不为 nil 时, 缓存的响应头会被清空, 并设置为新值
-func (c *RespCache) Update(code int, body []byte, header http.Header) {
+func (c *respCache) Update(code int, body []byte, header http.Header) {
 	if code == 0 && body == nil && header == nil {
 		return
 	}

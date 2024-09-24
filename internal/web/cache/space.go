@@ -23,7 +23,7 @@ const (
 var spaceMap = sync.Map{}
 
 // GetSpaceCache 获取缓存空间的缓存对象
-func GetSpaceCache(space, spaceKey string) (*RespCache, bool) {
+func GetSpaceCache(space, spaceKey string) (RespCache, bool) {
 	if strs.AnyEmpty(space, spaceKey) {
 		return nil, false
 	}
@@ -36,7 +36,7 @@ func GetSpaceCache(space, spaceKey string) (*RespCache, bool) {
 }
 
 // putSpaceCache 设置缓存到缓存空间中
-func putSpaceCache(space, spaceKey string, cache *RespCache) {
+func putSpaceCache(space, spaceKey string, cache *respCache) {
 	if strs.AnyEmpty(space, spaceKey) {
 		return
 	}
@@ -62,12 +62,12 @@ func getSpace(space string) *sync.Map {
 }
 
 // getSpaceCache 获取缓存空间中的某个缓存
-func getSpaceCache(space *sync.Map, spaceKey string) (*RespCache, bool) {
+func getSpaceCache(space *sync.Map, spaceKey string) (*respCache, bool) {
 	if space == nil || strs.AnyEmpty(spaceKey) {
 		return nil, false
 	}
 	if cache, ok := space.Load(spaceKey); ok {
-		return cache.(*RespCache), true
+		return cache.(*respCache), true
 	}
 	return nil, false
 }
