@@ -69,7 +69,8 @@ func TransferPlaybackInfo(c *gin.Context) {
 
 	// 2 请求 emby 源服务器的 PlaybackInfo 信息
 	c.Request.Header.Del("Accept-Encoding")
-	res, respHeader := RawFetch(c.Request.URL.String(), c.Request.Method, c.Request.Header, c.Request.Body)
+	c.Request.Body = io.NopCloser(bytes.NewBufferString(PlaybackCommonPayload))
+	res, respHeader := RawFetch(itemInfo.PlaybackInfoUri, c.Request.Method, c.Request.Header, c.Request.Body)
 	if res.Code != http.StatusOK {
 		checkErr(c, errors.New(res.Msg))
 		return
@@ -183,16 +184,10 @@ func useCacheSpacePlaybackInfo(c *gin.Context, itemInfo ItemInfo, autoRequestAll
 	}
 
 	// updateCache 刷新缓存空间的缓存
-	// 当客户端发起 IsPlayback = true 的请求时, 需要对缓存进行赠两个更新
 	//
 	// 1 将 targetIdx 的 MediaSource 移至最前
 	// 2 更新所有与 target 一致 ItemId 的 DefaultAudioStreamIndex 和 DefaultSubtitleStreamIndex
 	updateCache := func(spaceCache cache.RespCache, jsonBody *jsons.Item, targetIdx int) {
-		// 校验请求
-		if c.Query("IsPlayback") != "true" {
-			return
-		}
-
 		// 获取所有的 MediaSources
 		mediaSources, ok := jsonBody.Attr("MediaSources").Done()
 		if !ok {
@@ -318,6 +313,7 @@ func useCacheSpacePlaybackInfo(c *gin.Context, itemInfo ItemInfo, autoRequestAll
 	q.Set(InternalPlaybackReqQueryKey, "true")
 	c.Request.URL.RawQuery = q.Encode()
 	u := https.ClientRequestHost(c) + c.Request.URL.String()
+	c.Request.Body = io.NopCloser(bytes.NewBufferString(PlaybackCommonPayload))
 	resp, err := https.Request(c.Request.Method, u, c.Request.Header, c.Request.Body)
 	if checkErr(c, err) {
 		return true
