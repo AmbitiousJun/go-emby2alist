@@ -279,6 +279,8 @@ func useCacheSpacePlaybackInfo(c *gin.Context, itemInfo ItemInfo) bool {
 			log.Printf(colors.ToBlue("复用缓存空间中的 PlaybackInfo 信息, itemId: %s"), itemInfo.Id)
 			c.Status(spaceCache.Code())
 			https.CloneHeader(c, spaceCache.Headers())
+			// 避免缓存的请求头中出现脏数据
+			c.Header("Access-Control-Allow-Origin", "*")
 			c.Writer.Write(spaceCache.BodyBytes())
 			c.Writer.Flush()
 			return true
