@@ -5,6 +5,7 @@
   <img src="https://img.shields.io/github/v/tag/AmbitiousJun/go-emby2alist"></img>
   <img src="https://img.shields.io/docker/image-size/ambitiousjun/go-emby2alist/v1.0.7"></img>
   <img src="https://img.shields.io/docker/pulls/ambitiousjun/go-emby2alist"></img>
+  <img src="https://img.shields.io/github/stars/AmbitiousJun/go-emby2alist"></img>
   <img src="https://img.shields.io/github/license/AmbitiousJun/go-emby2alist"></img>
 </div>
 
