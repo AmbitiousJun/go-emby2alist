@@ -37,6 +37,9 @@ var (
 
 	// ValidCacheItemsTypeRegex 校验 Items 的 Type 参数, 通过正则才覆盖 PlaybackInfo 缓存
 	ValidCacheItemsTypeRegex = regexp.MustCompile(`(?i)(movie|episode)`)
+
+	// UnvalidCacheItemsUARegex 特定客户端的 Items 请求, 不覆盖 PlaybackInfo 缓存
+	UnvalidCacheItemsUARegex = regexp.MustCompile(`(?i)(infuse)`)
 )
 
 // TransferPlaybackInfo 代理 PlaybackInfo 接口, 防止客户端转码
@@ -328,6 +331,11 @@ func LoadCacheItems(c *gin.Context) {
 	// 只处理特定类型的 Items 响应
 	itemType, _ := resJson.Attr("Type").String()
 	if !ValidCacheItemsTypeRegex.MatchString(itemType) {
+		return
+	}
+
+	// 特定客户端不处理
+	if UnvalidCacheItemsUARegex.MatchString(c.GetHeader("User-Agent")) {
 		return
 	}
 
