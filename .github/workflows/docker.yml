@@ -32,6 +32,16 @@ jobs:
         with:
           context: .
           platforms: ${{ matrix.platform }}  # 多架构构建
+          push: false
+          tags: |
+            ambitiousjun/go-emby2alist:${{ github.ref_name }}
+            ambitiousjun/go-emby2alist:latest
+
+      - name: Push Docker manifest (multi-architecture)
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          platforms: ${{ matrix.platform }}
           push: true
           tags: |
             ambitiousjun/go-emby2alist:${{ github.ref_name }}
