@@ -5,7 +5,23 @@ import (
 	"net/url"
 	"path/filepath"
 	"strings"
+
+	"github.com/AmbitiousJun/go-emby2alist/internal/util/strs"
 )
+
+// TransferSlash 将传递的路径的斜杠转换为正斜杠
+//
+// 如果传递的参数不是一个路径, 不作任何处理
+func TransferSlash(p string) string {
+	if strs.AnyEmpty(p) {
+		return p
+	}
+	_, err := url.Parse(p)
+	if err != nil {
+		return p
+	}
+	return strings.ReplaceAll(p, `\`, `/`)
+}
 
 // ResolveResourceName 解析一个资源 url 的名称
 //

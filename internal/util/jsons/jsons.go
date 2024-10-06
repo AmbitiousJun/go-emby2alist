@@ -9,6 +9,7 @@ import (
 	"sync"
 
 	"github.com/AmbitiousJun/go-emby2alist/internal/util/strs"
+	"github.com/AmbitiousJun/go-emby2alist/internal/util/urls"
 )
 
 // NewEmptyObj 初始化一个对象类型的 json 数据
@@ -119,7 +120,7 @@ func NewByVal(val interface{}) *Item {
 			// 将字符串中的 unicode 字符转换为 utf8
 			newVal = conv
 		}
-		item.val = newVal
+		item.val = urls.TransferSlash(newVal)
 		return item
 	case *Item:
 		return newVal

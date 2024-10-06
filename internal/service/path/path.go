@@ -8,6 +8,7 @@ import (
 	"github.com/AmbitiousJun/go-emby2alist/internal/config"
 	"github.com/AmbitiousJun/go-emby2alist/internal/service/alist"
 	"github.com/AmbitiousJun/go-emby2alist/internal/util/jsons"
+	"github.com/AmbitiousJun/go-emby2alist/internal/util/urls"
 )
 
 // AlistPathRes 路径转换结果
@@ -25,8 +26,7 @@ type AlistPathRes struct {
 
 // Emby2Alist Emby 资源路径转 Alist 资源路径
 func Emby2Alist(embyPath string) AlistPathRes {
-	// 适配 windows
-	embyPath = strings.ReplaceAll(embyPath, `\`, `/`)
+	embyPath = urls.TransferSlash(embyPath)
 	embyMount := config.C.Emby.MountPath
 	alistFilePath := strings.ReplaceAll(embyPath, embyMount, "")
 	if mapPath, ok := config.C.Path.MapEmby2Alist(alistFilePath); ok {
@@ -72,8 +72,7 @@ func Emby2Alist(embyPath string) AlistPathRes {
 // SplitFromSecondSlash 找到给定字符串 str 中第二个 '/' 字符的位置
 // 并以该位置为首字符切割剩余的子串返回
 func SplitFromSecondSlash(str string) (string, error) {
-	// 适配 windows
-	str = strings.ReplaceAll(str, `\`, `/`)
+	str = urls.TransferSlash(str)
 	firstIdx := strings.Index(str, "/")
 	if firstIdx == -1 {
 		return "", fmt.Errorf("字符串不包含 /: %s", str)
