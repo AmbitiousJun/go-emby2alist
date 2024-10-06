@@ -160,7 +160,7 @@ func RandomItemsWithLimit(c *gin.Context) {
 	}
 
 	https.CloneHeader(c, resp.Header)
-	c.Header(cache.HeaderKeyExpired, cache.Duration(time.Minute*15))
+	c.Header(cache.HeaderKeyExpired, cache.Duration(time.Hour))
 	c.Header(cache.HeaderKeySpace, ItemsCacheSpace)
 	c.Header(cache.HeaderKeySpaceKey, calcRandomItemsCacheKey(c))
 	c.Status(resp.StatusCode)
@@ -176,5 +176,6 @@ func calcRandomItemsCacheKey(c *gin.Context) string {
 		c.Query("ImageTypeLimit") +
 		c.Query("IsFavorite") +
 		c.Query("IsFolder") +
-		c.Query("ProjectToMedia")
+		c.Query("ProjectToMedia") +
+		c.Query("ParentId")
 }
