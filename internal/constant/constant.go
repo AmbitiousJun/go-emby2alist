@@ -13,7 +13,7 @@ const (
 	Reg_ProxyPlaylist            = `(?i)^/.*videos/proxy_playlist\??`
 	Reg_ProxyTs                  = `(?i)^/.*videos/proxy_ts\??`
 	Reg_ProxySubtitle            = `(?i)^/.*videos/proxy_subtitle\??`
-	Reg_ItemDownload             = `(?i)^/.*items/.*/download`
+	Reg_ItemDownload             = `(?i)^/.*items/\d+/download($|\?)`
 	Reg_Images                   = `(?i)^/.*images`
 	Reg_Proxy2Origin             = `^/$|(?i)^.*(/web|/users|/artists|/genres|/similar|/shows|/system|/remote|/scheduledtasks)`
 	Reg_All                      = `.*`
