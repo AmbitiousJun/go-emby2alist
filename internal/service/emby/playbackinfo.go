@@ -51,6 +51,12 @@ func TransferPlaybackInfo(c *gin.Context) {
 		return
 	}
 
+	// 如果是远程资源, 直接代理到源服务器
+	if handleRemotePlayback(c, itemInfo) {
+		c.Header(cache.HeaderKeyExpired, "-1")
+		return
+	}
+
 	// 如果是指定 MediaSourceId 的 PlaybackInfo 信息, 就从缓存空间中获取
 	msInfo := itemInfo.MsInfo
 	if useCacheSpacePlaybackInfo(c, itemInfo) {
@@ -58,16 +64,9 @@ func TransferPlaybackInfo(c *gin.Context) {
 		return
 	}
 
-	defer func() {
-		// 缓存 12h
-		c.Header(cache.HeaderKeyExpired, cache.Duration(time.Hour*12))
-		// 将请求结果缓存到指定缓存空间下
-		c.Header(cache.HeaderKeySpace, PlaybackCacheSpace)
-		c.Header(cache.HeaderKeySpaceKey, itemInfo.Id)
-	}()
-
 	// 2 请求 emby 源服务器的 PlaybackInfo 信息
 	c.Request.Header.Del("Accept-Encoding")
+	originRequestBody := c.Request.Body
 	c.Request.Body = io.NopCloser(bytes.NewBufferString(PlaybackCommonPayload))
 	res, respHeader := RawFetch(itemInfo.PlaybackInfoUri, c.Request.Method, c.Request.Header, c.Request.Body)
 	if res.Code != http.StatusOK {
@@ -98,11 +97,12 @@ func TransferPlaybackInfo(c *gin.Context) {
 			source.Attr("Id").Set(msInfo.RawId)
 		}
 
-		if ir, ok := source.Attr("IsRemote").Bool(); ok && ir {
-			// 不阻塞远程资源
-			respHeader.Del("Content-Length")
-			https.CloneHeader(c, respHeader)
-			c.JSON(res.Code, resJson.Struct())
+		ir, _ := source.Attr("IsRemote").Bool()
+		iis, _ := source.Attr("IsInfiniteStream").Bool()
+		if ir || iis {
+			// 远程资源直接代理到源服务器
+			c.Request.Body = originRequestBody
+			ProxyOrigin(c)
 			return haveReturned
 		}
 
@@ -145,6 +145,14 @@ func TransferPlaybackInfo(c *gin.Context) {
 		return
 	}
 
+	defer func() {
+		// 缓存 12h
+		c.Header(cache.HeaderKeyExpired, cache.Duration(time.Hour*12))
+		// 将请求结果缓存到指定缓存空间下
+		c.Header(cache.HeaderKeySpace, PlaybackCacheSpace)
+		c.Header(cache.HeaderKeySpaceKey, itemInfo.Id)
+	}()
+
 	// 收集异步请求的转码资源信息
 	for _, resChan := range resChans {
 		previewInfos := <-resChan
@@ -159,22 +167,60 @@ func TransferPlaybackInfo(c *gin.Context) {
 	c.JSON(res.Code, resJson.Struct())
 }
 
-// useCacheSpacePlaybackInfo 请求缓存空间的 PlaybackInfo 信息
+// handleRemotePlayback 判断如果请求的 PlaybackInfo 信息是远程地址, 直接返回结果
+func handleRemotePlayback(c *gin.Context, itemInfo ItemInfo) bool {
+	// 请求必须携带 MediaSourceId
+	if itemInfo.MsInfo.Empty {
+		return false
+	}
+
+	c.Request.Header.Del("Accept-Encoding")
+	originRequestBody := c.Request.Body
+	c.Request.Body = io.NopCloser(bytes.NewBufferString(PlaybackCommonPayload))
+	res, _ := RawFetch(itemInfo.PlaybackInfoUri, c.Request.Method, c.Request.Header, c.Request.Body)
+	if res.Code != http.StatusOK {
+		return false
+	}
+
+	mediaSources, ok := res.Data.Attr("MediaSources").Done()
+	if !ok || mediaSources.Len() != 1 {
+		return false
+	}
+
+	ms, _ := mediaSources.Idx(0).Done()
+	ir, _ := ms.Attr("IsRemote").Bool()
+	iis, _ := ms.Attr("IsInfiniteStream").Bool()
+	if ir || iis {
+		// 代理到源服务器
+		c.Request.Body = originRequestBody
+		ProxyOrigin(c)
+		return true
+	}
+
+	return false
+}
+
+// useCacheSpacePlaybackInfo 请求缓存空间的 PlaybackInfo 信息, 前提是开启了缓存功能
 //
 // ① 请求携带 MediaSourceId:
 //
-//	优先返回缓存空间中的值, 没有缓存返回 false
+//	从缓存空间的全量缓存中匹配 MediaSourceId, 没有全量缓存或者匹配失败直接报 500 错误
 //
 // ② 请求不携带 MediaSourceId:
 //
-//	先判断缓存空间是否有缓存, 没有缓存返回 false
-//	有缓存则从缓存中匹配 MediaSourceId, 匹配成功与否都会返回 true
+//	先判断缓存空间是否有缓存, 没有缓存返回 false, 由主函数请求全量信息并缓存
+//	有缓存则直接返回缓存中的全量信息
 func useCacheSpacePlaybackInfo(c *gin.Context, itemInfo ItemInfo) bool {
 	if c == nil {
 		return false
 	}
 	reqId, err := url.QueryUnescape(itemInfo.MsInfo.RawId)
 	if err != nil {
+		return false
+	}
+
+	if !config.C.Cache.Enable {
+		// 未开启缓存功能
 		return false
 	}
 
