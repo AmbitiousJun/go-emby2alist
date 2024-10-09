@@ -2,7 +2,6 @@ package emby
 
 import (
 	"errors"
-	"fmt"
 	"log"
 	"net/http"
 	"net/url"
@@ -28,9 +27,10 @@ func Redirect2Transcode(c *gin.Context) {
 	apiKey := c.Query(QueryApiKeyName)
 	alistPath := c.Query("alist_path")
 	if strs.AnyEmpty(templateId, apiKey, alistPath) {
-		checkErr(c, fmt.Errorf("获取不到核心参数, templateId: %s, apiKey: %s, alistPath: %s", templateId, apiKey, alistPath))
+		ProxyOrigin(c)
 		return
 	}
+	log.Println(colors.ToBlue("检测到自定义的转码 m3u8 请求, 重定向到本地代理接口"))
 	tu, _ := url.Parse("/videos/proxy_playlist")
 	q := tu.Query()
 	q.Set("alist_path", alistPath)
