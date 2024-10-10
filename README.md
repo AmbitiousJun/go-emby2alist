@@ -2,11 +2,8 @@
 
 <div align="center">
   <img src="https://img.shields.io/github/v/tag/AmbitiousJun/go-emby2alist"></img>
-  <img src="https://img.shields.io/docker/image-size/ambitiousjun/go-emby2alist/v1.0.9"></img>
+  <img src="https://img.shields.io/docker/image-size/ambitiousjun/go-emby2alist/v1.0.10"></img>
   <img src="https://img.shields.io/docker/pulls/ambitiousjun/go-emby2alist"></img>
-</div>
-
-<div align="center">
   <img src="https://goreportcard.com/badge/github.com/AmbitiousJun/go-emby2alist"></img>
   <img src="https://img.shields.io/github/stars/AmbitiousJun/go-emby2alist"></img>
   <img src="https://img.shields.io/github/license/AmbitiousJun/go-emby2alist"></img>
@@ -184,7 +181,7 @@
 1. 获取代码
 
 ```shell
-git clone --branch v1.0.9 --depth 1 https://ghproxy.cc/https://github.com/AmbitiousJun/go-emby2alist
+git clone --branch v1.0.10 --depth 1 https://ghproxy.cc/https://github.com/AmbitiousJun/go-emby2alist
 cd go-emby2alist
 ```
 
@@ -254,7 +251,7 @@ docker image prune -f
 
 1. 准备配置
 
-参考[示例配置](https://github.com/AmbitiousJun/go-emby2alist/blob/v1.0.9/config-example.yml)，配置好自己的服务器信息，保存并命名为 `config.yml`
+参考[示例配置](https://github.com/AmbitiousJun/go-emby2alist/blob/v1.0.10/config-example.yml)，配置好自己的服务器信息，保存并命名为 `config.yml`
 
 2. 创建 docker-compose 文件
 
@@ -264,7 +261,7 @@ docker image prune -f
 version: "3.1"
 services:
   go-emby2alist:
-    image: ambitiousjun/go-emby2alist:v1.0.9
+    image: ambitiousjun/go-emby2alist:v1.0.10
     environment:
       - TZ=Asia/Shanghai
       - GIN_MODE=release
