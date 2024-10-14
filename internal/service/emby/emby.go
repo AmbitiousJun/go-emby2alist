@@ -55,15 +55,14 @@ func ProxySocket() func(*gin.Context) {
 
 // HandleImages 处理图片请求
 //
-// 首先修改图片质量参数为配置值
-// 然后执行重定向
+// 修改图片质量参数为配置值
 func HandleImages(c *gin.Context) {
 	q := c.Request.URL.Query()
 	q.Del("quality")
 	q.Del("Quality")
 	q.Set("Quality", strconv.Itoa(config.C.Emby.ImagesQuality))
 	c.Request.URL.RawQuery = q.Encode()
-	RedirectOrigin(c)
+	ProxyOrigin(c)
 }
 
 // ProxyOrigin 将请求代理到源服务器
