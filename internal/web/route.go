@@ -53,16 +53,8 @@ func initRulePatterns() {
 		// 处理图片请求
 		{constant.Reg_Images, emby.HandleImages},
 
-		// 特定资源走代理
-		//
-		// ^/$: 根路径不允许重定向
-		//
-		// (?i): 忽略大小写
-		// 有些请求使用重定向会导致部分客户端无法正常使用, 这里统一进行拦截
-		{constant.Reg_Proxy2Origin, emby.ProxyOrigin},
-
 		// 其余资源走重定向回源
-		{constant.Reg_All, emby.RedirectOrigin},
+		{constant.Reg_All, emby.ProxyOrigin},
 	})
 	log.Println("路由规则初始化完成")
 }

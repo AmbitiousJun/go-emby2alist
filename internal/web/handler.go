@@ -5,6 +5,7 @@ import (
 	"regexp"
 
 	"github.com/AmbitiousJun/go-emby2alist/internal/util/colors"
+	"github.com/AmbitiousJun/go-emby2alist/internal/web/webport"
 
 	"github.com/gin-gonic/gin"
 )
@@ -15,7 +16,8 @@ func globalDftHandler(c *gin.Context) {
 	for _, rule := range rules {
 		reg := rule[0].(*regexp.Regexp)
 		if reg.MatchString(c.Request.RequestURI) {
-			log.Printf(colors.ToBlue("匹配路由: %s"), reg.String())
+			servePort, _ := c.Get(webport.GinKey)
+			log.Printf(colors.ToBlue("监听端口: %s, 匹配路由: %s"), servePort, reg.String())
 			rule[1].(gin.HandlerFunc)(c)
 			return
 		}
