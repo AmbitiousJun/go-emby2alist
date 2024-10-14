@@ -9,6 +9,17 @@ emby:
   # reject: 拒绝处理
   proxy-error-strategy: origin
   images-quality: 70                         # 图片质量, 配置范围: [1, 100]
+  strm:                                      # 远程视频 strm 配置
+    # 路径映射, 将 strm 文件内的路径片段替换成指定路径片段
+    # 可配置多个映射, 每个映射需要有 2 个片段, 使用 [=>] 符号进行分割, 程序自上而下映射第一个匹配的结果
+    # 这个配置的映射是比较灵活的, 不一定必须按照前缀映射, 可以直接将地址中间的片段给替换掉
+    #
+    # 举个栗子
+    # strm 文件内容: https://test-res.com:8094/1.mp4, 替换结果: http://localhost:8095/1.mp4 
+    # strm 文件内容: https://test-res.com:12138/test-id-12138.mp4, 替换结果: https://test-res.com:10086/test-id-12138.mp4 
+    path-map:
+      - https://test-res.com:8094 => http://localhost:8095
+      - 12138 => 10086
 alist:
   host: http://192.168.0.109:5244            # alist 访问地址 (非 docker 内网)
   token: alist-xxxxx                         # alist api key 可以在 alist 管理后台查看
