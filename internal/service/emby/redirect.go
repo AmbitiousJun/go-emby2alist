@@ -15,6 +15,7 @@ import (
 	"github.com/AmbitiousJun/go-emby2alist/internal/util/https"
 	"github.com/AmbitiousJun/go-emby2alist/internal/util/jsons"
 	"github.com/AmbitiousJun/go-emby2alist/internal/util/strs"
+	"github.com/AmbitiousJun/go-emby2alist/internal/util/urls"
 	"github.com/AmbitiousJun/go-emby2alist/internal/web/cache"
 
 	"github.com/gin-gonic/gin"
@@ -71,7 +72,16 @@ func Redirect2AlistLink(c *gin.Context) {
 		return
 	}
 
-	// 4 请求 alist 资源
+	// 4 如果是远程地址 (strm), 直接进行重定向
+	if urls.IsRemote(embyPath) {
+		finalPath := config.C.Emby.Strm.MapPath(embyPath)
+		log.Printf(colors.ToGreen("重定向 strm: %s"), finalPath)
+		c.Header(cache.HeaderKeyExpired, "-1")
+		c.Redirect(http.StatusTemporaryRedirect, finalPath)
+		return
+	}
+
+	// 5 请求 alist 资源
 	fi := alist.FetchInfo{}
 	fi.Header = c.Request.Header.Clone()
 	alistPathRes := path.Emby2Alist(embyPath)

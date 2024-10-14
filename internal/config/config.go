@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"reflect"
 
+	"github.com/AmbitiousJun/go-emby2alist/internal/util/colors"
 	"gopkg.in/yaml.v3"
 )
 
@@ -64,7 +65,7 @@ func ReadFromFile(path string) error {
 		// 配置项初始化
 		if i, ok := field.Interface().(Initializer); ok {
 			if err := i.Init(); err != nil {
-				return fmt.Errorf("初始化配置文件失败: %v", err)
+				return fmt.Errorf(colors.ToRed("初始化配置文件失败: %v"), err)
 			}
 		}
 	}

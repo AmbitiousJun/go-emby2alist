@@ -97,10 +97,9 @@ func TransferPlaybackInfo(c *gin.Context) {
 			source.Attr("Id").Set(msInfo.RawId)
 		}
 
-		ir, _ := source.Attr("IsRemote").Bool()
 		iis, _ := source.Attr("IsInfiniteStream").Bool()
-		if ir || iis {
-			// 远程资源直接代理到源服务器
+		if iis {
+			// 默认无限流为电视直播, 代理到源服务器
 			c.Request.Body = originRequestBody
 			ProxyOrigin(c)
 			return haveReturned
@@ -188,10 +187,9 @@ func handleRemotePlayback(c *gin.Context, itemInfo ItemInfo) bool {
 	}
 
 	ms, _ := mediaSources.Idx(0).Done()
-	ir, _ := ms.Attr("IsRemote").Bool()
 	iis, _ := ms.Attr("IsInfiniteStream").Bool()
-	if ir || iis {
-		// 代理到源服务器
+	if iis {
+		// 默认无限流为电视直播, 直接代理到源服务器
 		c.Request.Body = originRequestBody
 		ProxyOrigin(c)
 		return true

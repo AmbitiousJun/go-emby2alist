@@ -36,6 +36,8 @@ type Emby struct {
 	ProxyErrorStrategy PeStrategy `yaml:"proxy-error-strategy"`
 	// ImagesQuality 图片质量
 	ImagesQuality int `yaml:"images-quality"`
+	// Strm strm 配置
+	Strm *Strm `yaml:"strm"`
 }
 
 func (e *Emby) Init() error {
@@ -65,5 +67,46 @@ func (e *Emby) Init() error {
 	if e.ImagesQuality < 0 || e.ImagesQuality > 100 {
 		return fmt.Errorf("emby.images-quality 配置错误: %d, 允许配置范围: [1, 100]", e.ImagesQuality)
 	}
+
+	if e.Strm == nil {
+		e.Strm = new(Strm)
+	}
+	if err := e.Strm.Init(); err != nil {
+		return fmt.Errorf("emby.strm 配置错误: %v", err)
+	}
+
 	return nil
+}
+
+// Strm strm 配置
+type Strm struct {
+	// PathMap 远程路径映射
+	PathMap []string `yaml:"path-map"`
+	// pathMap 配置初始化后转换为标准的 map 结构
+	pathMap map[string]string
+}
+
+// Init 配置初始化
+func (s *Strm) Init() error {
+	s.pathMap = make(map[string]string)
+	for _, path := range s.PathMap {
+		splits := strings.Split(path, "=>")
+		if len(splits) != 2 {
+			return fmt.Errorf("映射配置不规范: %s, 请使用 => 进行分割", path)
+		}
+		from, to := strings.TrimSpace(splits[0]), strings.TrimSpace(splits[1])
+		s.pathMap[from] = to
+	}
+	return nil
+}
+
+// MapPath 将传入路径按照预配置的映射关系从上到下按顺序进行映射,
+// 至多成功映射一次
+func (s *Strm) MapPath(path string) string {
+	for from, to := range s.pathMap {
+		if strings.Contains(path, from) {
+			return strings.Replace(path, from, to, 1)
+		}
+	}
+	return path
 }
