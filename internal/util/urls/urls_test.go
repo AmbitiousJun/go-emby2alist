@@ -18,3 +18,27 @@ func TestAppendUrlArgs(t *testing.T) {
 	res := urls.AppendArgs(rawUrl, "ambitious", "jun", "Static", "true", "unvalid")
 	log.Println("拼接后的结果: ", res)
 }
+
+func TestIsRemote(t *testing.T) {
+	type args struct {
+		path string
+	}
+	tests := []struct {
+		name string
+		args args
+		want bool
+	}{
+		{name: "rtp", args: args{path: "rtp://1.2.3.4:9999"}, want: true},
+		{name: "http", args: args{path: "http://localhost:8095/emby/videos/53507/stream"}, want: true},
+		{name: "https", args: args{path: "https://localhost:8095/emby/videos/53507/stream"}, want: true},
+		{name: "file-unix", args: args{path: "/usr/local/app/test.mp4"}, want: false},
+		{name: "file-windows", args: args{path: `D:\user\local\app\test.mp4`}, want: false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := urls.IsRemote(tt.args.path); got != tt.want {
+				t.Errorf("IsRemote() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}

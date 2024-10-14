@@ -9,6 +9,15 @@ import (
 	"github.com/AmbitiousJun/go-emby2alist/internal/util/strs"
 )
 
+// IsRemote 检查一个地址是否是远程地址
+func IsRemote(path string) bool {
+	u, err := url.Parse(path)
+	if err != nil {
+		return false
+	}
+	return u.Host != ""
+}
+
 // TransferSlash 将传递的路径的斜杠转换为正斜杠
 //
 // 如果传递的参数不是一个路径, 不作任何处理
