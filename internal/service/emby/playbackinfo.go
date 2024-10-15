@@ -129,6 +129,12 @@ func TransferPlaybackInfo(c *gin.Context) {
 		source.DelKey("TranscodingContainer")
 		log.Println(colors.ToBlue("转码配置被移除"))
 
+		// 如果是远程资源, 不获取转码地址
+		ir, _ := source.Attr("IsRemote").Bool()
+		if ir {
+			return nil
+		}
+
 		// 添加转码 MediaSource 获取
 		cfg := config.C.VideoPreview
 		if !msInfo.Empty || !cfg.Enable || !cfg.ContainerValid(source.Attr("Container").Val().(string)) {
