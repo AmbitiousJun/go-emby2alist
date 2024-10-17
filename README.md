@@ -1,10 +1,10 @@
 <h1 align="center">go-emby2alist</h1>
 
 <div align="center">
-  <img src="https://img.shields.io/github/v/tag/AmbitiousJun/go-emby2alist"></img>
-  <img src="https://img.shields.io/docker/image-size/ambitiousjun/go-emby2alist/v1.1.0"></img>
-  <img src="https://img.shields.io/docker/pulls/ambitiousjun/go-emby2alist"></img>
-  <img src="https://goreportcard.com/badge/github.com/AmbitiousJun/go-emby2alist"></img>
+  <a href="https://github.com/AmbitiousJun/go-emby2alist/tree/v1.1.0"><img src="https://img.shields.io/github/v/tag/AmbitiousJun/go-emby2alist"></img></a>
+  <a href="https://hub.docker.com/r/ambitiousjun/go-emby2alist/tags"><img src="https://img.shields.io/docker/image-size/ambitiousjun/go-emby2alist/v1.1.0"></img></a>
+  <a href="https://hub.docker.com/r/ambitiousjun/go-emby2alist/tags"><img src="https://img.shields.io/docker/pulls/ambitiousjun/go-emby2alist"></img></a>
+  <a href="https://goreportcard.com/report/github.com/AmbitiousJun/go-emby2alist"><img src="https://goreportcard.com/badge/github.com/AmbitiousJun/go-emby2alist"></img></a>
   <img src="https://img.shields.io/github/stars/AmbitiousJun/go-emby2alist"></img>
   <img src="https://img.shields.io/github/license/AmbitiousJun/go-emby2alist"></img>
 </div>
