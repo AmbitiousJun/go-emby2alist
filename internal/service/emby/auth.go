@@ -1,9 +1,11 @@
 package emby
 
 import (
+	"io"
 	"log"
 	"net/http"
 	"regexp"
+	"strings"
 	"sync"
 
 	"github.com/AmbitiousJun/go-emby2alist/internal/config"
@@ -41,6 +43,8 @@ const (
 	HeaderAuthName     = "Authorization"
 	HeaderFullAuthName = "X-Emby-Authorization"
 )
+
+const UnauthorizedResp = "Access token is invalid or expired."
 
 // ApiKeyChecker 对指定的 api 进行鉴权
 //
@@ -97,9 +101,15 @@ func ApiKeyChecker() gin.HandlerFunc {
 			return
 		}
 		defer resp.Body.Close()
+		bodyBytes, err := io.ReadAll(resp.Body)
+		if err != nil {
+			log.Printf(colors.ToRed("鉴权中间件读取源服务器响应失败: %v"), err)
+			bodyBytes = []byte(UnauthorizedResp)
+		}
+		respBody := strings.TrimSpace(string(bodyBytes))
 
-		// 5 判断是否是 401 响应码
-		if resp.StatusCode == http.StatusUnauthorized {
+		// 5 判断是否被源服务器拒绝
+		if resp.StatusCode == http.StatusUnauthorized && respBody == UnauthorizedResp {
 			c.String(http.StatusUnauthorized, "鉴权失败")
 			c.Abort()
 			return
