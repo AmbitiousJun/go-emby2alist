@@ -19,9 +19,9 @@ func main() {
 		log.Fatal(err)
 	}
 
-	log.Println("正在启动服务...")
+	log.Println(colors.ToBlue("正在启动服务..."))
 	if err := web.Listen(); err != nil {
-		log.Fatal(err)
+		log.Fatal(colors.ToRed(err.Error()))
 	}
 }
 

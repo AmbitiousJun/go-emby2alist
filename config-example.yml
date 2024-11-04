@@ -62,3 +62,10 @@ ssl:
   single-port: false
   key: testssl.cn.key # 私钥文件名
   crt: testssl.cn.crt # 证书文件名
+log:
+  # 是否禁用控制台彩色日志
+  #
+  # 程序默认是输出彩色日志的,
+  # 如果你的终端不支持彩色输出, 并且多出来一些乱码字符
+  # 可以将该项设置为 true
+  disable-color: false
