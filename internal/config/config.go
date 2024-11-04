@@ -6,7 +6,6 @@ import (
 	"path/filepath"
 	"reflect"
 
-	"github.com/AmbitiousJun/go-emby2alist/internal/util/colors"
 	"gopkg.in/yaml.v3"
 )
 
@@ -23,6 +22,8 @@ type Config struct {
 	Cache *Cache `yaml:"cache"`
 	// Ssl ssl 相关配置
 	Ssl *Ssl `yaml:"ssl"`
+	// Log 日志相关配置
+	Log *Log `yaml:"log"`
 }
 
 // C 全局唯一配置对象
@@ -65,7 +66,7 @@ func ReadFromFile(path string) error {
 		// 配置项初始化
 		if i, ok := field.Interface().(Initializer); ok {
 			if err := i.Init(); err != nil {
-				return fmt.Errorf(colors.ToRed("初始化配置文件失败: %v"), err)
+				return fmt.Errorf("初始化配置文件失败: %v", err)
 			}
 		}
 	}

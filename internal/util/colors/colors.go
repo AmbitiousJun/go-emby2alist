@@ -1,5 +1,7 @@
 package colors
 
+import "github.com/AmbitiousJun/go-emby2alist/internal/config"
+
 // 日志颜色输出常量
 const (
 	Blue   = "\x1b[38;2;090;156;248m"
@@ -14,30 +16,40 @@ const (
 
 // ToBlue 将字符串转成蓝色
 func ToBlue(str string) string {
-	return Blue + str + reset
+	return wrapColor(Blue, str)
 }
 
 // ToGreen 将字符串转成绿色
 func ToGreen(str string) string {
-	return Green + str + reset
+	return wrapColor(Green, str)
 }
 
 // ToYellow 将字符串转成黄色
 func ToYellow(str string) string {
-	return Yellow + str + reset
+	return wrapColor(Yellow, str)
 }
 
 // ToRed 将字符串转成红色
 func ToRed(str string) string {
-	return Red + str + reset
+	return wrapColor(Red, str)
 }
 
 // ToPurple 将字符串转成紫色
 func ToPurple(str string) string {
-	return Purple + str + reset
+	return wrapColor(Purple, str)
 }
 
 // ToGray 将字符串转成灰色
 func ToGray(str string) string {
-	return Gray + str + reset
+	return wrapColor(Gray, str)
+}
+
+// wrapColor 将字符串 str 包裹上指定颜色的 ANSI 字符
+//
+// 如果用户关闭了颜色输出, 则直接返回原字符串
+func wrapColor(color, str string) string {
+	if config.C != nil && config.C.Log.DisableColor {
+		return str
+	}
+	return color + str + reset
 }
