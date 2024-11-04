@@ -8,7 +8,7 @@ import (
 	"github.com/AmbitiousJun/go-emby2alist/internal/web"
 )
 
-const CurrentVersion = "v1.1.0"
+const CurrentVersion = "v1.2.0"
 const RepoAddr = "https://github.com/AmbitiousJun/go-emby2alist"
 
 func main() {
