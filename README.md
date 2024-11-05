@@ -341,6 +341,10 @@ Object reference not set to an instance of an object.
    
 5. ... （如果有什么更好的想法，欢迎 issue 区留言）
 
+## 请我喝杯 9.9💰 的 Luckin Coffee☕️
+
+![](assets/2024-11-05-09-57-45.png)
+
 ## Star History
 
 <a href="https://star-history.com/#AmbitiousJun/go-emby2alist&Date">
