@@ -25,7 +25,7 @@ func init() {
 }
 
 // GetPlaylist 获取 m3u 播放列表, 返回 m3u 文本
-var GetPlaylist func(alistPath, templateId string, proxy, main bool) (string, bool)
+var GetPlaylist func(alistPath, templateId string, proxy, main bool, routePrefix string) (string, bool)
 
 // GetTsLink 获取 m3u 播放列表中的某个 ts 链接
 var GetTsLink func(alistPath, templateId string, idx int) (string, bool)
@@ -143,13 +143,13 @@ func loopMaintainPlaylist() {
 		return nil
 	}
 
-	GetPlaylist = func(alistPath, templateId string, proxy, main bool) (string, bool) {
+	GetPlaylist = func(alistPath, templateId string, proxy, main bool, routePrefix string) (string, bool) {
 		info := queryInfo(alistPath, templateId)
 		if info == nil {
 			return "", false
 		}
 		if proxy {
-			return info.ProxyContent(main), true
+			return info.ProxyContent(main, routePrefix), true
 		}
 		return info.Content(), true
 	}

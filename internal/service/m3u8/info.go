@@ -168,11 +168,18 @@ func (i *Info) ContentFunc(tsMapper func(int, string) string) string {
 }
 
 // ProxyContent 将 i 转换为 m3u8 本地代理文本
-func (i *Info) ProxyContent(main bool) string {
+func (i *Info) ProxyContent(main bool, routePrefix string) string {
+	baseRoute := strings.Builder{}
+	if routePrefix != "" {
+		baseRoute.WriteString(routePrefix)
+		baseRoute.WriteString("/")
+	}
+
 	// 有内封字幕的资源, 切换为变体 m3u8
 	if !main && len(i.Subtitles) > 0 {
+		baseRoute.WriteString("proxy_playlist")
 		return i.MasterFunc(func() string {
-			u, _ := url.Parse("proxy_playlist")
+			u, _ := url.Parse(baseRoute.String())
 			q := u.Query()
 			q.Set("alist_path", i.AlistPath)
 			q.Set("template_id", i.TemplateId)
@@ -182,8 +189,10 @@ func (i *Info) ProxyContent(main bool) string {
 			return u.String()
 		})
 	}
+
+	baseRoute.WriteString("proxy_ts")
 	return i.ContentFunc(func(idx int, _ string) string {
-		u, _ := url.Parse("proxy_ts")
+		u, _ := url.Parse(baseRoute.String())
 		q := u.Query()
 		q.Set("idx", strconv.Itoa(idx))
 		q.Set("alist_path", i.AlistPath)

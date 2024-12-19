@@ -1,7 +1,7 @@
 package emby
 
 import (
-	"errors"
+	"fmt"
 	"log"
 	"net/http"
 	"net/url"
@@ -12,7 +12,6 @@ import (
 	"github.com/AmbitiousJun/go-emby2alist/internal/service/alist"
 	"github.com/AmbitiousJun/go-emby2alist/internal/service/path"
 	"github.com/AmbitiousJun/go-emby2alist/internal/util/colors"
-	"github.com/AmbitiousJun/go-emby2alist/internal/util/https"
 	"github.com/AmbitiousJun/go-emby2alist/internal/util/jsons"
 	"github.com/AmbitiousJun/go-emby2alist/internal/util/strs"
 	"github.com/AmbitiousJun/go-emby2alist/internal/util/urls"
@@ -53,16 +52,15 @@ func Redirect2AlistLink(c *gin.Context) {
 	// 2 如果请求的是转码资源, 重定向到本地的 m3u8 代理服务
 	msInfo := itemInfo.MsInfo
 	useTranscode := !msInfo.Empty && msInfo.Transcode
-	if useTranscode {
+	if useTranscode && msInfo.AlistPath != "" {
 		u, _ := url.Parse(strings.ReplaceAll(MasterM3U8UrlTemplate, "${itemId}", itemInfo.Id))
 		q := u.Query()
 		q.Set("template_id", itemInfo.MsInfo.TemplateId)
 		q.Set(QueryApiKeyName, config.C.Emby.ApiKey)
 		q.Set("alist_path", itemInfo.MsInfo.AlistPath)
 		u.RawQuery = q.Encode()
-		res := https.ClientRequestHost(c) + u.String()
-		log.Printf(colors.ToGreen("重定向 playlist: %s"), res)
-		c.Redirect(http.StatusTemporaryRedirect, res)
+		log.Printf(colors.ToGreen("重定向 playlist: %s"), u.String())
+		c.Redirect(http.StatusTemporaryRedirect, u.String())
 		return
 	}
 
@@ -82,46 +80,64 @@ func Redirect2AlistLink(c *gin.Context) {
 	}
 
 	// 5 请求 alist 资源
-	fi := alist.FetchInfo{}
-	fi.Header = c.Request.Header.Clone()
+	fi := alist.FetchInfo{
+		Header:       c.Request.Header.Clone(),
+		UseTranscode: useTranscode,
+		Format:       msInfo.TemplateId,
+	}
 	alistPathRes := path.Emby2Alist(embyPath)
-	if alistPathRes.Success {
-		log.Printf(colors.ToBlue("尝试请求 Alist 资源: %s"), alistPathRes.Path)
-		fi.Path = alistPathRes.Path
-		res := alist.FetchResource(fi)
 
-		if res.Code == http.StatusOK {
-			log.Printf(colors.ToGreen("请求成功, 重定向到: %s"), res.Data.Url)
-			c.Header(cache.HeaderKeyExpired, cache.Duration(time.Minute*10))
-			c.Redirect(http.StatusTemporaryRedirect, res.Data.Url)
-			return
-		}
-
-		if res.Code == http.StatusForbidden {
-			log.Printf(colors.ToRed("请求 Alist 被阻止: %s"), res.Msg)
-			c.String(http.StatusForbidden, res.Msg)
-		}
-	}
-
-	paths, err := alistPathRes.Range()
-	if checkErr(c, err) {
-		return
-	}
-
-	for _, path := range paths {
+	allErrors := strings.Builder{}
+	// handleAlistResource 根据传递的 path 请求 alist 资源
+	handleAlistResource := func(path string) (success bool) {
 		log.Printf(colors.ToBlue("尝试请求 Alist 资源: %s"), path)
 		fi.Path = path
 		res := alist.FetchResource(fi)
 
-		if res.Code == http.StatusOK {
-			log.Printf(colors.ToGreen("请求成功, 重定向到: %s"), res.Data.Url)
+		if res.Code != http.StatusOK {
+			allErrors.WriteString(fmt.Sprintf("请求 Alist 失败, code: %d, msg: %s, path: %s;", res.Code, res.Msg, path))
+			return
+		}
+
+		success = true
+		var redirectUrl string
+		defer func() {
+			log.Printf(colors.ToGreen("请求成功, 重定向到: %s"), redirectUrl)
 			c.Header(cache.HeaderKeyExpired, cache.Duration(time.Minute*10))
-			c.Redirect(http.StatusTemporaryRedirect, res.Data.Url)
+			c.Redirect(http.StatusTemporaryRedirect, redirectUrl)
+		}()
+
+		// 处理直链
+		if !fi.UseTranscode {
+			redirectUrl = res.Data.Url
+			return
+		}
+
+		// 处理转码
+		u, _ := url.Parse(strings.ReplaceAll(MasterM3U8UrlTemplate, "${itemId}", itemInfo.Id))
+		q := u.Query()
+		q.Set("template_id", itemInfo.MsInfo.TemplateId)
+		q.Set(QueryApiKeyName, config.C.Emby.ApiKey)
+		q.Set("alist_path", path)
+		u.RawQuery = q.Encode()
+		redirectUrl = u.String()
+		return
+	}
+
+	if alistPathRes.Success && handleAlistResource(alistPathRes.Path) {
+		return
+	}
+	paths, err := alistPathRes.Range()
+	if checkErr(c, err) {
+		return
+	}
+	for _, path := range paths {
+		if handleAlistResource(path) {
 			return
 		}
 	}
 
-	checkErr(c, errors.New("查无 Alist 直链资源"))
+	checkErr(c, fmt.Errorf("获取直链失败: %s", allErrors.String()))
 }
 
 // checkErr 检查 err 是否为空

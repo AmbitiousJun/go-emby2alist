@@ -26,6 +26,8 @@ func initRulePatterns() {
 
 		// Items 接口
 		{constant.Reg_UserItems, emby.LoadCacheItems},
+		// 代理 Items 并添加转码版本信息
+		{constant.Reg_UserEpisodeItems, emby.ProxyAddItemsPreviewInfo},
 		// 随机列表接口
 		{constant.Reg_UserItemsRandomResort, emby.ResortRandomItems},
 		// 代理原始的随机列表接口, 去除 limit 限制, 并进行缓存

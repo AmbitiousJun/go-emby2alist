@@ -14,6 +14,7 @@ import (
 	"github.com/AmbitiousJun/go-emby2alist/internal/config"
 	"github.com/AmbitiousJun/go-emby2alist/internal/util/colors"
 	"github.com/AmbitiousJun/go-emby2alist/internal/util/https"
+	"github.com/AmbitiousJun/go-emby2alist/internal/util/jsons"
 	"github.com/AmbitiousJun/go-emby2alist/internal/web/cache"
 
 	"github.com/gin-gonic/gin"
@@ -178,4 +179,77 @@ func calcRandomItemsCacheKey(c *gin.Context) string {
 		c.Query("IsFolder") +
 		c.Query("ProjectToMedia") +
 		c.Query("ParentId")
+}
+
+// ProxyAddItemsPreviewInfo 代理 Items 接口, 并
+func ProxyAddItemsPreviewInfo(c *gin.Context) {
+	// 检查用户是否启用了转码版本获取
+	if !config.C.VideoPreview.Enable {
+		ProxyOrigin(c)
+		return
+	}
+
+	// 代理请求
+	embyHost := config.C.Emby.Host
+	c.Request.Header.Del("Accept-Encoding")
+	resp, err := https.Request(c.Request.Method, embyHost+c.Request.URL.String(), c.Request.Header, c.Request.Body)
+	if checkErr(c, err) {
+		return
+	}
+	defer resp.Body.Close()
+
+	// 检查响应, 读取为 JSON
+	if resp.StatusCode != http.StatusOK {
+		checkErr(c, fmt.Errorf("emby 远程返回了错误的响应码: %d", resp.StatusCode))
+		return
+	}
+	bodyBytes, err := io.ReadAll(resp.Body)
+	if checkErr(c, err) {
+		return
+	}
+	resJson, err := jsons.New(string(bodyBytes))
+	if checkErr(c, err) {
+		return
+	}
+
+	// 预响应请求
+	defer func() {
+		resp.Header.Del("Content-Length")
+		https.CloneHeader(c, resp.Header)
+		c.JSON(http.StatusOK, resJson.Struct())
+	}()
+
+	// 获取 Items 数组
+	itemsArr, ok := resJson.Attr("Items").Done()
+	if !ok || itemsArr.Empty() || itemsArr.Type() != jsons.JsonTypeArr {
+		return
+	}
+
+	// 遍历每个 Item, 修改 MediaSource 信息
+	itemsArr.RangeArr(func(index int, item *jsons.Item) error {
+		mediaSources, ok := item.Attr("MediaSources").Done()
+		if !ok || mediaSources.Empty() {
+			return nil
+		}
+
+		toAdd := make([]*jsons.Item, 0)
+		mediaSources.RangeArr(func(_ int, ms *jsons.Item) error {
+			originId, _ := ms.Attr("Id").String()
+			originName := findMediaSourceName(ms)
+			width, height := findMediaSourceRect(ms)
+			allTplIds := getAllPreviewTemplateIds(width, height)
+			ms.Put("Name", jsons.NewByVal("(原画) "+originName))
+
+			for _, tplId := range allTplIds {
+				copyMs := jsons.NewByVal(ms.Struct())
+				copyMs.Put("Name", jsons.NewByVal(fmt.Sprintf("(%s) %s", tplId, originName)))
+				copyMs.Put("Id", jsons.NewByVal(fmt.Sprintf("%s%s%s", originId, MediaSourceIdSegment, tplId)))
+				toAdd = append(toAdd, copyMs)
+			}
+			return nil
+		})
+
+		mediaSources.Append(toAdd...)
+		return nil
+	})
 }
