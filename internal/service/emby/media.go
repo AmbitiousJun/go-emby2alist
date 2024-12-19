@@ -33,22 +33,11 @@ const MediaSourceIdSegment = "[[_]]"
 // uri 中必须有 query 参数 MediaSourceId,
 // 如果没有携带该参数, 可能会请求到多个资源, 默认返回第一个资源
 func getEmbyFileLocalPath(itemInfo ItemInfo) (string, error) {
-	var body *jsons.Item
-
-	if spaceCache, ok := getPlaybackInfoByCacheSpace(itemInfo); ok {
-		cacheBody, err := spaceCache.JsonBody()
-		if err == nil {
-			body = cacheBody
-		}
+	res, _ := Fetch(itemInfo.PlaybackInfoUri, http.MethodPost, nil, nil)
+	if res.Code != http.StatusOK {
+		return "", fmt.Errorf("请求 Emby 接口异常, error: %s", res.Msg)
 	}
-
-	if body == nil {
-		res, _ := Fetch(itemInfo.PlaybackInfoUri, http.MethodPost, nil, nil)
-		if res.Code != http.StatusOK {
-			return "", fmt.Errorf("请求 Emby 接口异常, error: %s", res.Msg)
-		}
-		body = res.Data
-	}
+	body := res.Data
 
 	mediaSources, ok := body.Attr("MediaSources").Done()
 	if !ok {
@@ -281,6 +270,34 @@ func findMediaSourceName(source *jsons.Item) string {
 	return mediaStreams.Ti().Idx(idx).Attr("DisplayTitle").Val().(string)
 }
 
+// findMediaSourceRect 查找 MediaSource 中的宽高信息, 如 '1920 1080'
+//
+// 获取不到时返回零值
+func findMediaSourceRect(source *jsons.Item) (width, height int) {
+	if source == nil || source.Type() != jsons.JsonTypeObj {
+		return
+	}
+
+	mediaStreams, ok := source.Attr("MediaStreams").Done()
+	if !ok || mediaStreams.Type() != jsons.JsonTypeArr {
+		return
+	}
+
+	idx := mediaStreams.FindIdx(func(val *jsons.Item) bool {
+		return val.Attr("Type").Val() == "Video"
+	})
+	if idx == -1 {
+		return
+	}
+
+	width, okW := mediaStreams.Ti().Idx(idx).Attr("Width").Int()
+	height, okH := mediaStreams.Ti().Idx(idx).Attr("Height").Int()
+	if okW && okH {
+		return
+	}
+	return 0, 0
+}
+
 // itemIdRegex 用于匹配出请求 uri 中的 itemId
 var itemIdRegex = regexp.MustCompile(`(?:/emby)?/.*/(\d+)(?:/|\?)?`)
 
@@ -371,15 +388,45 @@ func resolveMediaSourceId(id string) (MsInfo, error) {
 	}
 
 	segments := strings.Split(id, MediaSourceIdSegment)
-	if len(segments) != 4 {
-		return MsInfo{}, errors.New("MediaSourceId 格式错误: " + id)
+
+	if len(segments) == 2 {
+		res.Transcode = true
+		res.OriginId = segments[0]
+		res.TemplateId = segments[1]
+		return res, nil
 	}
 
-	res.Transcode = true
-	res.OriginId = segments[0]
-	res.TemplateId = segments[1]
-	res.Format = segments[2]
-	res.AlistPath = segments[3]
-	res.SourceNamePrefix = fmt.Sprintf("%s_%s", res.TemplateId, res.Format)
-	return res, nil
+	if len(segments) == 4 {
+		res.Transcode = true
+		res.OriginId = segments[0]
+		res.TemplateId = segments[1]
+		res.Format = segments[2]
+		res.AlistPath = segments[3]
+		res.SourceNamePrefix = fmt.Sprintf("%s_%s", res.TemplateId, res.Format)
+		return res, nil
+	}
+
+	return MsInfo{}, errors.New("MediaSourceId 格式错误: " + id)
+}
+
+// getAllPreviewTemplateIds 获取所有转码格式
+//
+// 在配置文件中忽略的格式不会返回
+// 返回 FHD 或 QHD 取决于宽高
+func getAllPreviewTemplateIds(width, height int) []string {
+	allIds := []string{"LD", "SD", "HD"}
+	if width > 1920 || height > 1080 {
+		allIds = append(allIds, "QHD")
+	} else {
+		allIds = append(allIds, "FHD")
+	}
+
+	res := []string{}
+	for _, id := range allIds {
+		if config.C.VideoPreview.IsTemplateIgnore(id) {
+			continue
+		}
+		res = append(res, id)
+	}
+	return res
 }

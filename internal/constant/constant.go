@@ -4,6 +4,7 @@ const (
 	Reg_Socket                   = `(?i)^/.*(socket|embywebsocket)`
 	Reg_PlaybackInfo             = `(?i)^/.*items/.*/playbackinfo\??`
 	Reg_UserItems                = `(?i)^/.*users/.*/items/\d+($|\?)`
+	Reg_UserEpisodeItems         = `(?i)^/.*users/.*/items\?.*includeitemtypes=(episode|movie)`
 	Reg_UserItemsRandomResort    = `(?i)^/.*users/.*/items\?.*SortBy=Random`
 	Reg_UserItemsRandomWithLimit = `(?i)^/.*users/.*/items/with_limit\?.*SortBy=Random`
 	Reg_ShowEpisodes             = `(?i)^/.*shows/.*/episodes\??`

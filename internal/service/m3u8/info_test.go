@@ -409,7 +409,7 @@ func TestConvert(t *testing.T) {
 	// log.Println(info.Content())
 	info.AlistPath = "/电视剧/xxx"
 	info.TemplateId = "FHD"
-	log.Println(info.ProxyContent(true))
+	log.Println(info.ProxyContent(true, ""))
 }
 
 func TestUpdateContent(t *testing.T) {

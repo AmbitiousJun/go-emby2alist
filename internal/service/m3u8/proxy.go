@@ -59,7 +59,10 @@ func ProxyPlaylist(c *gin.Context) {
 		c.String(http.StatusOK, content)
 	}
 
-	m3uContent, ok := GetPlaylist(params.AlistPath, params.TemplateId, true, true)
+	// ts 切片使用绝对路径
+	routePrefix := https.ClientRequestHost(c) + "/videos"
+
+	m3uContent, ok := GetPlaylist(params.AlistPath, params.TemplateId, true, true, routePrefix)
 	if ok {
 		okContent(m3uContent)
 		return
@@ -69,7 +72,7 @@ func ProxyPlaylist(c *gin.Context) {
 	PushPlaylistAsync(Info{AlistPath: params.AlistPath, TemplateId: params.TemplateId})
 
 	// 重新获取一次
-	m3uContent, ok = GetPlaylist(params.AlistPath, params.TemplateId, true, true)
+	m3uContent, ok = GetPlaylist(params.AlistPath, params.TemplateId, true, true, routePrefix)
 	if ok {
 		okContent(m3uContent)
 		return
