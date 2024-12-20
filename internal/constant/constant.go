@@ -11,6 +11,7 @@ const (
 	Reg_VideoSubtitles           = `(?i)^/.*videos/.*/subtitles`
 	Reg_ResourceStream           = `(?i)^/.*(videos|audio)/.*/(stream|universal)(\.\w+)?\??`
 	Reg_ResourceMaster           = `(?i)^/.*(videos|audio)/.*/(master)(\.\w+)?\??`
+	Reg_ResourceMain             = `(?i)^/.*(videos|audio)/.*/main.m3u8\??`
 	Reg_ProxyPlaylist            = `(?i)^/.*videos/proxy_playlist\??`
 	Reg_ProxyTs                  = `(?i)^/.*videos/proxy_ts\??`
 	Reg_ProxySubtitle            = `(?i)^/.*videos/proxy_subtitle\??`
