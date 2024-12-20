@@ -312,11 +312,9 @@ func resolveItemInfo(c *gin.Context) (ItemInfo, error) {
 	if len(matches) < 2 {
 		return ItemInfo{}, fmt.Errorf("itemId 匹配失败, uri: %s", uri)
 	}
-	itemInfo := ItemInfo{Id: matches[1], ApiKey: c.Query(QueryTokenName)}
+	itemInfo := ItemInfo{Id: matches[1]}
 
-	if itemInfo.ApiKey == "" {
-		itemInfo.ApiKey = c.Query(QueryApiKeyName)
-	}
+	_, itemInfo.ApiKey = getApiKey(c)
 	if itemInfo.ApiKey == "" {
 		itemInfo.ApiKey = config.C.Emby.ApiKey
 	}
