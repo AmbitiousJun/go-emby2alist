@@ -12,7 +12,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/AmbitiousJun/go-emby2alist/internal/config"
 	"github.com/AmbitiousJun/go-emby2alist/internal/service/alist"
 	"github.com/AmbitiousJun/go-emby2alist/internal/service/emby"
 	"github.com/AmbitiousJun/go-emby2alist/internal/util/colors"
@@ -116,7 +115,7 @@ func (i *Info) GetTsLink(idx int) (string, bool) {
 // Deprecated: MasterFunc 获取变体 m3u8
 //
 // 当 info 包含有字幕时, 需要调用这个方法返回
-func (i *Info) MasterFunc(cntMapper func() string) string {
+func (i *Info) MasterFunc(cntMapper func() string, clientApiKey string) string {
 	sb := strings.Builder{}
 	sb.WriteString("#EXTM3U\n")
 	sb.WriteString("#EXT-X-VERSION:3\n")
@@ -127,7 +126,7 @@ func (i *Info) MasterFunc(cntMapper func() string) string {
 		q.Set("alist_path", i.AlistPath)
 		q.Set("template_id", i.TemplateId)
 		q.Set("sub_name", urls.ResolveResourceName(subInfo.Url))
-		q.Set(emby.QueryApiKeyName, config.C.Emby.ApiKey)
+		q.Set(emby.QueryApiKeyName, clientApiKey)
 		u.RawQuery = q.Encode()
 		cmt := fmt.Sprintf(`#EXT-X-MEDIA:TYPE=SUBTITLES,GROUP-ID="subs",NAME="%s",LANGUAGE="%s",URI="%s"`, subInfo.Lang, subInfo.Lang, u.String())
 		sb.WriteString(cmt + "\n")
@@ -168,7 +167,7 @@ func (i *Info) ContentFunc(tsMapper func(int, string) string) string {
 }
 
 // ProxyContent 将 i 转换为 m3u8 本地代理文本
-func (i *Info) ProxyContent(main bool, routePrefix string) string {
+func (i *Info) ProxyContent(main bool, routePrefix, clientApiKey string) string {
 	baseRoute := strings.Builder{}
 	if routePrefix != "" {
 		baseRoute.WriteString(routePrefix)
@@ -183,11 +182,11 @@ func (i *Info) ProxyContent(main bool, routePrefix string) string {
 			q := u.Query()
 			q.Set("alist_path", i.AlistPath)
 			q.Set("template_id", i.TemplateId)
-			q.Set(emby.QueryApiKeyName, config.C.Emby.ApiKey)
+			q.Set(emby.QueryApiKeyName, clientApiKey)
 			q.Set("type", "main")
 			u.RawQuery = q.Encode()
 			return u.String()
-		})
+		}, clientApiKey)
 	}
 
 	baseRoute.WriteString("proxy_ts")
@@ -197,7 +196,7 @@ func (i *Info) ProxyContent(main bool, routePrefix string) string {
 		q.Set("idx", strconv.Itoa(idx))
 		q.Set("alist_path", i.AlistPath)
 		q.Set("template_id", i.TemplateId)
-		q.Set(emby.QueryApiKeyName, config.C.Emby.ApiKey)
+		q.Set(emby.QueryApiKeyName, clientApiKey)
 		u.RawQuery = q.Encode()
 		return u.String()
 	})

@@ -110,7 +110,7 @@ func TransferPlaybackInfo(c *gin.Context) {
 		source.Put("SupportsDirectStream", jsons.NewByVal(true))
 		newUrl := fmt.Sprintf(
 			"/videos/%s/stream?MediaSourceId=%s&%s=%s&Static=true",
-			itemInfo.Id, source.Attr("Id").Val(), QueryApiKeyName, config.C.Emby.ApiKey,
+			itemInfo.Id, source.Attr("Id").Val(), QueryApiKeyName, itemInfo.ApiKey,
 		)
 		source.Put("DirectStreamUrl", jsons.NewByVal(newUrl))
 		log.Printf(colors.ToBlue("设置直链播放链接为: %s"), newUrl)
@@ -141,7 +141,7 @@ func TransferPlaybackInfo(c *gin.Context) {
 			return nil
 		}
 		resChan := make(chan []*jsons.Item, 1)
-		go findVideoPreviewInfos(source, name, resChan)
+		go findVideoPreviewInfos(source, name, itemInfo.ApiKey, resChan)
 		resChans = append(resChans, resChan)
 		return nil
 	})
