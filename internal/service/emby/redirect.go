@@ -2,6 +2,7 @@ package emby
 
 import (
 	"fmt"
+	"io"
 	"log"
 	"net/http"
 	"net/url"
@@ -12,6 +13,7 @@ import (
 	"github.com/AmbitiousJun/go-emby2alist/internal/service/alist"
 	"github.com/AmbitiousJun/go-emby2alist/internal/service/path"
 	"github.com/AmbitiousJun/go-emby2alist/internal/util/colors"
+	"github.com/AmbitiousJun/go-emby2alist/internal/util/https"
 	"github.com/AmbitiousJun/go-emby2alist/internal/util/jsons"
 	"github.com/AmbitiousJun/go-emby2alist/internal/util/strs"
 	"github.com/AmbitiousJun/go-emby2alist/internal/util/urls"
@@ -89,39 +91,46 @@ func Redirect2AlistLink(c *gin.Context) {
 
 	allErrors := strings.Builder{}
 	// handleAlistResource 根据传递的 path 请求 alist 资源
-	handleAlistResource := func(path string) (success bool) {
+	handleAlistResource := func(path string) bool {
 		log.Printf(colors.ToBlue("尝试请求 Alist 资源: %s"), path)
 		fi.Path = path
 		res := alist.FetchResource(fi)
 
 		if res.Code != http.StatusOK {
 			allErrors.WriteString(fmt.Sprintf("请求 Alist 失败, code: %d, msg: %s, path: %s;", res.Code, res.Msg, path))
-			return
+			return false
 		}
-
-		success = true
-		var redirectUrl string
-		defer func() {
-			log.Printf(colors.ToGreen("请求成功, 重定向到: %s"), redirectUrl)
-			c.Header(cache.HeaderKeyExpired, cache.Duration(time.Minute*10))
-			c.Redirect(http.StatusTemporaryRedirect, redirectUrl)
-		}()
 
 		// 处理直链
 		if !fi.UseTranscode {
-			redirectUrl = res.Data.Url
-			return
+			log.Printf(colors.ToGreen("请求成功, 重定向到: %s"), res.Data.Url)
+			c.Header(cache.HeaderKeyExpired, cache.Duration(time.Minute*10))
+			c.Redirect(http.StatusTemporaryRedirect, res.Data.Url)
+			return true
 		}
 
-		// 处理转码
-		u, _ := url.Parse(strings.ReplaceAll(MasterM3U8UrlTemplate, "${itemId}", itemInfo.Id))
+		// 代理转码 m3u
+		u, _ := url.Parse(strings.ReplaceAll(https.ClientRequestHost(c)+MasterM3U8UrlTemplate, "${itemId}", itemInfo.Id))
 		q := u.Query()
 		q.Set("template_id", itemInfo.MsInfo.TemplateId)
 		q.Set(QueryApiKeyName, config.C.Emby.ApiKey)
 		q.Set("alist_path", path)
 		u.RawQuery = q.Encode()
-		redirectUrl = u.String()
-		return
+		_, resp, err := https.RequestRedirect(http.MethodGet, u.String(), nil, nil, true)
+		if err != nil {
+			allErrors.WriteString(fmt.Sprintf("代理转码 m3u 失败: %v;", err))
+			return false
+		}
+		defer resp.Body.Close()
+		bodyBytes, err := io.ReadAll(resp.Body)
+		if checkErr(c, err) {
+			return true
+		}
+		c.Status(resp.StatusCode)
+		https.CloneHeader(c, resp.Header)
+		c.Writer.Write(bodyBytes)
+		c.Writer.Flush()
+		return true
 	}
 
 	if alistPathRes.Success && handleAlistResource(alistPathRes.Path) {
