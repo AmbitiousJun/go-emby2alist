@@ -10,7 +10,6 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/AmbitiousJun/go-emby2alist/internal/config"
 	"github.com/AmbitiousJun/go-emby2alist/internal/util/colors"
 	"github.com/AmbitiousJun/go-emby2alist/internal/util/https"
 	"github.com/AmbitiousJun/go-emby2alist/internal/util/strs"
@@ -39,9 +38,6 @@ func baseCheck(c *gin.Context) (ProxyParams, error) {
 		return ProxyParams{}, errors.New("参数不足")
 	}
 
-	if params.ApiKey != config.C.Emby.ApiKey {
-		return ProxyParams{}, errors.New("无权限访问")
-	}
 	return params, nil
 }
 
@@ -62,7 +58,7 @@ func ProxyPlaylist(c *gin.Context) {
 	// ts 切片使用绝对路径
 	routePrefix := https.ClientRequestHost(c) + "/videos"
 
-	m3uContent, ok := GetPlaylist(params.AlistPath, params.TemplateId, true, true, routePrefix)
+	m3uContent, ok := GetPlaylist(params.AlistPath, params.TemplateId, true, true, routePrefix, params.ApiKey)
 	if ok {
 		okContent(m3uContent)
 		return
@@ -72,7 +68,7 @@ func ProxyPlaylist(c *gin.Context) {
 	PushPlaylistAsync(Info{AlistPath: params.AlistPath, TemplateId: params.TemplateId})
 
 	// 重新获取一次
-	m3uContent, ok = GetPlaylist(params.AlistPath, params.TemplateId, true, true, routePrefix)
+	m3uContent, ok = GetPlaylist(params.AlistPath, params.TemplateId, true, true, routePrefix, params.ApiKey)
 	if ok {
 		okContent(m3uContent)
 		return

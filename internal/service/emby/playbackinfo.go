@@ -110,7 +110,7 @@ func TransferPlaybackInfo(c *gin.Context) {
 		source.Put("SupportsDirectStream", jsons.NewByVal(true))
 		newUrl := fmt.Sprintf(
 			"/videos/%s/stream?MediaSourceId=%s&%s=%s&Static=true",
-			itemInfo.Id, source.Attr("Id").Val(), QueryApiKeyName, config.C.Emby.ApiKey,
+			itemInfo.Id, source.Attr("Id").Val(), QueryApiKeyName, itemInfo.ApiKey,
 		)
 		source.Put("DirectStreamUrl", jsons.NewByVal(newUrl))
 		log.Printf(colors.ToBlue("设置直链播放链接为: %s"), newUrl)
@@ -141,7 +141,7 @@ func TransferPlaybackInfo(c *gin.Context) {
 			return nil
 		}
 		resChan := make(chan []*jsons.Item, 1)
-		go findVideoPreviewInfos(source, name, resChan)
+		go findVideoPreviewInfos(source, name, itemInfo.ApiKey, resChan)
 		resChans = append(resChans, resChan)
 		return nil
 	})
@@ -155,7 +155,7 @@ func TransferPlaybackInfo(c *gin.Context) {
 		c.Header(cache.HeaderKeyExpired, cache.Duration(time.Hour*12))
 		// 将请求结果缓存到指定缓存空间下
 		c.Header(cache.HeaderKeySpace, PlaybackCacheSpace)
-		c.Header(cache.HeaderKeySpaceKey, itemInfo.Id)
+		c.Header(cache.HeaderKeySpaceKey, calcPlaybackInfoSpaceCacheKey(itemInfo))
 	}()
 
 	// 收集异步请求的转码资源信息
@@ -447,9 +447,14 @@ func LoadCacheItems(c *gin.Context) {
 	coverMediaSources(bodyJson)
 }
 
+// calcPlaybackInfoSpaceCacheKey 根据请求的 item 信息计算 PlaybackInfo 在缓存空间中的 key
+func calcPlaybackInfoSpaceCacheKey(itemInfo ItemInfo) string {
+	return itemInfo.Id + "_" + itemInfo.ApiKey
+}
+
 // getPlaybackInfoByCacheSpace 从缓存空间中获取 PlaybackInfo 信息
 func getPlaybackInfoByCacheSpace(itemInfo ItemInfo) (cache.RespCache, bool) {
-	spaceCache, ok := cache.GetSpaceCache(PlaybackCacheSpace, itemInfo.Id)
+	spaceCache, ok := cache.GetSpaceCache(PlaybackCacheSpace, calcPlaybackInfoSpaceCacheKey(itemInfo))
 	if !ok {
 		return nil, false
 	}

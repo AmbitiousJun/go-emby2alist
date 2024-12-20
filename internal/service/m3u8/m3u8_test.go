@@ -19,7 +19,7 @@ func TestPlaylistCache(t *testing.T) {
 	m3u8.PushPlaylistAsync(info)
 
 	// 获取 playlist
-	m3uContent, ok := m3u8.GetPlaylist(info.AlistPath, info.TemplateId, true, true, "")
+	m3uContent, ok := m3u8.GetPlaylist(info.AlistPath, info.TemplateId, true, true, "", "")
 	if !ok {
 		log.Fatal("获取 m3u 失败")
 	}

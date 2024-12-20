@@ -79,7 +79,7 @@ func getEmbyFileLocalPath(itemInfo ItemInfo) (string, error) {
 // findVideoPreviewInfos 查找 source 的所有转码资源
 //
 // 传递 resChan 进行异步查询, 通过监听 resChan 获取查询结果
-func findVideoPreviewInfos(source *jsons.Item, originName string, resChan chan []*jsons.Item) {
+func findVideoPreviewInfos(source *jsons.Item, originName, clientApiKey string, resChan chan []*jsons.Item) {
 	if source == nil || source.Type() != jsons.JsonTypeObj {
 		resChan <- nil
 		return
@@ -172,7 +172,7 @@ func findVideoPreviewInfos(source *jsons.Item, originName string, resChan chan [
 			q := tu.Query()
 			q.Set("alist_path", alistPathRes.Path)
 			q.Set("template_id", templateId)
-			q.Set(QueryApiKeyName, config.C.Emby.ApiKey)
+			q.Set(QueryApiKeyName, clientApiKey)
 			tu.RawQuery = q.Encode()
 
 			// 标记转码资源使用转码容器
@@ -185,7 +185,7 @@ func findVideoPreviewInfos(source *jsons.Item, originName string, resChan chan [
 			copySource.Put("SupportsDirectStream", jsons.NewByVal(false))
 
 			// 设置转码字幕
-			addSubtitles2MediaStreams(copySource, subtitleList, alistPathRes.Path, templateId)
+			addSubtitles2MediaStreams(copySource, subtitleList, alistPathRes.Path, templateId, clientApiKey)
 
 			res[idx] = copySource
 		}()
@@ -208,7 +208,7 @@ func findVideoPreviewInfos(source *jsons.Item, originName string, resChan chan [
 // addSubtitles2MediaStreams 添加转码字幕到 PlaybackInfo 的 MediaStreams 项中
 //
 // subtitleList 是请求 alist 转码信息接口获取到的字幕列表
-func addSubtitles2MediaStreams(source, subtitleList *jsons.Item, alistPath, templateId string) {
+func addSubtitles2MediaStreams(source, subtitleList *jsons.Item, alistPath, templateId, clientApiKey string) {
 	// 1 json 参数类型校验
 	if source == nil || subtitleList == nil || subtitleList.Empty() {
 		return
@@ -241,7 +241,7 @@ func addSubtitles2MediaStreams(source, subtitleList *jsons.Item, alistPath, temp
 		q.Set("alist_path", alistPath)
 		q.Set("template_id", templateId)
 		q.Set("sub_name", subName)
-		q.Set(QueryApiKeyName, config.C.Emby.ApiKey)
+		q.Set(QueryApiKeyName, clientApiKey)
 		u.RawQuery = q.Encode()
 		subStream.Put("DeliveryUrl", jsons.NewByVal(u.String()))
 
@@ -312,11 +312,9 @@ func resolveItemInfo(c *gin.Context) (ItemInfo, error) {
 	if len(matches) < 2 {
 		return ItemInfo{}, fmt.Errorf("itemId 匹配失败, uri: %s", uri)
 	}
-	itemInfo := ItemInfo{Id: matches[1], ApiKey: c.Query(QueryTokenName)}
+	itemInfo := ItemInfo{Id: matches[1]}
 
-	if itemInfo.ApiKey == "" {
-		itemInfo.ApiKey = c.Query(QueryApiKeyName)
-	}
+	_, itemInfo.ApiKey = getApiKey(c)
 	if itemInfo.ApiKey == "" {
 		itemInfo.ApiKey = config.C.Emby.ApiKey
 	}
