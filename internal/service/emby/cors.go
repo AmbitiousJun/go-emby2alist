@@ -33,7 +33,7 @@ func ChangeBaseVideoModuleCorsDefined(c *gin.Context) {
 	}
 
 	// 3 注入 JS 代码补丁
-	modObj := `window.defined['modules/htmlvideoplayer/basehtmlplayer.js']`
+	modObj := `window.defined['modules/htmlvideoplayer/plugin.js']`
 	modObjDefault := modObj + ".default"
 	modObjPrototype := modObjDefault + ".prototype"
 	modObjCorsFunc := modObjPrototype + ".getCrossOriginValue"
