@@ -57,6 +57,9 @@ func initRulePatterns() {
 		// 处理图片请求
 		{constant.Reg_Images, emby.HandleImages},
 
+		// web cors 处理
+		{constant.Reg_BaseVideoModWebDefined, emby.ChangeBaseVideoModuleCorsDefined},
+
 		// 其余资源走重定向回源
 		{constant.Reg_All, emby.ProxyOrigin},
 	})
