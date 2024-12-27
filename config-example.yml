@@ -1,7 +1,7 @@
 emby:
-  host: http://192.168.0.109:8096            # emby 访问地址 (非 docker 内网)
+  host: http://192.168.0.109:8096            # emby 访问地址
   mount-path: /data                          # rclone/cd2 挂载的本地磁盘路径, 如果 emby 是容器部署, 这里要配的就是容器内部的挂载路径
-  api-key: 2f8sng5sjd5enm65df5e4s12q96324fwc # emby api key 可以在 emby 管理后台配置
+  api-key: 2f8sng5sjd5enm65df5e4s12q96324fwc # emby api key
   episodes-unplay-prior: true                # 是否修改剧集排序, 让未播的剧集靠前排列; 启用该配置时, 会忽略原接口的分页机制
   resort-random-items: true                  # 是否重排序随机列表, 对 emby 的排序结果进行二次重排序, 使得列表足够随机
   # 代理异常处理策略
@@ -20,9 +20,13 @@ emby:
     path-map:
       - https://test-res.com:8094 => http://localhost:8095
       - 12138 => 10086
+
+# 该配置仅针对通过磁盘挂载方式接入的网盘, 如果你使用的是 strm, 可忽略该配置
 alist:
-  host: http://192.168.0.109:5244            # alist 访问地址 (非 docker 内网)
+  host: http://192.168.0.109:5244            # alist 访问地址
   token: alist-xxxxx                         # alist api key 可以在 alist 管理后台查看
+
+# 该配置项目前只对阿里云盘生效, 如果你使用的是其他网盘, 请直接将 enable 设置为 false
 video-preview:
   enable: true                               # 是否开启 alist 转码资源信息获取
   containers:                                # 对哪些视频容器获取转码资源信息
@@ -31,6 +35,7 @@ video-preview:
   ignore-template-ids:                       # 忽略哪些转码清晰度
     - LD
     - SD
+
 path:
   # emby 挂载路径和 alist 真实路径之间的前缀映射
   # 冒号左边表示本地挂载路径, 冒号右边表示 alist 的真实路径
@@ -42,6 +47,7 @@ path:
     - /series:/电视剧
     - /sport:/运动
     - /animation:/动漫
+
 cache:
   # 是否启用缓存中间件
   # 推荐启用, 既可以缓存 Emby 的大接口以及静态资源, 又可以缓存网盘直链, 避免频繁请求
@@ -53,6 +59,7 @@ cache:
   # 该配置不会影响特殊接口的缓存时间
   # 比如直链获取接口的缓存时间固定为 10m, 字幕获取接口的缓存时间固定为 30d
   expired: 1d
+
 ssl:
   enable: false       # 是否启用 https
   # 是否使用单一端口
@@ -62,6 +69,7 @@ ssl:
   single-port: false
   key: testssl.cn.key # 私钥文件名
   crt: testssl.cn.crt # 证书文件名
+
 log:
   # 是否禁用控制台彩色日志
   #
