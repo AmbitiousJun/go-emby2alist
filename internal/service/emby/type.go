@@ -14,8 +14,9 @@ type MsInfo struct {
 
 // ItemInfo emby 资源 item 解析信息
 type ItemInfo struct {
-	Id              string // item id
-	MsInfo          MsInfo // MediaSourceId 解析信息
-	ApiKey          string // emby 接口密钥
-	PlaybackInfoUri string // item 信息查询接口 uri, 通过源服务器查询
+	Id              string     // item id
+	MsInfo          MsInfo     // MediaSourceId 解析信息
+	ApiKey          string     // emby 接口密钥
+	ApiKeyType      ApiKeyType // emby 接口密钥类型
+	PlaybackInfoUri string     // item 信息查询接口 uri, 通过源服务器查询
 }
