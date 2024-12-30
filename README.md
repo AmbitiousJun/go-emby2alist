@@ -304,27 +304,6 @@ docker-compose up -d --build
 
 可能有部分客户端会出现首次用 https 成功连上了，下次再打开客户端时，就自动变回到 http 连接，目前不太清楚具体的原因
 
-## 关于 Emby 的 api_key
-
-近期发现在 Emby 控制台中生成的 api_key 并不是所有接口都能正常访问
-
-如果你在 `go-emby2alist` 的日志中看到以下报错，则需要通过浏览器抓包的方式重新获取 api_key: 
-
-```shell
-Object reference not set to an instance of an object.
-```
-
-获取步骤：
-
-1. 浏览器访问你的 Emby 首页（登录好**管理员**账号）
-2. 打开浏览器的控制台，并切换到 “网络” 选项卡
-3. 在过滤条件中输入 `api_key=`
-4. 不关闭控制台，刷新一下浏览器页面，就可以看到一个携带了 api_key 的 info 请求，将这个 api_key 配置到 `config.yml` 中即可
-
-附上抓包截图：
-
-![](assets/2024-09-20-23-01-49.png)
-
 ## 开发计划
 
 1. - [x] 进一步优化 m3u8 转码直链的兼容性 
