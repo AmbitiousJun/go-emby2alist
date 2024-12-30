@@ -1,7 +1,6 @@
 emby:
   host: http://192.168.0.109:8096            # emby 访问地址
   mount-path: /data                          # rclone/cd2 挂载的本地磁盘路径, 如果 emby 是容器部署, 这里要配的就是容器内部的挂载路径
-  api-key: 2f8sng5sjd5enm65df5e4s12q96324fwc # emby api key
   episodes-unplay-prior: true                # 是否修改剧集排序, 让未播的剧集靠前排列; 启用该配置时, 会忽略原接口的分页机制
   resort-random-items: true                  # 是否重排序随机列表, 对 emby 的排序结果进行二次重排序, 使得列表足够随机
   # 代理异常处理策略

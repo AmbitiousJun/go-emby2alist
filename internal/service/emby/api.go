@@ -28,24 +28,6 @@ func proxyAndSetRespHeader(c *gin.Context) (model.HttpRes[*jsons.Item], bool) {
 	return res, true
 }
 
-// AddDefaultApiKey 为请求加上 api_key
-//
-// 如果检测到已经包含了 api_key 或者 X-Emby-Token 则取消操作
-//
-// 如果已经成功加上了 api_key, 则移除请求头的 Authorization 属性
-func AddDefaultApiKey(c *gin.Context) {
-	if c == nil {
-		return
-	}
-	q := c.Request.URL.Query()
-	if q.Get(QueryApiKeyName) != "" || q.Get(QueryTokenName) != "" {
-		return
-	}
-	q.Set(QueryApiKeyName, config.C.Emby.ApiKey)
-	c.Request.URL.RawQuery = q.Encode()
-	c.Request.Header.Del("Authorization")
-}
-
 // Fetch 请求 emby api 接口, 使用 map 请求体
 func Fetch(uri, method string, header http.Header, body map[string]interface{}) (model.HttpRes[*jsons.Item], http.Header) {
 	return RawFetch(uri, method, header, https.MapBody(body))
