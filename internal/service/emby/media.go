@@ -33,7 +33,13 @@ const MediaSourceIdSegment = "[[_]]"
 // uri 中必须有 query 参数 MediaSourceId,
 // 如果没有携带该参数, 可能会请求到多个资源, 默认返回第一个资源
 func getEmbyFileLocalPath(itemInfo ItemInfo) (string, error) {
-	res, _ := Fetch(itemInfo.PlaybackInfoUri, http.MethodPost, nil, nil)
+	var header http.Header
+	if itemInfo.ApiKeyType == Header {
+		// 带上请求头的 api key
+		header = http.Header{HeaderFullAuthName: []string{itemInfo.ApiKey}}
+	}
+
+	res, _ := Fetch(itemInfo.PlaybackInfoUri, http.MethodPost, header, nil)
 	if res.Code != http.StatusOK {
 		return "", fmt.Errorf("请求 Emby 接口异常, error: %s", res.Msg)
 	}
@@ -279,6 +285,7 @@ func resolveItemInfo(c *gin.Context) (ItemInfo, error) {
 		return ItemInfo{}, errors.New("参数 c 不能为空")
 	}
 
+	// 匹配 item id
 	uri := c.Request.RequestURI
 	matches := itemIdRegex.FindStringSubmatch(uri)
 	if len(matches) < 2 {
@@ -286,11 +293,10 @@ func resolveItemInfo(c *gin.Context) (ItemInfo, error) {
 	}
 	itemInfo := ItemInfo{Id: matches[1]}
 
-	_, itemInfo.ApiKey = getApiKey(c)
-	if itemInfo.ApiKey == "" {
-		itemInfo.ApiKey = config.C.Emby.ApiKey
-	}
+	// 获取客户端请求的 api_key
+	itemInfo.ApiKeyType, itemInfo.ApiKey = getApiKey(c)
 
+	// 解析请求的媒体信息
 	msInfo, err := resolveMediaSourceId(getRequestMediaSourceId(c))
 	if err != nil {
 		return ItemInfo{}, fmt.Errorf("解析 MediaSource 失败, uri: %s, err: %v", uri, err)
@@ -302,7 +308,10 @@ func resolveItemInfo(c *gin.Context) (ItemInfo, error) {
 		return ItemInfo{}, fmt.Errorf("构建 PlaybackInfo uri 失败, err: %v", err)
 	}
 	q := u.Query()
-	q.Set(QueryApiKeyName, itemInfo.ApiKey)
+	// 默认只携带 query 形式的 api key
+	if itemInfo.ApiKeyType == Query {
+		q.Set(QueryApiKeyName, itemInfo.ApiKey)
+	}
 	q.Set("reqformat", "json")
 	if !msInfo.Empty {
 		q.Set("MediaSourceId", msInfo.OriginId)

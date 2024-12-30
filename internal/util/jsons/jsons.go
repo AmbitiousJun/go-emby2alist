@@ -3,6 +3,7 @@ package jsons
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"reflect"
 	"strconv"
 	"strings"
@@ -111,33 +112,35 @@ func NewByVal(val interface{}) *Item {
 		return item
 	}
 
-	switch newVal := val.(type) {
-	case bool, int, float64, int64:
-		item.val = newVal
-		return item
-	case string:
-		if conv, err := strconv.Unquote(`"` + newVal + `"`); err == nil {
-			// 将字符串中的 unicode 字符转换为 utf8
-			newVal = conv
-		}
-		item.val = urls.TransferSlash(newVal)
-		return item
-	case *Item:
+	if newVal, ok := val.(*Item); ok {
 		return newVal
-	default:
 	}
 
 	t := reflect.TypeOf(val)
 	if t.Kind() == reflect.Ptr {
 		t = t.Elem()
 	}
-	if t.Kind() == reflect.Struct || t.Kind() == reflect.Map {
+
+	switch t.Kind() {
+	case reflect.Bool, reflect.Int, reflect.Float64, reflect.Int64:
+		item.val = val
+		return item
+	case reflect.String:
+		newVal := reflect.ValueOf(val).String()
+		if conv, err := strconv.Unquote(`"` + newVal + `"`); err == nil {
+			// 将字符串中的 unicode 字符转换为 utf8
+			newVal = conv
+		}
+		item.val = urls.TransferSlash(newVal)
+		return item
+	case reflect.Struct, reflect.Map:
 		return NewByObj(val)
-	}
-	if t.Kind() == reflect.Array || t.Kind() == reflect.Slice {
+	case reflect.Array, reflect.Slice:
 		return NewByArr(val)
+	default:
+		log.Panicf("无效的数据类型, kind: %v, name: %v", t.Kind(), t.Name())
+		return nil
 	}
-	panic("无效的数据类型: " + t.Name())
 }
 
 // New 从 json 字符串中初始化成 item 对象

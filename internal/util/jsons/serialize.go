@@ -2,6 +2,7 @@ package jsons
 
 import (
 	"fmt"
+	"reflect"
 	"strings"
 	"sync"
 )
@@ -52,12 +53,13 @@ func (i *Item) String() string {
 		if i.val == nil {
 			return "null"
 		}
-		switch i.val.(type) {
-		case string:
-			return fmt.Sprintf(`"%v"`, i.val)
-		default:
-			return fmt.Sprintf("%v", i.val)
+
+		t := reflect.TypeOf(i.val)
+		if t.Kind() == reflect.String {
+			str := reflect.ValueOf(i.val).String()
+			return fmt.Sprintf(`"%v"`, strings.ReplaceAll(str, `"`, `\"`))
 		}
+		return fmt.Sprintf("%v", i.val)
 	case JsonTypeObj:
 		sb := strings.Builder{}
 		sb.WriteString("{")

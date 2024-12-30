@@ -4,13 +4,11 @@ import (
 	"errors"
 	"io"
 	"net/http"
-	"strings"
 
 	"github.com/AmbitiousJun/go-emby2alist/internal/config"
 	"github.com/AmbitiousJun/go-emby2alist/internal/model"
 	"github.com/AmbitiousJun/go-emby2alist/internal/util/https"
 	"github.com/AmbitiousJun/go-emby2alist/internal/util/jsons"
-	"github.com/AmbitiousJun/go-emby2alist/internal/util/urls"
 
 	"github.com/gin-gonic/gin"
 )
@@ -20,7 +18,8 @@ import (
 //
 // 如果请求是失败的响应, 会直接返回客户端, 并在第二个参数中返回 false
 func proxyAndSetRespHeader(c *gin.Context) (model.HttpRes[*jsons.Item], bool) {
-	res, respHeader := RawFetch(c.Request.URL.String(), c.Request.Method, nil, c.Request.Body)
+	c.Request.Header.Del("Accept-Encoding")
+	res, respHeader := RawFetch(c.Request.URL.String(), c.Request.Method, c.Request.Header, c.Request.Body)
 	if res.Code != http.StatusOK {
 		checkErr(c, errors.New(res.Msg))
 		return res, false
@@ -48,26 +47,15 @@ func AddDefaultApiKey(c *gin.Context) {
 }
 
 // Fetch 请求 emby api 接口, 使用 map 请求体
-//
-// 如果 uri 中不包含 token, 自动从配置中取 token 进行拼接
 func Fetch(uri, method string, header http.Header, body map[string]interface{}) (model.HttpRes[*jsons.Item], http.Header) {
 	return RawFetch(uri, method, header, https.MapBody(body))
 }
 
 // RawFetch 请求 emby api 接口, 使用流式请求体
-//
-// 如果 uri 中不包含 token, 自动从配置中取 token 进行拼接
 func RawFetch(uri, method string, header http.Header, body io.ReadCloser) (model.HttpRes[*jsons.Item], http.Header) {
-	host := config.C.Emby.Host
-	token := config.C.Emby.ApiKey
+	u := config.C.Emby.Host + uri
 
-	// 1 检查 uri 中是否含有 token
-	u := host + uri
-	if !strings.Contains(uri, QueryApiKeyName) && !strings.Contains(uri, "QueryTokenName") {
-		u = urls.AppendArgs(u, QueryApiKeyName, token)
-	}
-
-	// 2 构造请求头, 发出请求
+	// 构造请求头, 发出请求
 	if header == nil {
 		header = make(http.Header)
 	}
@@ -81,7 +69,7 @@ func RawFetch(uri, method string, header http.Header, body io.ReadCloser) (model
 	}
 	defer resp.Body.Close()
 
-	// 3 读取响应
+	// 读取响应
 	bodyBytes, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return model.HttpRes[*jsons.Item]{Code: http.StatusBadRequest, Msg: "读取响应失败: " + err.Error()}, nil

@@ -29,7 +29,8 @@ func ResortEpisodes(c *gin.Context) {
 	c.Request.URL.RawQuery = q.Encode()
 
 	// 3 代理请求
-	res, respHeader := RawFetch(c.Request.URL.String(), c.Request.Method, nil, c.Request.Body)
+	c.Request.Header.Del("Accept-Encoding")
+	res, respHeader := RawFetch(c.Request.URL.String(), c.Request.Method, c.Request.Header, c.Request.Body)
 	if res.Code != http.StatusOK {
 		checkErr(c, errors.New(res.Msg))
 		return
