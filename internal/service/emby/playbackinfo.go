@@ -424,6 +424,9 @@ func LoadCacheItems(c *gin.Context) {
 	reqBody := io.NopCloser(bytes.NewBufferString(PlaybackCommonPayload))
 	header := make(http.Header)
 	header.Set("Content-Type", "text/plain")
+	if itemInfo.ApiKeyType == Header {
+		header.Set(HeaderFullAuthName, itemInfo.ApiKey)
+	}
 	resp, err := https.Request(http.MethodPost, u, header, reqBody)
 	if err != nil {
 		log.Printf(colors.ToRed("手动请求 PlaybackInfo 失败: %v, 不更新 Items 信息"), err)
