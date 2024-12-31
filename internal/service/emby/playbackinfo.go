@@ -110,7 +110,7 @@ func TransferPlaybackInfo(c *gin.Context) {
 		source.Put("SupportsDirectStream", jsons.NewByVal(true))
 		newUrl := fmt.Sprintf(
 			"/videos/%s/stream?MediaSourceId=%s&%s=%s&Static=true",
-			itemInfo.Id, source.Attr("Id").Val(), QueryApiKeyName, itemInfo.ApiKey,
+			itemInfo.Id, source.Attr("Id").Val(), itemInfo.ApiKeyName, itemInfo.ApiKey,
 		)
 		source.Put("DirectStreamUrl", jsons.NewByVal(newUrl))
 		log.Printf(colors.ToBlue("设置直链播放链接为: %s"), newUrl)
@@ -425,7 +425,7 @@ func LoadCacheItems(c *gin.Context) {
 	header := make(http.Header)
 	header.Set("Content-Type", "text/plain")
 	if itemInfo.ApiKeyType == Header {
-		header.Set(HeaderFullAuthName, itemInfo.ApiKey)
+		header.Set(itemInfo.ApiKeyName, itemInfo.ApiKey)
 	}
 	resp, err := https.Request(http.MethodPost, u, header, reqBody)
 	if err != nil {

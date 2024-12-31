@@ -3,6 +3,7 @@ package constant
 const (
 	Reg_Socket                   = `(?i)^/.*(socket|embywebsocket)`
 	Reg_PlaybackInfo             = `(?i)^/.*items/.*/playbackinfo\??`
+	Reg_PlayingStopped           = `(?i)^/.*sessions/playing/stopped`
 	Reg_UserItems                = `(?i)^/.*users/.*/items/\d+($|\?)`
 	Reg_UserEpisodeItems         = `(?i)^/.*users/.*/items\?.*includeitemtypes=(episode|movie)`
 	Reg_UserItemsRandomResort    = `(?i)^/.*users/.*/items\?.*SortBy=Random`

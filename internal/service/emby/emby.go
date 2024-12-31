@@ -70,6 +70,9 @@ func ProxyOrigin(c *gin.Context) {
 	if c == nil {
 		return
 	}
+	if TestProxyUri(c) {
+		return
+	}
 	origin := config.C.Emby.Host
 	if err := https.ProxyRequest(c, origin, true); err != nil {
 		log.Printf(colors.ToRed("代理异常: %v"), err)
@@ -79,7 +82,7 @@ func ProxyOrigin(c *gin.Context) {
 // TestProxyUri 用于测试的代理,
 // 主要是为了查看实际请求的详细信息, 方便测试
 func TestProxyUri(c *gin.Context) bool {
-	testUris := []string{}
+	testUris := []string{"/Sessions/Playing"}
 
 	flag := false
 	for _, uri := range testUris {

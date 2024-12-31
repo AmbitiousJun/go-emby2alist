@@ -18,5 +18,6 @@ type ItemInfo struct {
 	MsInfo          MsInfo     // MediaSourceId 解析信息
 	ApiKey          string     // emby 接口密钥
 	ApiKeyType      ApiKeyType // emby 接口密钥类型
+	ApiKeyName      string     // emby 接口密钥名称
 	PlaybackInfoUri string     // item 信息查询接口 uri, 通过源服务器查询
 }

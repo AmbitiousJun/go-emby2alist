@@ -24,6 +24,9 @@ func initRulePatterns() {
 		// PlaybackInfo 接口
 		{constant.Reg_PlaybackInfo, emby.TransferPlaybackInfo},
 
+		// 播放停止时, 辅助请求 Progress 记录进度
+		{constant.Reg_PlayingStopped, emby.PlayingStoppedHelper},
+
 		// Items 接口
 		{constant.Reg_UserItems, emby.LoadCacheItems},
 		// 代理 Items 并添加转码版本信息

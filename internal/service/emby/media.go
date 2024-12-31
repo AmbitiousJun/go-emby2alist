@@ -36,7 +36,7 @@ func getEmbyFileLocalPath(itemInfo ItemInfo) (string, error) {
 	var header http.Header
 	if itemInfo.ApiKeyType == Header {
 		// 带上请求头的 api key
-		header = http.Header{HeaderFullAuthName: []string{itemInfo.ApiKey}}
+		header = http.Header{itemInfo.ApiKeyName: []string{itemInfo.ApiKey}}
 	}
 
 	res, _ := Fetch(itemInfo.PlaybackInfoUri, http.MethodPost, header, nil)
@@ -294,7 +294,7 @@ func resolveItemInfo(c *gin.Context) (ItemInfo, error) {
 	itemInfo := ItemInfo{Id: matches[1]}
 
 	// 获取客户端请求的 api_key
-	itemInfo.ApiKeyType, itemInfo.ApiKey = getApiKey(c)
+	itemInfo.ApiKeyType, itemInfo.ApiKeyName, itemInfo.ApiKey = getApiKey(c)
 
 	// 解析请求的媒体信息
 	msInfo, err := resolveMediaSourceId(getRequestMediaSourceId(c))
@@ -310,7 +310,7 @@ func resolveItemInfo(c *gin.Context) (ItemInfo, error) {
 	q := u.Query()
 	// 默认只携带 query 形式的 api key
 	if itemInfo.ApiKeyType == Query {
-		q.Set(QueryApiKeyName, itemInfo.ApiKey)
+		q.Set(itemInfo.ApiKeyName, itemInfo.ApiKey)
 	}
 	q.Set("reqformat", "json")
 	if !msInfo.Empty {
