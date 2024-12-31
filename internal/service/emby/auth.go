@@ -66,7 +66,7 @@ func ApiKeyChecker() gin.HandlerFunc {
 
 	return func(c *gin.Context) {
 		// 1 取出 api_key
-		kType, apiKey := getApiKey(c)
+		kType, kName, apiKey := getApiKey(c)
 
 		// 2 如果该 key 已经是被信任的, 跳过校验
 		if _, ok := validApiKeys.Load(apiKey); ok {
@@ -89,10 +89,10 @@ func ApiKeyChecker() gin.HandlerFunc {
 		u := config.C.Emby.Host + AuthUri
 		var header http.Header
 		if kType == Query {
-			u = urls.AppendArgs(u, QueryApiKeyName, apiKey)
+			u = urls.AppendArgs(u, kName, apiKey)
 		} else {
 			header = make(http.Header)
-			header.Set(HeaderAuthName, apiKey)
+			header.Set(kName, apiKey)
 		}
 		resp, err := https.Request(http.MethodGet, u, header, nil)
 		if err != nil {
@@ -121,33 +121,41 @@ func ApiKeyChecker() gin.HandlerFunc {
 }
 
 // getApiKey 获取请求中的 api_key 信息
-func getApiKey(c *gin.Context) (ApiKeyType, string) {
+func getApiKey(c *gin.Context) (keyType ApiKeyType, keyName string, apiKey string) {
 	if c == nil {
-		return Query, ""
+		return Query, "", ""
 	}
 
-	apiKey := c.Query(QueryApiKeyName)
+	keyName = QueryApiKeyName
+	keyType = Query
+	apiKey = c.Query(keyName)
 	if strs.AllNotEmpty(apiKey) {
-		return Query, apiKey
+		return
 	}
 
-	apiKey = c.Query(QueryTokenName)
+	keyName = QueryTokenName
+	apiKey = c.Query(keyName)
 	if strs.AllNotEmpty(apiKey) {
-		return Query, apiKey
-	}
-	apiKey = c.GetHeader(QueryTokenName)
-	if strs.AllNotEmpty(apiKey) {
-		return Query, apiKey
+		return
 	}
 
-	apiKey = c.GetHeader(HeaderAuthName)
+	keyType = Header
+	apiKey = c.GetHeader(keyName)
 	if strs.AllNotEmpty(apiKey) {
-		return Header, apiKey
-	}
-	apiKey = c.GetHeader(HeaderFullAuthName)
-	if strs.AllNotEmpty(apiKey) {
-		return Header, apiKey
+		return
 	}
 
-	return Query, ""
+	keyName = HeaderAuthName
+	apiKey = c.GetHeader(keyName)
+	if strs.AllNotEmpty(apiKey) {
+		return
+	}
+
+	keyName = HeaderFullAuthName
+	apiKey = c.GetHeader(keyName)
+	if strs.AllNotEmpty(apiKey) {
+		return
+	}
+
+	return
 }
