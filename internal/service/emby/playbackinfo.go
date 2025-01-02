@@ -349,11 +349,14 @@ func useCacheSpacePlaybackInfo(c *gin.Context, itemInfo ItemInfo) bool {
 		return false
 	}
 
-	// 一般在请求指定 MediaSourceId 的 PlaybackInfo 信息时必然会先请求一次全量的 PlaybackInfo 信息
-	// 当用户停在已获取全量信息的剧集详情页面时缓存被清理, 或者是代理服务重启导致的缓存丢失
-	// 此时再去播放就会触发这个错误提示, 需要等待下次全量请求完成之后才可以正常播放
-	c.String(http.StatusInternalServerError, "查无缓存, 请稍后尝试重新播放")
-	return true
+	// 如果是单个查询, 则手动请求一次全量
+	if _, err = fetchFullPlaybackInfo(c, itemInfo); err != nil {
+		log.Printf(colors.ToRed("更新缓存空间 PlaybackInfo 信息异常: %v"), err)
+		c.String(http.StatusInternalServerError, "查无缓存, 请稍后尝试重新播放")
+		return true
+	}
+
+	return useCacheSpacePlaybackInfo(c, itemInfo)
 }
 
 // LoadCacheItems 拦截并代理 items 接口
@@ -420,34 +423,47 @@ func LoadCacheItems(c *gin.Context) {
 	}
 
 	// 缓存空间中没有当前 Item 的 PlaybackInfo 数据, 手动请求
-	u := https.ClientRequestHost(c) + itemInfo.PlaybackInfoUri
+	bodyJson, err := fetchFullPlaybackInfo(c, itemInfo)
+	if err != nil {
+		log.Printf(colors.ToRed("更新 Items 缓存异常: %v"), err)
+		return
+	}
+	coverMediaSources(bodyJson)
+}
+
+// fetchFullPlaybackInfo 请求全量的 PlaybackInfo 信息
+func fetchFullPlaybackInfo(c *gin.Context, itemInfo ItemInfo) (*jsons.Item, error) {
+	u, err := url.Parse(https.ClientRequestHost(c) + itemInfo.PlaybackInfoUri)
+	if err != nil {
+		return nil, fmt.Errorf("PlaybackInfo 地址异常: %v, uri: %s", err, itemInfo.PlaybackInfoUri)
+	}
+	q := u.Query()
+	q.Del("MediaSourceId")
+	u.RawQuery = q.Encode()
+
 	reqBody := io.NopCloser(bytes.NewBufferString(PlaybackCommonPayload))
 	header := make(http.Header)
 	header.Set("Content-Type", "text/plain")
 	if itemInfo.ApiKeyType == Header {
 		header.Set(itemInfo.ApiKeyName, itemInfo.ApiKey)
 	}
-	resp, err := https.Request(http.MethodPost, u, header, reqBody)
+	resp, err := https.Request(http.MethodPost, u.String(), header, reqBody)
 	if err != nil {
-		log.Printf(colors.ToRed("手动请求 PlaybackInfo 失败: %v, 不更新 Items 信息"), err)
-		return
+		return nil, fmt.Errorf("手动请求 PlaybackInfo 失败: %v", err)
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
-		log.Printf(colors.ToRed("手动请求 PlaybackInfo 失败, code: %d, 不更新 Items 信息"), resp.StatusCode)
-		return
+		return nil, fmt.Errorf("手动请求 PlaybackInfo 失败, code: %d", resp.StatusCode)
 	}
 	bodyBytes, err := io.ReadAll(resp.Body)
 	if err != nil {
-		log.Printf(colors.ToRed("手动请求 PlaybackInfo 失败: %v, 不更新 Items 信息"), err)
-		return
+		return nil, fmt.Errorf("手动请求 PlaybackInfo 失败: %v", err)
 	}
 	bodyJson, err := jsons.New(string(bodyBytes))
 	if err != nil {
-		log.Printf(colors.ToRed("手动请求 PlaybackInfo 失败: %v, 不更新 Items 信息"), err)
-		return
+		return nil, fmt.Errorf("手动请求 PlaybackInfo 失败: %v", err)
 	}
-	coverMediaSources(bodyJson)
+	return bodyJson, nil
 }
 
 // calcPlaybackInfoSpaceCacheKey 根据请求的 item 信息计算 PlaybackInfo 在缓存空间中的 key
