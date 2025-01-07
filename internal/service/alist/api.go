@@ -156,7 +156,8 @@ func Fetch(uri, method string, header http.Header, body map[string]interface{}) 
 	}
 
 	if code, ok := result.Attr("code").Int(); !ok || code != http.StatusOK {
-		return model.HttpRes[*jsons.Item]{Code: code, Msg: result.Attr("message").Val().(string)}
+		message, _ := result.Attr("message").String()
+		return model.HttpRes[*jsons.Item]{Code: code, Msg: message}
 	}
 
 	if data, ok := result.Attr("data").Done(); ok {
