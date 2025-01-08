@@ -17,6 +17,7 @@ const (
 	Reg_ProxyTs                  = `(?i)^/.*videos/proxy_ts\??`
 	Reg_ProxySubtitle            = `(?i)^/.*videos/proxy_subtitle\??`
 	Reg_ItemDownload             = `(?i)^/.*items/\d+/download($|\?)`
+	Reg_ItemSyncDownload         = `(?i)^/.*sync/jobitems/\d+/file($|\?)`
 	Reg_Images                   = `(?i)^/.*images`
 	Reg_VideoModWebDefined       = `(?i)^/web/modules/htmlvideoplayer/plugin.js`
 	Reg_Proxy2Origin             = `^/$|(?i)^.*(/web|/users|/artists|/genres|/similar|/shows|/system|/remote|/scheduledtasks)`
