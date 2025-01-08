@@ -56,6 +56,7 @@ func ApiKeyChecker() gin.HandlerFunc {
 		regexp.MustCompile(constant.Reg_ResourceStream),
 		regexp.MustCompile(constant.Reg_PlaybackInfo),
 		regexp.MustCompile(constant.Reg_ItemDownload),
+		regexp.MustCompile(constant.Reg_ItemSyncDownload),
 		regexp.MustCompile(constant.Reg_VideoSubtitles),
 		regexp.MustCompile(constant.Reg_ProxyPlaylist),
 		regexp.MustCompile(constant.Reg_ProxyTs),

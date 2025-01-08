@@ -54,8 +54,10 @@ func initRulePatterns() {
 		{constant.Reg_ProxyTs, m3u8.ProxyTsLink},
 		// m3u8 字幕
 		{constant.Reg_ProxySubtitle, m3u8.ProxySubtitle},
+
 		// 资源下载, 重定向到直链
 		{constant.Reg_ItemDownload, emby.Redirect2AlistLink},
+		{constant.Reg_ItemSyncDownload, emby.HandleSyncDownload},
 
 		// 处理图片请求
 		{constant.Reg_Images, emby.HandleImages},
