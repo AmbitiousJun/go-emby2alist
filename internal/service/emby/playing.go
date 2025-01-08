@@ -36,12 +36,19 @@ func PlayingStoppedHelper(c *gin.Context) {
 	// 3 代理原始 Stopped 接口
 	ProxyOrigin(c)
 
+	// 至少播放 5 分钟才记录进度
+	positionTicks, ok := bodyJson.Attr("PositionTicks").Int()
+	minPos := 5 * 60 * 10_000_000
+	if !ok || positionTicks < minPos {
+		return
+	}
+
 	// 4 代理 Progress 接口
 	go func() {
 		newBody := jsons.NewEmptyObj()
 		newBody.Put("ItemId", jsons.NewByVal(bodyJson.Attr("ItemId").Val()))
 		newBody.Put("PlaySessionId", jsons.NewByVal(newSessionId))
-		newBody.Put("PositionTicks", jsons.NewByVal(bodyJson.Attr("PositionTicks").Val()))
+		newBody.Put("PositionTicks", jsons.NewByVal(positionTicks))
 
 		log.Printf(colors.ToGray("开始发送辅助 Progress 进度记录, 内容: %v"), newBody)
 		remote := config.C.Emby.Host + "/emby/Sessions/Playing/Progress"
