@@ -26,6 +26,8 @@ func initRulePatterns() {
 
 		// 播放停止时, 辅助请求 Progress 记录进度
 		{constant.Reg_PlayingStopped, emby.PlayingStoppedHelper},
+		// 拦截无效的进度报告
+		{constant.Reg_PlayingProgress, emby.PlayingProgressHelper},
 
 		// Items 接口
 		{constant.Reg_UserItems, emby.LoadCacheItems},
