@@ -11,7 +11,6 @@ import (
 	"github.com/AmbitiousJun/go-emby2alist/internal/util/colors"
 	"github.com/AmbitiousJun/go-emby2alist/internal/util/https"
 	"github.com/AmbitiousJun/go-emby2alist/internal/util/jsons"
-	"github.com/AmbitiousJun/go-emby2alist/internal/util/randoms"
 	"github.com/gin-gonic/gin"
 )
 
@@ -83,12 +82,5 @@ func PlayingProgressHelper(c *gin.Context) {
 		c.Status(http.StatusNoContent)
 		return
 	}
-
-	newBody := jsons.NewEmptyObj()
-	newBody.Put("ItemId", jsons.NewByVal(bodyJson.Attr("ItemId").Val()))
-	newBody.Put("PlaySessionId", jsons.NewByVal(randoms.RandomHex(32)))
-	newBody.Put("PositionTicks", jsons.NewByVal(bodyJson.Attr("PositionTicks").Val()))
-	log.Println(colors.ToGray(newBody.String()))
-	c.Request.Body = io.NopCloser(bytes.NewBuffer([]byte(newBody.String())))
 	ProxyOrigin(c)
 }
