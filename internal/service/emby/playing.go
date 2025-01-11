@@ -33,8 +33,8 @@ func PlayingStoppedHelper(c *gin.Context) {
 	kType, kName, apiKey := getApiKey(c)
 
 	// 至少播放 5 分钟才记录进度
-	positionTicks, ok := bodyJson.Attr("PositionTicks").Int()
-	minPos := 5 * 60 * 10_000_000
+	positionTicks, ok := bodyJson.Attr("PositionTicks").Int64()
+	var minPos int64 = 5 * 60 * 10_000_000
 	if !ok || positionTicks < minPos {
 		return
 	}
