@@ -11,6 +11,7 @@ import (
 	"github.com/AmbitiousJun/go-emby2alist/internal/util/colors"
 	"github.com/AmbitiousJun/go-emby2alist/internal/util/https"
 	"github.com/AmbitiousJun/go-emby2alist/internal/util/jsons"
+	"github.com/AmbitiousJun/go-emby2alist/internal/util/randoms"
 	"github.com/gin-gonic/gin"
 )
 
@@ -25,6 +26,8 @@ func PlayingStoppedHelper(c *gin.Context) {
 	if checkErr(c, err) {
 		return
 	}
+	bodyJson.Put("PlaySessionId", jsons.NewByVal(randoms.RandomHex(32)))
+	c.Request.Body = io.NopCloser(bytes.NewBufferString(bodyJson.String()))
 
 	// 代理原始 Stopped 接口
 	defer ProxyOrigin(c)
