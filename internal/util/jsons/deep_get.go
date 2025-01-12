@@ -78,6 +78,9 @@ func (ti *TempItem) Int64() (int64, bool) {
 	if ti.item == nil || ti.item.jType != JsonTypeVal {
 		return 0, false
 	}
+	if val, ok := ti.item.val.(int); ok {
+		return int64(val), true
+	}
 	if val, ok := ti.item.val.(int64); ok {
 		return val, true
 	}
