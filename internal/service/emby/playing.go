@@ -11,6 +11,7 @@ import (
 	"github.com/AmbitiousJun/go-emby2alist/internal/util/colors"
 	"github.com/AmbitiousJun/go-emby2alist/internal/util/https"
 	"github.com/AmbitiousJun/go-emby2alist/internal/util/jsons"
+	"github.com/AmbitiousJun/go-emby2alist/internal/util/randoms"
 	"github.com/gin-gonic/gin"
 )
 
@@ -39,10 +40,10 @@ func PlayingStoppedHelper(c *gin.Context) {
 		return
 	}
 
-	// 4 代理 Progress 接口
+	// 代理 Progress 接口
 	newBody := jsons.NewEmptyObj()
 	newBody.Put("ItemId", jsons.NewByVal(bodyJson.Attr("ItemId").Val()))
-	newBody.Put("PlaySessionId", jsons.NewByVal(bodyJson.Attr("PlaySessionId").Val()))
+	newBody.Put("PlaySessionId", jsons.NewByVal(randoms.RandomHex(32)))
 	newBody.Put("PositionTicks", jsons.NewByVal(bodyJson.Attr("PositionTicks").Val()))
 	log.Printf(colors.ToGray("开始发送辅助 Progress 进度记录, 内容: %v"), newBody)
 	remote := config.C.Emby.Host + "/emby/Sessions/Playing/Progress"
