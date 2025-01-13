@@ -28,7 +28,7 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: .
-          platforms: linux/amd64,linux/arm64,linux/arm/v7
+          platforms: linux/386,linux/arm/v7,linux/amd64,linux/arm64
           push: true
           tags: |
             ambitiousjun/go-emby2alist:${{ github.ref_name }}
