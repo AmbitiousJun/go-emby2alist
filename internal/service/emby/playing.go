@@ -78,7 +78,7 @@ func PlayingProgressHelper(c *gin.Context) {
 		return
 	}
 
-	if pt, _ := bodyJson.Attr("PositionTicks").Int(); pt <= 10_000_000 {
+	if pt, ok := bodyJson.Attr("PositionTicks").Int64(); ok && pt <= 10_000_000 {
 		c.Status(http.StatusNoContent)
 		return
 	}
