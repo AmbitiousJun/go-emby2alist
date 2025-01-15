@@ -68,8 +68,8 @@ func (e *Emby) Init() error {
 		e.ProxyErrorStrategy = PeStrategyOrigin
 	}
 	if strs.AnyEmpty(string(e.DownloadStrategy)) {
-		// 默认不开放下载接口
-		e.DownloadStrategy = DlStrategy403
+		// 默认响应直链
+		e.DownloadStrategy = DlStrategyDirect
 	}
 
 	e.ProxyErrorStrategy = PeStrategy(strings.TrimSpace(string(e.ProxyErrorStrategy)))
