@@ -5,19 +5,35 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/AmbitiousJun/go-emby2alist/internal/util/maps"
 	"github.com/AmbitiousJun/go-emby2alist/internal/util/strs"
 )
 
+// PeStrategy 代理异常策略类型
 type PeStrategy string
 
 const (
-	StrategyOrigin PeStrategy = "origin" // 回源
-	StrategyReject PeStrategy = "reject" // 拒绝请求
+	PeStrategyOrigin PeStrategy = "origin" // 回源
+	PeStrategyReject PeStrategy = "reject" // 拒绝请求
+)
+
+// DlStrategy 下载策略类型
+type DlStrategy string
+
+const (
+	DlStrategyOrigin DlStrategy = "origin" // 代理到源服务器
+	DlStrategyDirect DlStrategy = "direct" // 获取并重定向到直链
+	DlStrategy403    DlStrategy = "403"    // 拒绝响应
 )
 
 // validPeStrategy 用于校验用户配置的策略是否合法
 var validPeStrategy = map[PeStrategy]struct{}{
-	StrategyOrigin: {}, StrategyReject: {},
+	PeStrategyOrigin: {}, PeStrategyReject: {},
+}
+
+// validDlStrategy 用于校验用户配置的下载策略是否合法
+var validDlStrategy = map[DlStrategy]struct{}{
+	DlStrategyOrigin: {}, DlStrategyDirect: {}, DlStrategy403: {},
 }
 
 // Emby 相关配置
@@ -36,6 +52,8 @@ type Emby struct {
 	ImagesQuality int `yaml:"images-quality"`
 	// Strm strm 配置
 	Strm *Strm `yaml:"strm"`
+	// DownloadStrategy 下载接口响应策略
+	DownloadStrategy DlStrategy `yaml:"download-strategy"`
 }
 
 func (e *Emby) Init() error {
@@ -47,12 +65,16 @@ func (e *Emby) Init() error {
 	}
 	if strs.AnyEmpty(string(e.ProxyErrorStrategy)) {
 		// 失败默认回源
-		e.ProxyErrorStrategy = StrategyOrigin
+		e.ProxyErrorStrategy = PeStrategyOrigin
+	}
+	if strs.AnyEmpty(string(e.DownloadStrategy)) {
+		// 默认响应直链
+		e.DownloadStrategy = DlStrategyDirect
 	}
 
 	e.ProxyErrorStrategy = PeStrategy(strings.TrimSpace(string(e.ProxyErrorStrategy)))
 	if _, ok := validPeStrategy[e.ProxyErrorStrategy]; !ok {
-		return errors.New("emby.proxy-error-strategy 配置错误")
+		return fmt.Errorf("emby.proxy-error-strategy 配置错误, 有效值: %v", maps.Keys(validPeStrategy))
 	}
 
 	if e.ImagesQuality == 0 {
@@ -68,6 +90,11 @@ func (e *Emby) Init() error {
 	}
 	if err := e.Strm.Init(); err != nil {
 		return fmt.Errorf("emby.strm 配置错误: %v", err)
+	}
+
+	e.DownloadStrategy = DlStrategy(strings.TrimSpace(string(e.DownloadStrategy)))
+	if _, ok := validDlStrategy[e.DownloadStrategy]; !ok {
+		return fmt.Errorf("emby.download-strategy 配置错误, 有效值: %v", maps.Keys(validDlStrategy))
 	}
 
 	return nil

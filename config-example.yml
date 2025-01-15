@@ -23,6 +23,11 @@ emby:
     path-map:
       - https://test-res.com:8094 => http://localhost:8095
       - 12138 => 10086
+  # emby 下载接口处理策略
+  #    403: 禁用下载接口, 返回 403 响应
+  # origin: 代理到源服务器
+  # direct: 获取并重定向到直链地址
+  download-strategy: 403
 
 # 该配置仅针对通过磁盘挂载方式接入的网盘, 如果你使用的是 strm, 可忽略该配置
 alist:

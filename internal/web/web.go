@@ -41,6 +41,7 @@ func Listen() error {
 func initRouter(r *gin.Engine) {
 	r.Use(referrerPolicySetter())
 	r.Use(emby.ApiKeyChecker())
+	r.Use(emby.DownloadStrategyChecker())
 	if config.C.Cache.Enable {
 		r.Use(cache.CacheableRouteMarker())
 		r.Use(cache.RequestCacher())
