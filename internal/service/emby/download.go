@@ -3,12 +3,17 @@ package emby
 import (
 	"errors"
 	"fmt"
+	"io"
 	"log"
 	"net/http"
 	"net/url"
+	"regexp"
 	"strconv"
 
+	"github.com/AmbitiousJun/go-emby2alist/internal/config"
+	"github.com/AmbitiousJun/go-emby2alist/internal/constant"
 	"github.com/AmbitiousJun/go-emby2alist/internal/util/colors"
+	"github.com/AmbitiousJun/go-emby2alist/internal/util/https"
 	"github.com/AmbitiousJun/go-emby2alist/internal/util/jsons"
 	"github.com/gin-gonic/gin"
 )
@@ -98,4 +103,52 @@ func HandleSyncDownload(c *gin.Context) {
 		return nil
 	})
 
+}
+
+// DownloadStrategyChecker 拦截下载请求, 并根据配置的策略进行响应
+func DownloadStrategyChecker() gin.HandlerFunc {
+
+	var downloadRoutes = []*regexp.Regexp{
+		regexp.MustCompile(constant.Reg_ItemDownload),
+		regexp.MustCompile(constant.Reg_ItemSyncDownload),
+	}
+
+	return func(c *gin.Context) {
+		// 放行非下载接口
+		var flag bool
+		for _, route := range downloadRoutes {
+			if route.MatchString(c.Request.RequestURI) {
+				flag = true
+				break
+			}
+		}
+		if !flag {
+			return
+		}
+
+		strategy := config.C.Emby.DownloadStrategy
+
+		if strategy == config.DlStrategyDirect {
+			return
+		}
+		defer c.Abort()
+
+		if strategy == config.DlStrategy403 {
+			c.String(http.StatusForbidden, "下载接口已禁用")
+			return
+		}
+
+		if strategy == config.DlStrategyOrigin {
+			remote := config.C.Emby.Host + c.Request.URL.String()
+			resp, err := https.Request(c.Request.Method, remote, c.Request.Header, c.Request.Body)
+			if checkErr(c, err) {
+				return
+			}
+			defer resp.Body.Close()
+			c.Status(resp.StatusCode)
+			https.CloneHeader(c, resp.Header)
+			io.Copy(c.Writer, resp.Body)
+		}
+
+	}
 }

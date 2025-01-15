@@ -170,7 +170,7 @@ func checkErr(c *gin.Context, err error) bool {
 	}
 
 	// 采用拒绝策略, 直接返回错误
-	if config.C.Emby.ProxyErrorStrategy == config.StrategyReject {
+	if config.C.Emby.ProxyErrorStrategy == config.PeStrategyReject {
 		log.Printf(colors.ToRed("代理接口失败: %v"), err)
 		c.String(http.StatusInternalServerError, "代理接口失败, 请检查日志")
 		return true
