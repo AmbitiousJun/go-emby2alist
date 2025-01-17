@@ -26,9 +26,9 @@ var RedirectCodes = [4]int{http.StatusMovedPermanently, http.StatusFound, http.S
 func init() {
 	client = &http.Client{
 		Transport: &http.Transport{
-			TLSClientConfig:       &tls.Config{InsecureSkipVerify: true},
+			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 			// 建立连接 1 分钟超时
-			Dial:                  (&net.Dialer{Timeout: time.Minute}).Dial,
+			Dial: (&net.Dialer{Timeout: time.Minute}).Dial,
 			// 接收数据 5 分钟超时
 			ResponseHeaderTimeout: time.Minute * 5,
 		},
