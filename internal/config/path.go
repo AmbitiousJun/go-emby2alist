@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+	"log"
 	"strings"
 )
 
@@ -30,7 +31,8 @@ func (p *Path) MapEmby2Alist(embyPath string) (string, bool) {
 	for _, cfg := range p.emby2AlistArr {
 		ep, ap := cfg[0], cfg[1]
 		if strings.HasPrefix(embyPath, ep) {
-			return strings.ReplaceAll(embyPath, ep, ap), true
+			log.Printf("命中 emby2alist 路径映射: %s => %s", ep, ap)
+			return strings.Replace(embyPath, ep, ap, 1), true
 		}
 	}
 	return "", false
