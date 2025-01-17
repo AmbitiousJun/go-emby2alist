@@ -2,11 +2,13 @@ package path
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 	"strings"
 
 	"github.com/AmbitiousJun/go-emby2alist/internal/config"
 	"github.com/AmbitiousJun/go-emby2alist/internal/service/alist"
+	"github.com/AmbitiousJun/go-emby2alist/internal/util/colors"
 	"github.com/AmbitiousJun/go-emby2alist/internal/util/jsons"
 	"github.com/AmbitiousJun/go-emby2alist/internal/util/urls"
 )
@@ -26,12 +28,23 @@ type AlistPathRes struct {
 
 // Emby2Alist Emby 资源路径转 Alist 资源路径
 func Emby2Alist(embyPath string) AlistPathRes {
+	pathRoutes := strings.Builder{}
+	pathRoutes.WriteString("[")
+	pathRoutes.WriteString("\n1 => " + embyPath)
+
 	embyPath = urls.TransferSlash(embyPath)
+	pathRoutes.WriteString("\n2 => " + embyPath)
+
 	embyMount := config.C.Emby.MountPath
-	alistFilePath := strings.ReplaceAll(embyPath, embyMount, "")
+	alistFilePath := strings.TrimPrefix(embyPath, embyMount)
+	pathRoutes.WriteString("\n3 => " + alistFilePath)
+
 	if mapPath, ok := config.C.Path.MapEmby2Alist(alistFilePath); ok {
 		alistFilePath = mapPath
+		pathRoutes.WriteString("\n4 => " + alistFilePath)
 	}
+	pathRoutes.WriteString("\n]")
+	log.Printf(colors.ToGray("embyPath 转换路径: %s"), pathRoutes.String())
 
 	rangeFunc := func() ([]string, error) {
 		filePath, err := SplitFromSecondSlash(alistFilePath)
