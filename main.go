@@ -4,20 +4,18 @@ import (
 	"log"
 
 	"github.com/AmbitiousJun/go-emby2alist/internal/config"
+	"github.com/AmbitiousJun/go-emby2alist/internal/constant"
 	"github.com/AmbitiousJun/go-emby2alist/internal/util/colors"
 	"github.com/AmbitiousJun/go-emby2alist/internal/web"
 )
 
-const CurrentVersion = "v1.5.1-beta-v2"
-const RepoAddr = "https://github.com/AmbitiousJun/go-emby2alist"
-
 func main() {
-	printBanner()
-
 	log.Println("正在加载配置...")
 	if err := config.ReadFromFile("config.yml"); err != nil {
 		log.Fatal(err)
 	}
+
+	printBanner()
 
 	log.Println(colors.ToBlue("正在启动服务..."))
 	if err := web.Listen(); err != nil {
@@ -36,5 +34,5 @@ func printBanner() {
  
  Repository: %s
     Version: %s
-	`), RepoAddr, CurrentVersion)
+	`), constant.RepoAddr, constant.CurrentVersion)
 }

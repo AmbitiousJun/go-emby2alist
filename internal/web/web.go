@@ -53,7 +53,9 @@ func initRouter(r *gin.Engine) {
 //
 // 出现错误时, 会写入 errChan 中
 func listenHTTP(errChan chan error) {
-	r := gin.Default()
+	r := gin.New()
+	r.Use(gin.Recovery())
+	r.Use(CustomLogger(webport.HTTP))
 	r.Use(func(c *gin.Context) {
 		c.Set(webport.GinKey, webport.HTTP)
 	})
@@ -68,7 +70,9 @@ func listenHTTP(errChan chan error) {
 //
 // 出现错误时, 会写入 errChan 中
 func listenHTTPS(errChan chan error) {
-	r := gin.Default()
+	r := gin.New()
+	r.Use(gin.Recovery())
+	r.Use(CustomLogger(webport.HTTPS))
 	r.Use(func(c *gin.Context) {
 		c.Set(webport.GinKey, webport.HTTPS)
 	})
