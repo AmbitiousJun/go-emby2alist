@@ -1,6 +1,8 @@
 package colors
 
-import "github.com/AmbitiousJun/go-emby2alist/internal/config"
+import (
+	"github.com/AmbitiousJun/go-emby2alist/internal/setup"
+)
 
 // 日志颜色输出常量
 const (
@@ -48,7 +50,7 @@ func ToGray(str string) string {
 //
 // 如果用户关闭了颜色输出, 则直接返回原字符串
 func wrapColor(color, str string) string {
-	if config.C != nil && config.C.Log.DisableColor {
+	if !setup.LogColorEnbale {
 		return str
 	}
 	return color + str + reset

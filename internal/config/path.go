@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"log"
 	"strings"
+
+	"github.com/AmbitiousJun/go-emby2alist/internal/util/colors"
 )
 
 type Path struct {
@@ -31,7 +33,7 @@ func (p *Path) MapEmby2Alist(embyPath string) (string, bool) {
 	for _, cfg := range p.emby2AlistArr {
 		ep, ap := cfg[0], cfg[1]
 		if strings.HasPrefix(embyPath, ep) {
-			log.Printf("命中 emby2alist 路径映射: %s => %s", ep, ap)
+			log.Printf(colors.ToGray("命中 emby2alist 路径映射: %s => %s (如命中错误, 请将正确的映射配置前移)"), ep, ap)
 			return strings.Replace(embyPath, ep, ap, 1), true
 		}
 	}
