@@ -4,11 +4,11 @@ import (
 	"log"
 	"regexp"
 
-	"github.com/AmbitiousJun/go-emby2alist/internal/util/colors"
-	"github.com/AmbitiousJun/go-emby2alist/internal/web/webport"
-
 	"github.com/gin-gonic/gin"
 )
+
+// MatchRouteKey 存储在 gin 上下文的路由匹配字段
+const MatchRouteKey = "matchRoute"
 
 // globalDftHandler 全局默认兜底的请求处理器
 func globalDftHandler(c *gin.Context) {
@@ -16,8 +16,7 @@ func globalDftHandler(c *gin.Context) {
 	for _, rule := range rules {
 		reg := rule[0].(*regexp.Regexp)
 		if reg.MatchString(c.Request.RequestURI) {
-			servePort, _ := c.Get(webport.GinKey)
-			log.Printf(colors.ToBlue("监听端口: %s, 匹配路由: %s"), servePort, reg.String())
+			c.Set(MatchRouteKey, reg.String())
 			rule[1].(gin.HandlerFunc)(c)
 			return
 		}

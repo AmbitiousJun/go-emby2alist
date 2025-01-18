@@ -1,6 +1,11 @@
 package constant
 
 const (
+	CurrentVersion = "v1.5.1-beta-v2"
+	RepoAddr = "https://github.com/AmbitiousJun/go-emby2alist"
+)
+
+const (
 	Reg_Socket                   = `(?i)^/.*(socket|embywebsocket)`
 	Reg_PlaybackInfo             = `(?i)^/.*items/.*/playbackinfo\??`
 	Reg_PlayingStopped           = `(?i)^/.*sessions/playing/stopped`

@@ -83,6 +83,18 @@ func IsRedirectCode(code int) bool {
 	return false
 }
 
+// IsSuccessCode 判断 http code 是否为成功状态
+func IsSuccessCode(code int) bool {
+	codeStr := strconv.Itoa(code)
+	return strings.HasPrefix(codeStr, "2")
+}
+
+// IsErrorCode 判断 http code 是否为错误状态
+func IsErrorCode(code int) bool {
+	codeStr := strconv.Itoa(code)
+	return strings.HasPrefix(codeStr, "4") || strings.HasPrefix(codeStr, "5")
+}
+
 // IsErrorResponse 判断一个请求响应是否是错误响应
 //
 // 判断标准是响应码以 4xx 5xx 开头
