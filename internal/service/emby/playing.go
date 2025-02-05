@@ -70,7 +70,7 @@ func PlayingStoppedHelper(c *gin.Context) {
 			}
 		} else {
 			// 存在旧定时器, 尝试替换为新定时器
-			if ok := stoppedHelperSentTimerMap.CompareAndSwap(itemId, oldTimer, newTimer); oldTimerExist && !ok {
+			if ok := stoppedHelperSentTimerMap.CompareAndSwap(itemId, oldTimer, newTimer); !ok {
 				// 如果 CAS 失败, 说明已经有其他请求在处理该 itemId, 则取消发送辅助请求
 				return
 			}
