@@ -29,6 +29,8 @@ func initRulePatterns() {
 		{constant.Reg_PlayingStopped, emby.PlayingStoppedHelper},
 		// 拦截无效的进度报告
 		{constant.Reg_PlayingProgress, emby.PlayingProgressHelper},
+		// 拦截剧集标记请求, 中断辅助请求
+		{constant.Reg_UserPlayedItems, emby.PlayedItemsIntercepter},
 
 		// Items 接口
 		{constant.Reg_UserItems, emby.LoadCacheItems},

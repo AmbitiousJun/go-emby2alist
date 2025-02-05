@@ -4,6 +4,7 @@ import (
 	"log"
 	"regexp"
 
+	"github.com/AmbitiousJun/go-emby2alist/internal/constant"
 	"github.com/gin-gonic/gin"
 )
 
@@ -17,6 +18,7 @@ func globalDftHandler(c *gin.Context) {
 		reg := rule[0].(*regexp.Regexp)
 		if reg.MatchString(c.Request.RequestURI) {
 			c.Set(MatchRouteKey, reg.String())
+			c.Set(constant.RouteSubMatchGinKey, reg.FindStringSubmatch(c.Request.RequestURI))
 			rule[1].(gin.HandlerFunc)(c)
 			return
 		}
