@@ -143,7 +143,6 @@ func PlayedItemsIntercepter(c *gin.Context) {
 	// 取出内存中是否有待发送的辅助请求计时器
 	if timer, ok := stoppedHelperSentTimerMap.LoadAndDelete(itemId); ok {
 		if t, ok := timer.(*time.Timer); ok && t != nil {
-			log.Println("辅助请求已被拦截")
 			t.Stop()
 		}
 	}
