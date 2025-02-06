@@ -230,12 +230,7 @@ func ProxyRequest(c *gin.Context, remote string, withUri bool) error {
 	}
 
 	// 7 回写响应体
-	bodyBytes, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return fmt.Errorf("读取响应体失败: %v", err)
-	}
+	io.Copy(c.Writer, resp.Body)
 	c.Status(resp.StatusCode)
-	c.Writer.Write(bodyBytes)
-	c.Writer.Flush()
 	return nil
 }
