@@ -6,6 +6,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"strconv"
 	"sync"
 	"time"
 
@@ -15,11 +16,12 @@ import (
 	"github.com/AmbitiousJun/go-emby2alist/internal/util/https"
 	"github.com/AmbitiousJun/go-emby2alist/internal/util/jsons"
 	"github.com/AmbitiousJun/go-emby2alist/internal/util/randoms"
+	"github.com/AmbitiousJun/go-emby2alist/internal/util/strs"
 	"github.com/gin-gonic/gin"
 )
 
-// stoppedHelperSentTimerMap 用于实现延时发送辅助 Progress 请求
-var stoppedHelperSentTimerMap = sync.Map{}
+// stoppedHelperMarkMap 用于实现延时发送辅助 Progress 请求
+var stoppedHelperMarkMap = sync.Map{}
 
 // PlayingStoppedHelper 拦截停止播放接口, 然后手动请求一次 Progress 接口记录进度
 func PlayingStoppedHelper(c *gin.Context) {
@@ -47,41 +49,22 @@ func PlayingStoppedHelper(c *gin.Context) {
 	}
 
 	go func() {
-		// 依据 itemId 获取到内存中是否已经有待发送的辅助请求计时器
-		// 如果已存在, 就停止计时器, 以当前请求的进度为主
-		itemId, ok := bodyJson.Attr("ItemId").String()
-		if !ok {
+		// 依据 itemId 获取到内存中是否已经有待发送的辅助请求
+		// 如果已存在, 就中止本次的辅助请求
+		itemId, _ := bodyJson.Attr("ItemId").String()
+		if itemIdNum, ok := bodyJson.Attr("ItemId").Int(); ok {
+			itemId = strconv.Itoa(itemIdNum)
+		}
+		if strs.AnyEmpty(itemId) {
 			return
 		}
-		oldTimer, oldTimerExist := stoppedHelperSentTimerMap.Load(itemId)
-		if oldTimerExist {
-			if timer, ok := oldTimer.(*time.Timer); ok && timer != nil {
-				timer.Stop()
-			}
-		}
 
-		newTimer := time.NewTimer(30 * time.Second)
-		timeoutTimer := time.NewTimer(40 * time.Second)
-		if !oldTimerExist {
-			// 不存在旧定时器, 尝试设置新定时器
-			if _, loaded := stoppedHelperSentTimerMap.LoadOrStore(itemId, newTimer); loaded {
-				// 已经有其他请求正在处理该 itemId
-				return
-			}
-		} else {
-			// 存在旧定时器, 尝试替换为新定时器
-			if ok := stoppedHelperSentTimerMap.CompareAndSwap(itemId, oldTimer, newTimer); !ok {
-				// 如果 CAS 失败, 说明已经有其他请求在处理该 itemId, 则取消发送辅助请求
-				return
-			}
-		}
-
-		// 等待计时器触发后再执行逻辑
-		select {
-		case <-timeoutTimer.C:
+		// 每个请求使用一个随机数进行标记区分
+		randomKey := randoms.RandomHex(32)
+		stoppedHelperMarkMap.Store(itemId, randomKey)
+		time.Sleep(30 * time.Second)
+		if deleted := stoppedHelperMarkMap.CompareAndDelete(itemId, randomKey); !deleted {
 			return
-		case <-newTimer.C:
-			stoppedHelperSentTimerMap.CompareAndDelete(itemId, newTimer)
 		}
 
 		// 代理 Progress 接口
@@ -140,12 +123,8 @@ func PlayedItemsIntercepter(c *gin.Context) {
 	}
 	itemId := routeMatches[1]
 
-	// 取出内存中是否有待发送的辅助请求计时器
-	if timer, ok := stoppedHelperSentTimerMap.LoadAndDelete(itemId); ok {
-		if t, ok := timer.(*time.Timer); ok && t != nil {
-			t.Stop()
-		}
-	}
+	// 移除内存中的辅助请求标记
+	stoppedHelperMarkMap.Delete(itemId)
 
 	ProxyOrigin(c)
 }
