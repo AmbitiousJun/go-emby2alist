@@ -54,7 +54,7 @@
 
 1. 本项目初衷: 易用轻巧、小白友好、高度适配阿里云盘 (如果你使用本项目观看其他网盘时出现问题，也欢迎到 issue 区反馈，我会尽量适配它)
 
-2. 如果你有更复杂的需求, 推荐使用[功能更完善的反向代理服务](https://github.com/bpking1/embyExternalUrl)
+2. 如果你有更复杂的需求, 推荐使用功能更完善的反向代理服务：[bpking1/embyExternalUrl](https://github.com/bpking1/embyExternalUrl)
 
 ## 功能
 
