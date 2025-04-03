@@ -1,3 +1,7 @@
+<div align="center">
+  <img height="150px" src="./assets/logo.png"></img>
+</div>
+
 <h1 align="center">go-emby2alist</h1>
 
 <div align="center">
@@ -329,7 +333,7 @@ docker-compose up -d --build
 
 ## 请我喝杯 9.9💰 的 Luckin Coffee☕️
 
-<img style="zoom:50%;" src="assets/2024-11-05-09-57-45.jpg"></img>
+<img height="500px" src="assets/2024-11-05-09-57-45.jpg"></img>
 
 ## Star History
 
