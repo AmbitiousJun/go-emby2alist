@@ -280,6 +280,7 @@ services:
     volumes:
       - ./config.yml:/app/config.yml
       - ./ssl:/app/ssl
+      - ./custom-js:/app/custom-js
     ports:
       - 8095:8095 # http
       - 8094:8094 # https
