@@ -4,3 +4,4 @@ ssl/*crt
 ssl/*key
 .DS_Store
 custom-js/*.js
+custom-css/*.css

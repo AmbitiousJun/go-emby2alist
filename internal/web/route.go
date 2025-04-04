@@ -74,6 +74,8 @@ func initRulePatterns() {
 		{constant.Reg_IndexHtml, emby.ProxyIndexHtml},
 		// 响应自定义脚本
 		{constant.Route_CustomJs, emby.ProxyCustomJs},
+		// 响应自定义样式
+		{constant.Route_CustomCss, emby.ProxyCustomCss},
 
 		// 其余资源走重定向回源
 		{constant.Reg_All, emby.ProxyOrigin},

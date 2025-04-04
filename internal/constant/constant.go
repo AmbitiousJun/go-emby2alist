@@ -36,8 +36,9 @@ const (
 	Reg_VideoModWebDefined = `(?i)^/web/modules/htmlvideoplayer/plugin.js`
 	Reg_Proxy2Origin       = `^/$|(?i)^.*(/web|/users|/artists|/genres|/similar|/shows|/system|/remote|/scheduledtasks)`
 
-	Reg_IndexHtml  = `(?i)^/web/index\.html`
-	Route_CustomJs = `/ge2a/custom.js`
+	Reg_IndexHtml   = `(?i)^/web/index\.html`
+	Route_CustomJs  = `/ge2a/custom.js`
+	Route_CustomCss = `/ge2a/custom.css`
 
 	Reg_All = `.*`
 )
@@ -45,5 +46,6 @@ const (
 const (
 	RouteSubMatchGinKey = "routeSubMatches" // 路由匹配成功时, 会将匹配的正则结果存放到 Gin 上下文
 
-	CustomJsDirName = "custom-js" // 自定义脚本存放目录
+	CustomJsDirName  = "custom-js"  // 自定义脚本存放目录
+	CustomCssDirName = "custom-css" // 自定义样式存放目录
 )
