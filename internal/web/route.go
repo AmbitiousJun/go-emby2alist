@@ -70,6 +70,11 @@ func initRulePatterns() {
 		// web cors 处理
 		{constant.Reg_VideoModWebDefined, emby.ChangeBaseVideoModuleCorsDefined},
 
+		// 代理首页, 注入自定义脚本
+		{constant.Reg_IndexHtml, emby.ProxyIndexHtml},
+		// 响应自定义脚本
+		{constant.Route_CustomJs, emby.ProxyCustomJs},
+
 		// 其余资源走重定向回源
 		{constant.Reg_All, emby.ProxyOrigin},
 	})
