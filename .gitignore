@@ -3,3 +3,4 @@ config.yml
 ssl/*crt
 ssl/*key
 .DS_Store
+custom-js/*.js

@@ -308,6 +308,14 @@ docker-compose up -d --build
 
 可能有部分客户端会出现首次用 https 成功连上了，下次再打开客户端时，就自动变回到 http 连接，目前不太清楚具体的原因
 
+## 自定义注入 web js 脚本
+
+**使用方式：**将自定义脚本文件以 `.js` 后缀命名放到程序根目录下的 `custom-js` 目录后重启服务自动生效
+
+**示例脚本：**
+
+生成外部播放器按钮：[ExternalPlayers.js](https://github.com/Shurelol/ScriptsForEmby/raw/refs/heads/main/ExternalPlayers.js)
+
 ## 开发计划
 
 1. - [x] 进一步优化 m3u8 转码直链的兼容性 
