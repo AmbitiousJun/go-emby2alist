@@ -38,12 +38,13 @@ var loadAllCustomCssJs = sync.OnceFunc(func() {
 
 		res := []string{}
 		ch := make(chan string)
-		defer close(ch)
-		go func() {
+		chg := new(errgroup.Group)
+		chg.Go(func() error {
 			for content := range ch {
 				res = append(res, content)
 			}
-		}()
+			return nil
+		})
 
 		g := new(errgroup.Group)
 		for _, file := range files {
@@ -68,8 +69,11 @@ var loadAllCustomCssJs = sync.OnceFunc(func() {
 		}
 
 		if err := g.Wait(); err != nil {
+			close(ch)
 			return nil, err
 		}
+		close(ch)
+		chg.Wait()
 		return res, nil
 	}
 
