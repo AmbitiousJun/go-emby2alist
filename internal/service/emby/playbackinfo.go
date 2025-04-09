@@ -417,7 +417,7 @@ func LoadCacheItems(c *gin.Context) {
 	spaceCache, ok := getPlaybackInfoByCacheSpace(itemInfo)
 	if ok {
 		cacheBody, err := spaceCache.JsonBody()
-		if err != nil && coverMediaSources(cacheBody) {
+		if err == nil && coverMediaSources(cacheBody) {
 			return
 		}
 	}
@@ -425,7 +425,7 @@ func LoadCacheItems(c *gin.Context) {
 	// 缓存空间中没有当前 Item 的 PlaybackInfo 数据, 手动请求
 	bodyJson, err := fetchFullPlaybackInfo(c, itemInfo)
 	if err != nil {
-		log.Printf(colors.ToRed("更新 Items 缓存异常: %v"), err)
+		log.Printf(colors.ToYellow("更新 Items 缓存异常: %v"), err)
 		return
 	}
 	coverMediaSources(bodyJson)
@@ -447,7 +447,7 @@ func fetchFullPlaybackInfo(c *gin.Context, itemInfo ItemInfo) (*jsons.Item, erro
 	if itemInfo.ApiKeyType == Header {
 		header.Set(itemInfo.ApiKeyName, itemInfo.ApiKey)
 	}
-	resp, err := https.Request(http.MethodPost, u.String(), header, reqBody)
+	_, resp, err := https.RequestRedirect(http.MethodPost, u.String(), header, reqBody, true)
 	if err != nil {
 		return nil, fmt.Errorf("手动请求 PlaybackInfo 失败: %v", err)
 	}
