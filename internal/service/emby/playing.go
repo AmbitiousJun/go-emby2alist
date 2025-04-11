@@ -7,11 +7,8 @@ import (
 	"log"
 	"net/http"
 	"strconv"
-	"sync"
-	"time"
 
 	"github.com/AmbitiousJun/go-emby2alist/internal/config"
-	"github.com/AmbitiousJun/go-emby2alist/internal/constant"
 	"github.com/AmbitiousJun/go-emby2alist/internal/util/colors"
 	"github.com/AmbitiousJun/go-emby2alist/internal/util/https"
 	"github.com/AmbitiousJun/go-emby2alist/internal/util/jsons"
@@ -19,9 +16,6 @@ import (
 	"github.com/AmbitiousJun/go-emby2alist/internal/util/strs"
 	"github.com/gin-gonic/gin"
 )
-
-// stoppedHelperMarkMap 用于实现延时发送辅助 Progress 请求
-var stoppedHelperMarkMap = sync.Map{}
 
 // PlayingStoppedHelper 拦截停止播放接口, 然后手动请求一次 Progress 接口记录进度
 func PlayingStoppedHelper(c *gin.Context) {
@@ -49,21 +43,12 @@ func PlayingStoppedHelper(c *gin.Context) {
 	}
 
 	go func() {
-		// 依据 itemId 获取到内存中是否已经有待发送的辅助请求
-		// 如果已存在, 就中止本次的辅助请求
+		// 发送辅助请求记录播放进度
 		itemId, _ := bodyJson.Attr("ItemId").String()
 		if itemIdNum, ok := bodyJson.Attr("ItemId").Int(); ok {
 			itemId = strconv.Itoa(itemIdNum)
 		}
 		if strs.AnyEmpty(itemId) {
-			return
-		}
-
-		// 每个请求使用一个随机数进行标记区分
-		randomKey := randoms.RandomHex(32)
-		stoppedHelperMarkMap.Store(itemId, randomKey)
-		time.Sleep(30 * time.Second)
-		if deleted := stoppedHelperMarkMap.CompareAndDelete(itemId, randomKey); !deleted {
 			return
 		}
 
@@ -111,20 +96,5 @@ func PlayingProgressHelper(c *gin.Context) {
 		c.Status(http.StatusNoContent)
 		return
 	}
-	ProxyOrigin(c)
-}
-
-// PlayedItemsIntercepter 拦截剧集标记请求, 中断辅助请求
-func PlayedItemsIntercepter(c *gin.Context) {
-	// 解析 itemId
-	routeMatches := c.GetStringSlice(constant.RouteSubMatchGinKey)
-	if len(routeMatches) < 2 {
-		return
-	}
-	itemId := routeMatches[1]
-
-	// 移除内存中的辅助请求标记
-	stoppedHelperMarkMap.Delete(itemId)
-
 	ProxyOrigin(c)
 }
