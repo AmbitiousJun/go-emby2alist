@@ -449,19 +449,16 @@ func fetchFullPlaybackInfo(c *gin.Context, itemInfo ItemInfo) (*jsons.Item, erro
 	}
 	_, resp, err := https.RequestRedirect(http.MethodPost, u.String(), header, reqBody, true)
 	if err != nil {
-		return nil, fmt.Errorf("手动请求 PlaybackInfo 失败: %v", err)
+		return nil, fmt.Errorf("获取全量 PlaybackInfo 失败: %v", err)
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("手动请求 PlaybackInfo 失败, code: %d", resp.StatusCode)
+		return nil, fmt.Errorf("获取全量 PlaybackInfo 失败, code: %d", resp.StatusCode)
 	}
-	bodyBytes, err := io.ReadAll(resp.Body)
+
+	bodyJson, err := jsons.Read(resp.Body)
 	if err != nil {
-		return nil, fmt.Errorf("手动请求 PlaybackInfo 失败: %v", err)
-	}
-	bodyJson, err := jsons.New(string(bodyBytes))
-	if err != nil {
-		return nil, fmt.Errorf("手动请求 PlaybackInfo 失败: %v", err)
+		return nil, fmt.Errorf("获取全量 PlaybackInfo 失败: %v", err)
 	}
 	return bodyJson, nil
 }

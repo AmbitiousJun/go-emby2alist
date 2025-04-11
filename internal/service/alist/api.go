@@ -2,7 +2,6 @@ package alist
 
 import (
 	"fmt"
-	"io"
 	"log"
 	"net/http"
 
@@ -146,11 +145,7 @@ func Fetch(uri, method string, header http.Header, body map[string]interface{}) 
 	defer resp.Body.Close()
 
 	// 2 封装响应
-	bodyBytes, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return model.HttpRes[*jsons.Item]{Code: http.StatusBadRequest, Msg: "读取响应体失败: " + err.Error()}
-	}
-	result, err := jsons.New(string(bodyBytes))
+	result, err := jsons.Read(resp.Body)
 	if err != nil {
 		return model.HttpRes[*jsons.Item]{Code: http.StatusBadRequest, Msg: "解析响应体失败: " + err.Error()}
 	}
