@@ -181,7 +181,7 @@ func calcRandomItemsCacheKey(c *gin.Context) string {
 		c.Query("ParentId")
 }
 
-// ProxyAddItemsPreviewInfo 代理 Items 接口, 并
+// ProxyAddItemsPreviewInfo 代理 Items 接口, 并附带上转码版本信息
 func ProxyAddItemsPreviewInfo(c *gin.Context) {
 	// 检查用户是否启用了转码版本获取
 	if !config.C.VideoPreview.Enable {
@@ -203,11 +203,7 @@ func ProxyAddItemsPreviewInfo(c *gin.Context) {
 		checkErr(c, fmt.Errorf("emby 远程返回了错误的响应码: %d", resp.StatusCode))
 		return
 	}
-	bodyBytes, err := io.ReadAll(resp.Body)
-	if checkErr(c, err) {
-		return
-	}
-	resJson, err := jsons.New(string(bodyBytes))
+	resJson, err := jsons.Read(resp.Body)
 	if checkErr(c, err) {
 		return
 	}

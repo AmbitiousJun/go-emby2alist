@@ -2,7 +2,9 @@ package jsons
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
+	"io"
 	"log"
 	"reflect"
 	"strconv"
@@ -236,4 +238,17 @@ func New(rawJson string) (*Item, error) {
 	}
 
 	return nil, fmt.Errorf("不支持的字符串: %s", rawJson)
+}
+
+// Read 从流中读取 JSON 数据并转换为对象
+func Read(reader io.Reader) (*Item, error) {
+	if reader == nil {
+		return nil, errors.New("reader 为空")
+	}
+
+	bytes, err := io.ReadAll(reader)
+	if err != nil {
+		return nil, fmt.Errorf("读取 reader 数据失败: %v", err)
+	}
+	return New(string(bytes))
 }
