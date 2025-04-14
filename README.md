@@ -322,7 +322,7 @@ docker-compose up -d --build
 
 | 描述               | 获取脚本                                                     |
 | ------------------ | ------------------------------------------------------------ |
-| 生成外部播放器按钮 | [ExternalPlayers.js](https://raw.githubusercontent.com/Shurelol/ScriptsForEmby/refs/heads/main/ExternalPlayers.js) |
+| 生成外部播放器按钮 | [ExternalPlayers.js](https://emby-external-url.7o7o.cc/embyWebAddExternalUrl/embyLaunchPotplayer.js) |
 | 首页轮播图         | [emby-swiper.js](https://raw.githubusercontent.com/newday-life/emby-web-mod/refs/heads/main/emby-swiper/emby-swiper.js) |
 | 隐藏无图片演员     | [actorPlus.js](https://raw.githubusercontent.com/newday-life/emby-web-mod/refs/heads/main/actorPlus/actorPlus.js) |
 
