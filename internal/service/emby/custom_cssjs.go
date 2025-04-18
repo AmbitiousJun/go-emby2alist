@@ -153,7 +153,6 @@ func ProxyCustomCss(c *gin.Context) {
 
 	contentBuilder := strings.Builder{}
 	for _, style := range customCssList {
-		log.Println(style)
 		contentBuilder.WriteString(fmt.Sprintf("%s\n\n\n", style))
 	}
 	contentBytes := []byte(contentBuilder.String())
