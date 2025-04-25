@@ -373,6 +373,7 @@ func LoadCacheItems(c *gin.Context) {
 	}
 	resJson := res.Data
 	defer func() {
+		c.Writer.Header().Del("Content-Length")
 		c.JSON(res.Code, resJson.Struct())
 	}()
 
