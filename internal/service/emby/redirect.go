@@ -153,8 +153,6 @@ func Redirect2AlistLink(c *gin.Context) {
 // 不为空则根据错误处理策略返回响应
 //
 // 返回 true 表示请求已经被处理
-//
-// 如果检测到 query 参数 ignore_error 为 true, 则不进行重定向
 func checkErr(c *gin.Context, err error) bool {
 	if err == nil || c == nil {
 		return false
@@ -163,12 +161,6 @@ func checkErr(c *gin.Context, err error) bool {
 	// 异常接口, 不缓存
 	c.Header(cache.HeaderKeyExpired, "-1")
 
-	// 请求参数中有忽略异常
-	if c.Query("ignore_error") == "true" {
-		c.String(http.StatusOK, "error has been ignored")
-		return true
-	}
-
 	// 采用拒绝策略, 直接返回错误
 	if config.C.Emby.ProxyErrorStrategy == config.PeStrategyReject {
 		log.Printf(colors.ToRed("代理接口失败: %v"), err)
@@ -176,8 +168,7 @@ func checkErr(c *gin.Context, err error) bool {
 		return true
 	}
 
-	u := config.C.Emby.Host + c.Request.URL.String()
-	log.Printf(colors.ToRed("代理接口失败: %v, 重定向回源服务器处理\n"), err)
-	c.Redirect(http.StatusTemporaryRedirect, u)
+	log.Printf(colors.ToRed("代理接口失败: %v, 回源处理"), err)
+	ProxyOrigin(c)
 	return true
 }
