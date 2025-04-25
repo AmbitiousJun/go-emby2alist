@@ -55,7 +55,7 @@ func FetchResource(fi FetchInfo) model.HttpRes[Resource] {
 	}
 	idx := list.FindIdx(func(val *jsons.Item) bool { return val.Attr("template_id").Val() == fi.Format })
 	if idx == -1 {
-		allFmts := list.Map(func(val *jsons.Item) interface{} { return val.Attr("template_id").Val() })
+		allFmts := list.Map(func(val *jsons.Item) any { return val.Attr("template_id").Val() })
 		log.Printf(colors.ToRed("查找不到指定的格式: %s, 所有可用的格式: %v"), fi.Format, jsons.NewByArr(allFmts))
 		return failedAndTryRaw(res)
 	}
@@ -90,7 +90,7 @@ func FetchFsList(path string, header http.Header) model.HttpRes[*jsons.Item] {
 	if strs.AnyEmpty(path) {
 		return model.HttpRes[*jsons.Item]{Code: http.StatusBadRequest, Msg: "参数 path 不能为空"}
 	}
-	return Fetch("/api/fs/list", http.MethodPost, header, map[string]interface{}{
+	return Fetch("/api/fs/list", http.MethodPost, header, map[string]any{
 		"refresh":  true,
 		"password": "",
 		"path":     path,
@@ -105,7 +105,7 @@ func FetchFsGet(path string, header http.Header) model.HttpRes[*jsons.Item] {
 		return model.HttpRes[*jsons.Item]{Code: http.StatusBadRequest, Msg: "参数 path 不能为空"}
 	}
 
-	return Fetch("/api/fs/get", http.MethodPost, header, map[string]interface{}{
+	return Fetch("/api/fs/get", http.MethodPost, header, map[string]any{
 		"refresh":  true,
 		"password": "",
 		"path":     path,
@@ -120,7 +120,7 @@ func FetchFsOther(path string, header http.Header) model.HttpRes[*jsons.Item] {
 		return model.HttpRes[*jsons.Item]{Code: http.StatusBadRequest, Msg: "参数 path 不能为空"}
 	}
 
-	return Fetch("/api/fs/other", http.MethodPost, header, map[string]interface{}{
+	return Fetch("/api/fs/other", http.MethodPost, header, map[string]any{
 		"method":   "video_preview",
 		"password": "",
 		"path":     path,
@@ -128,7 +128,7 @@ func FetchFsOther(path string, header http.Header) model.HttpRes[*jsons.Item] {
 }
 
 // Fetch 请求 alist api
-func Fetch(uri, method string, header http.Header, body map[string]interface{}) model.HttpRes[*jsons.Item] {
+func Fetch(uri, method string, header http.Header, body map[string]any) model.HttpRes[*jsons.Item] {
 	host := config.C.Alist.Host
 	token := config.C.Alist.Token
 

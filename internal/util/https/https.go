@@ -108,7 +108,7 @@ func IsErrorResponse(c *gin.Context) bool {
 }
 
 // MapBody 将 map 转换为 ReadCloser 流
-func MapBody(body map[string]interface{}) io.ReadCloser {
+func MapBody(body map[string]any) io.ReadCloser {
 	if body == nil {
 		return nil
 	}

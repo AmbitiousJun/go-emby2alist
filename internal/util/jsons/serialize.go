@@ -8,12 +8,12 @@ import (
 )
 
 // Struct 将 item 转换为结构体对象
-func (i *Item) Struct() interface{} {
+func (i *Item) Struct() any {
 	switch i.jType {
 	case JsonTypeVal:
 		return i.val
 	case JsonTypeObj:
-		m := make(map[string]interface{})
+		m := make(map[string]any)
 		wg := sync.WaitGroup{}
 		mu := sync.Mutex{}
 		for key, value := range i.obj {
@@ -29,7 +29,7 @@ func (i *Item) Struct() interface{} {
 		wg.Wait()
 		return m
 	case JsonTypeArr:
-		a := make([]interface{}, i.Len())
+		a := make([]any, i.Len())
 		wg := sync.WaitGroup{}
 		for idx, value := range i.arr {
 			ci, cv := idx, value

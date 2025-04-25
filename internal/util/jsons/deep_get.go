@@ -110,7 +110,7 @@ func (ti *TempItem) String() (string, bool) {
 }
 
 // Val 获取链式调用后的 val 值, 类型不匹配时返回 nil
-func (ti *TempItem) Val() interface{} {
+func (ti *TempItem) Val() any {
 	if ti.item == nil || ti.item.jType != JsonTypeVal {
 		return nil
 	}
@@ -118,7 +118,7 @@ func (ti *TempItem) Val() interface{} {
 }
 
 // Set 设置当前链式调用后的 val 值, 类型不匹配时不作更改
-func (ti *TempItem) Set(val interface{}) *TempItem {
+func (ti *TempItem) Set(val any) *TempItem {
 	if ti.item == nil || ti.item.jType != JsonTypeVal {
 		return ti
 	}

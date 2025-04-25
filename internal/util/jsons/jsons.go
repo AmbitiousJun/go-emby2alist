@@ -26,7 +26,7 @@ func NewEmptyArr() *Item {
 }
 
 // NewByObj 根据对象初始化 json 数据
-func NewByObj(obj interface{}) *Item {
+func NewByObj(obj any) *Item {
 	if obj == nil {
 		return NewByVal(nil)
 	}
@@ -76,7 +76,7 @@ func NewByObj(obj interface{}) *Item {
 }
 
 // NewByArr 根据数组初始化 json 数据
-func NewByArr(arr interface{}) *Item {
+func NewByArr(arr any) *Item {
 	if arr == nil {
 		return NewByVal(nil)
 	}
@@ -108,7 +108,7 @@ func NewByArr(arr interface{}) *Item {
 }
 
 // NewByVal 根据指定普通值初始化 json 数据, 如果是数组或对象类型也会自动转化
-func NewByVal(val interface{}) *Item {
+func NewByVal(val any) *Item {
 	item := &Item{jType: JsonTypeVal}
 	if val == nil {
 		return item

@@ -22,7 +22,7 @@ var ErrBreakRange = errors.New("break arr or obj range")
 type Item struct {
 
 	// val 普通值: string, bool, int, float64, <null>
-	val interface{}
+	val any
 
 	// obj 对象值
 	obj map[string]*Item
@@ -158,11 +158,11 @@ func (i *Item) FindIdx(filterFunc func(val *Item) bool) int {
 }
 
 // Map 将数组中的元素按照指定规则映射之后返回一个新数组
-func (i *Item) Map(mapFunc func(val *Item) interface{}) []interface{} {
+func (i *Item) Map(mapFunc func(val *Item) any) []any {
 	if i.jType != JsonTypeArr {
 		return nil
 	}
-	res := make([]interface{}, 0)
+	res := make([]any, 0)
 	i.RangeArr(func(_ int, value *Item) error {
 		res = append(res, mapFunc(value))
 		return nil

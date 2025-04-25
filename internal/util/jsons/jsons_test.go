@@ -15,13 +15,13 @@ func TestMarshal(t *testing.T) {
 	log.Println(jsons.NewByVal(3.14159))
 	log.Println(jsons.NewByVal(nil))
 
-	arr := []interface{}{"Ambitious", true, 23, 3.14159, nil}
+	arr := []any{"Ambitious", true, 23, 3.14159, nil}
 	log.Println(jsons.NewByArr(arr))
 
-	m := map[string]interface{}{"1": arr}
+	m := map[string]any{"1": arr}
 	log.Println(jsons.NewByObj(m))
 
-	arr = append(arr, map[string]interface{}{"Path": "/a/b/c", "Age": 18, "Name": nil})
+	arr = append(arr, map[string]any{"Path": "/a/b/c", "Age": 18, "Name": nil})
 	log.Println(jsons.NewByArr(arr))
 }
 
@@ -43,7 +43,7 @@ func TestUnmarshal(t *testing.T) {
 }
 
 func TestMap(t *testing.T) {
-	item := jsons.NewByArr([]interface{}{1, 2, 1, 3, 8})
-	res := item.Map(func(val *jsons.Item) interface{} { return "😄" + strconv.Itoa(val.Ti().Val().(int)) })
+	item := jsons.NewByArr([]any{1, 2, 1, 3, 8})
+	res := item.Map(func(val *jsons.Item) any { return "😄" + strconv.Itoa(val.Ti().Val().(int)) })
 	log.Println("转换完成后的数组: ", res)
 }
