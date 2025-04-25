@@ -10,6 +10,7 @@ import (
 	"net/url"
 	"regexp"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/AmbitiousJun/go-emby2alist/internal/config"
@@ -91,18 +92,24 @@ func TransferPlaybackInfo(c *gin.Context) {
 	var haveReturned = errors.New("have returned")
 	resChans := make([]chan []*jsons.Item, 0)
 	err = mediaSources.RangeArr(func(_ int, source *jsons.Item) error {
+		// 如果客户端请求携带了 MediaSourceId 参数
+		// 在返回数据时, 需要重新设置回原始的 Id
 		if !msInfo.Empty {
-			// 如果客户端请求携带了 MediaSourceId 参数
-			// 在返回数据时, 需要重新设置回原始的 Id
 			source.Attr("Id").Set(msInfo.RawId)
 		}
 
+		// 默认无限流为电视直播, 代理到源服务器
 		iis, _ := source.Attr("IsInfiniteStream").Bool()
 		if iis {
-			// 默认无限流为电视直播, 代理到源服务器
 			c.Request.Body = originRequestBody
 			ProxyOrigin(c)
 			return haveReturned
+		}
+
+		// 如果是本地媒体, 不处理
+		embyPath, _ := source.Attr("Path").String()
+		if strings.HasPrefix(embyPath, config.C.Emby.LocalMediaRoot) {
+			return nil
 		}
 
 		// 转换直链链接
