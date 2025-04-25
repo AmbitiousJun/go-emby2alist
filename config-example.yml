@@ -28,6 +28,9 @@ emby:
   # origin: 代理到源服务器
   # direct: 获取并重定向到直链地址
   download-strategy: 403
+  # emby 本地媒体根目录
+  # 检测到该路径为前缀的媒体时, 代理回源处理
+  local-media-root: /data/local
 
 # 该配置仅针对通过磁盘挂载方式接入的网盘, 如果你使用的是 strm, 可忽略该配置
 alist:

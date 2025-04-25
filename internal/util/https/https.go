@@ -223,6 +223,7 @@ func ProxyRequest(c *gin.Context, remote string, withUri bool) error {
 	defer resp.Body.Close()
 
 	// 6 回写响应头
+	c.Status(resp.StatusCode)
 	for key, values := range resp.Header {
 		for _, value := range values {
 			c.Header(key, value)
@@ -231,6 +232,5 @@ func ProxyRequest(c *gin.Context, remote string, withUri bool) error {
 
 	// 7 回写响应体
 	io.Copy(c.Writer, resp.Body)
-	c.Status(resp.StatusCode)
 	return nil
 }

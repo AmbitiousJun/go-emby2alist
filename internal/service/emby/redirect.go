@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"net/url"
+	"slices"
 	"strings"
 	"time"
 
@@ -72,7 +73,7 @@ func Redirect2AlistLink(c *gin.Context) {
 		return
 	}
 
-	// 4 如果是远程地址 (strm), 直接进行重定向
+	// 4 如果是远程地址 (strm), 重定向处理
 	if urls.IsRemote(embyPath) {
 		finalPath := config.C.Emby.Strm.MapPath(embyPath)
 		log.Printf(colors.ToGreen("重定向 strm: %s"), finalPath)
@@ -81,7 +82,14 @@ func Redirect2AlistLink(c *gin.Context) {
 		return
 	}
 
-	// 5 请求 alist 资源
+	// 5 如果是本地地址, 回源处理
+	if strings.HasPrefix(embyPath, config.C.Emby.LocalMediaRoot) {
+		log.Printf(colors.ToBlue("本地媒体: %s, 回源处理"), embyPath)
+		ProxyOrigin(c)
+		return
+	}
+
+	// 6 请求 alist 资源
 	fi := alist.FetchInfo{
 		Header:       c.Request.Header.Clone(),
 		UseTranscode: useTranscode,
@@ -140,10 +148,10 @@ func Redirect2AlistLink(c *gin.Context) {
 	if checkErr(c, err) {
 		return
 	}
-	for _, path := range paths {
-		if handleAlistResource(path) {
-			return
-		}
+	if slices.ContainsFunc(paths, func(path string) bool {
+		return handleAlistResource(path)
+	}) {
+		return
 	}
 
 	checkErr(c, fmt.Errorf("获取直链失败: %s", allErrors.String()))
