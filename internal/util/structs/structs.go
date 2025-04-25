@@ -10,7 +10,7 @@ import (
 //
 //	@param s
 //	@return string
-func String(s interface{}) string {
+func String(s any) string {
 	if !IsStruct(s) {
 		return fmt.Sprintf("%v", s)
 	}
@@ -41,7 +41,7 @@ func String(s interface{}) string {
 //
 //	@param v
 //	@return bool
-func IsStruct(v interface{}) bool {
+func IsStruct(v any) bool {
 	if v == nil {
 		return false
 	}

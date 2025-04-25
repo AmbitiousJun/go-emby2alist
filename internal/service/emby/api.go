@@ -29,7 +29,7 @@ func proxyAndSetRespHeader(c *gin.Context) (model.HttpRes[*jsons.Item], bool) {
 }
 
 // Fetch 请求 emby api 接口, 使用 map 请求体
-func Fetch(uri, method string, header http.Header, body map[string]interface{}) (model.HttpRes[*jsons.Item], http.Header) {
+func Fetch(uri, method string, header http.Header, body map[string]any) (model.HttpRes[*jsons.Item], http.Header) {
 	return RawFetch(uri, method, header, https.MapBody(body))
 }
 

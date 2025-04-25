@@ -15,7 +15,7 @@ func TestFetch(t *testing.T) {
 		t.Error(err)
 		return
 	}
-	res := alist.Fetch("/api/fs/list", http.MethodPost, nil, map[string]interface{}{
+	res := alist.Fetch("/api/fs/list", http.MethodPost, nil, map[string]any{
 		"refresh":  true,
 		"password": "",
 		"path":     "/",
