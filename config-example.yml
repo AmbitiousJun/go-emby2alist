@@ -4,7 +4,7 @@ emby:
   episodes-unplay-prior: true                # 是否修改剧集排序, 让未播的剧集靠前排列; 启用该配置时, 会忽略原接口的分页机制
   resort-random-items: true                  # 是否重排序随机列表, 对 emby 的排序结果进行二次重排序, 使得列表足够随机
   # 代理异常处理策略
-  # origin: 重定向回源服务器
+  # origin: 代理回源服务器处理
   # reject: 拒绝处理
   proxy-error-strategy: origin
   # 图片质量, 默认请求原图
