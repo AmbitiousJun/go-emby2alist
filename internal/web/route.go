@@ -38,6 +38,8 @@ func initRulePatterns() {
 		{constant.Reg_UserItemsRandomResort, emby.ResortRandomItems},
 		// 代理原始的随机列表接口, 去除 limit 限制, 并进行缓存
 		{constant.Reg_UserItemsRandomWithLimit, emby.RandomItemsWithLimit},
+		// 拦截剧集标记请求, 中断辅助请求
+		{constant.Reg_UserPlayedItems, emby.PlayedItemsIntercepter},
 
 		// 重排序剧集
 		{constant.Reg_ShowEpisodes, emby.ResortEpisodes},
