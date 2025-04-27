@@ -42,42 +42,19 @@ func PlayingStoppedHelper(c *gin.Context) {
 		return
 	}
 
-	go func() {
-		// 发送辅助请求记录播放进度
-		itemId, _ := bodyJson.Attr("ItemId").String()
-		if itemIdNum, ok := bodyJson.Attr("ItemId").Int(); ok {
-			itemId = strconv.Itoa(itemIdNum)
-		}
-		if strs.AnyEmpty(itemId) {
-			return
-		}
-
-		// 代理 Progress 接口
-		newBody := jsons.NewEmptyObj()
-		newBody.Put("ItemId", jsons.NewByVal(itemId))
-		newBody.Put("PlaySessionId", jsons.NewByVal(randoms.RandomHex(32)))
-		newBody.Put("PositionTicks", jsons.NewByVal(bodyJson.Attr("PositionTicks").Val()))
-		log.Printf(colors.ToGray("开始发送辅助 Progress 进度记录, 内容: %v"), newBody)
-		remote := config.C.Emby.Host + "/emby/Sessions/Playing/Progress"
-		header := make(http.Header)
-		header.Set("Content-Type", "application/json")
-		if kType == Query {
-			remote += fmt.Sprintf("?%s=%s", kName, apiKey)
-		} else {
-			header.Set(kName, apiKey)
-		}
-		resp, err := https.Request(http.MethodPost, remote, header, io.NopCloser(bytes.NewBuffer([]byte(newBody.String()))))
-		if err != nil {
-			log.Printf(colors.ToYellow("辅助发送 Progress 请求失败: %v"), err)
-			return
-		}
-		defer resp.Body.Close()
-		if resp.StatusCode != http.StatusNoContent {
-			log.Printf(colors.ToYellow("辅助发送 Progress 请求失败, 源服务器返回状态码: %v"), resp.StatusCode)
-			return
-		}
-		log.Println(colors.ToGreen("辅助发送 Progress 进度记录成功"))
-	}()
+	// 发送辅助请求记录播放进度
+	itemId, _ := bodyJson.Attr("ItemId").String()
+	if itemIdNum, ok := bodyJson.Attr("ItemId").Int(); ok {
+		itemId = strconv.Itoa(itemIdNum)
+	}
+	if strs.AnyEmpty(itemId) {
+		return
+	}
+	body := jsons.NewEmptyObj()
+	body.Put("ItemId", jsons.NewByVal(itemId))
+	body.Put("PlaySessionId", jsons.NewByVal(randoms.RandomHex(32)))
+	body.Put("PositionTicks", jsons.NewByVal(bodyJson.Attr("PositionTicks").Val()))
+	go sendPlayingProgress(kType, kName, apiKey, body)
 }
 
 // PlayingProgressHelper 拦截 Progress 请求, 如果进度报告为 0, 认为是无效请求
@@ -97,4 +74,54 @@ func PlayingProgressHelper(c *gin.Context) {
 		return
 	}
 	ProxyOrigin(c)
+}
+
+// PlayedItemsIntercepter 拦截剧集标记请求, 中断辅助请求
+func PlayedItemsIntercepter(c *gin.Context) {
+	ProxyOrigin(c)
+
+	// 取出 token
+	kType, kName, apiKey := getApiKey(c)
+
+	// 解析 itemId
+	itemInfo, err := resolveItemInfo(c)
+	if err != nil {
+		log.Printf(colors.ToYellow("解析 itemId 失败: %v"), err)
+		return
+	}
+
+	// 构造请求体
+	body := jsons.NewEmptyObj()
+	body.Put("ItemId", jsons.NewByVal(itemInfo.Id))
+	body.Put("PlaySessionId", jsons.NewByVal(randoms.RandomHex(32)))
+	body.Put("PositionTicks", jsons.NewByVal(0))
+	go sendPlayingProgress(kType, kName, apiKey, body)
+}
+
+// sendPlayingProgress 发送辅助播放进度请求
+func sendPlayingProgress(kType ApiKeyType, kName, apiKey string, body *jsons.Item) {
+	if body == nil {
+		return
+	}
+
+	log.Printf(colors.ToGray("开始发送辅助 Progress 进度记录, 内容: %v"), body)
+	remote := config.C.Emby.Host + "/emby/Sessions/Playing/Progress"
+	header := make(http.Header)
+	header.Set("Content-Type", "application/json")
+	if kType == Query {
+		remote += fmt.Sprintf("?%s=%s", kName, apiKey)
+	} else {
+		header.Set(kName, apiKey)
+	}
+	resp, err := https.Request(http.MethodPost, remote, header, io.NopCloser(bytes.NewBuffer([]byte(body.String()))))
+	if err != nil {
+		log.Printf(colors.ToYellow("辅助发送 Progress 请求失败: %v"), err)
+		return
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusNoContent {
+		log.Printf(colors.ToYellow("辅助发送 Progress 请求失败, 源服务器返回状态码: %v"), resp.StatusCode)
+		return
+	}
+	log.Println(colors.ToGreen("辅助发送 Progress 进度记录成功"))
 }
