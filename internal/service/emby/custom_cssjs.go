@@ -5,6 +5,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"net/url"
 	"os"
 	"path/filepath"
 	"strings"
@@ -26,6 +27,31 @@ var customCssList = []string{}
 
 // loadAllCustomCssJs 加载所有自定义脚本
 var loadAllCustomCssJs = sync.OnceFunc(func() {
+	loadRemoteContent := func(originBytes []byte) ([]byte, error) {
+		if len(originBytes) == 0 {
+			return []byte{}, nil
+		}
+
+		u, err := url.Parse(string(originBytes))
+		if err != nil {
+			// 非远程地址
+			return originBytes, nil
+		}
+
+		_, resp, err := https.RequestRedirect(http.MethodGet, u.String(), nil, nil, true)
+		if err != nil {
+			return nil, fmt.Errorf("远程加载失败: %s, err: %v", u.String(), err)
+		}
+		defer resp.Body.Close()
+
+		bytes, err := io.ReadAll(resp.Body)
+		if err != nil {
+			return nil, fmt.Errorf("远程读取失败: %s, err: %v", u.String(), err)
+		}
+
+		return bytes, nil
+	}
+
 	loadFiles := func(fp, ext, successLogPrefix string) ([]string, error) {
 		if err := os.MkdirAll(fp, os.ModePerm); err != nil {
 			return nil, fmt.Errorf("目录初始化失败: %s, err: %v", fp, err)
@@ -61,6 +87,13 @@ var loadAllCustomCssJs = sync.OnceFunc(func() {
 				if err != nil {
 					return fmt.Errorf("读取文件失败: %s, err: %v", file.Name(), err)
 				}
+
+				// 支持远程加载
+				content, err = loadRemoteContent(content)
+				if err != nil {
+					return fmt.Errorf("远程加载失败: %s, err: %v", file.Name(), err)
+				}
+
 				ch <- string(content)
 				log.Printf(colors.ToGreen("%s已加载: %s"), successLogPrefix, file.Name())
 				return nil

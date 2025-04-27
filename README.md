@@ -96,9 +96,9 @@
   >
   > 如果是有多个内置音频的，转码直链只能播放其中的默认音频
   >
-  > 视频本身的内封字幕会丢失，Alist 接口虽然也返回了转码字幕直链地址，已经适配到**转码资源**的 PlaybackInfo 中，但是只有部分客户端能够正常挂载上，具体原因不明，示例图 ↓：
+  > 视频本身的内封字幕会丢失，不过若存在转码字幕，也会适配到转码版本的 PlaybackInfo 信息中，示例图 ↓：
   >
-  > <img src="assets/2024-09-26-22-02-47.jpg" />
+  > <img src="assets/2025-04-27-20-15-06.png"/>
   >
 
 - websocket 代理
@@ -310,28 +310,32 @@ docker-compose up -d --build
 
 **使用方式：** 将自定义脚本文件以 `.js` 后缀命名放到程序根目录下的 `custom-js` 目录后重启服务自动生效
 
+**远程脚本：**将远程脚本的 http 访问地址写入以 `.js` 后缀命名的文件后（**如编辑器报错请无视**）放到程序根目录下的 `custom-js` 目录后重启服务自动生效
+
 **注意事项：** 确保多个不同的文件必须都是相同的编码格式（推荐 UTF-8）
 
 **示例脚本：**
 
-| 描述               | 获取脚本                                                     |
-| ------------------ | ------------------------------------------------------------ |
-| 生成外部播放器按钮 | [ExternalPlayers.js](https://emby-external-url.7o7o.cc/embyWebAddExternalUrl/embyLaunchPotplayer.js) |
-| 首页轮播图         | [emby-swiper.js](https://raw.githubusercontent.com/newday-life/emby-web-mod/refs/heads/main/emby-swiper/emby-swiper.js) |
-| 隐藏无图片演员     | [actorPlus.js](https://raw.githubusercontent.com/newday-life/emby-web-mod/refs/heads/main/actorPlus/actorPlus.js) |
+| 描述               | 获取脚本                                                     | 自用优化版本                                                 |
+| ------------------ | ------------------------------------------------------------ | ------------------------------------------------------------ |
+| 生成外部播放器按钮 | [ExternalPlayers.js](https://emby-external-url.7o7o.cc/embyWebAddExternalUrl/embyLaunchPotplayer.js) | ---                                                          |
+| 首页轮播图         | [emby-swiper.js](https://raw.githubusercontent.com/newday-life/emby-web-mod/refs/heads/main/emby-swiper/emby-swiper.js) | [每日清空缓存](https://github.com/AmbitiousJun/emby-css-js/raw/refs/heads/main/custom-js/emby-swiper.js) |
+| 隐藏无图片演员     | [actorPlus.js](https://raw.githubusercontent.com/newday-life/emby-web-mod/refs/heads/main/actorPlus/actorPlus.js) | ---                                                          |
 
 ## 自定义注入 web css 样式表
 
 **使用方式：** 将自定义样式表文件以 `.css` 后缀命名放到程序根目录下的 `custom-css` 目录后重启服务自动生效
 
+**远程样式表：**将远程样式表的 http 访问地址写入以 `.css` 后缀命名的文件后（**如编辑器报错请无视**）放到程序根目录下的 `custom-css` 目录后重启服务自动生效
+
 **注意事项：** 确保多个不同的文件必须都是相同的编码格式（推荐 UTF-8）
 
 **示例样式：**
 
-| 描述                 | 获取样式                                                    |
-| -------------------- | ----------------------------------------------------------- |
-| 调整音量调整控件位置 | [音量条+控件修改.css](https://t.me/Emby_smzase1/74)         |
-| 节目界面样式美化     | [节目界面.txt](https://t.me/embycustomcssjs/10?comment=159) |
+| 描述                 | 获取样式                                                    | 自用优化版本                                                 |
+| -------------------- | ----------------------------------------------------------- | ------------------------------------------------------------ |
+| 调整音量调整控件位置 | [音量条+控件修改.css](https://t.me/Emby_smzase1/74)         | ---                                                          |
+| 节目界面样式美化     | [节目界面.txt](https://t.me/embycustomcssjs/10?comment=159) | [下拉框元素对齐](https://github.com/AmbitiousJun/emby-css-js/raw/refs/heads/main/custom-css/show-display.css) |
 
 ## 开发计划
 
