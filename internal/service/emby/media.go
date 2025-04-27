@@ -242,8 +242,8 @@ func addSubtitles2MediaStreams(source, subtitleList *jsons.Item, alistPath, temp
 		subStream.Put("Language", jsons.NewByVal(lang))
 
 		subName := urls.ResolveResourceName(sub.Attr("url").Val().(string))
-		subStream.Put("DisplayTitle", jsons.NewByVal(fmt.Sprintf("%s(%s)", subName, lang)))
-		subStream.Put("Title", jsons.NewByVal(fmt.Sprintf("%s(%s)", subName, lang)))
+		subStream.Put("DisplayTitle", jsons.NewByVal(alist.SubLangDisplayName(lang)))
+		subStream.Put("Title", jsons.NewByVal(fmt.Sprintf("(%s) %s", lang, subName)))
 
 		idx := curMediaStreamsSize + index
 		subStream.Put("Index", jsons.NewByVal(idx))
