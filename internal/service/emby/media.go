@@ -224,7 +224,13 @@ func addSubtitles2MediaStreams(source, subtitleList *jsons.Item, alistPath, temp
 		return
 	}
 
-	// 2 生成 MediaStream
+	// 2 去除原始的字幕信息
+	mediaStreams = mediaStreams.Filter(func(val *jsons.Item) bool {
+		return val != nil && val.Attr("Type").Val() != "Subtitle"
+	})
+	source.Put("MediaStreams", mediaStreams)
+
+	// 3 生成 MediaStream
 	itemId, _ := source.Attr("ItemId").String()
 	curMediaStreamsSize := mediaStreams.Len()
 	fakeId := randoms.RandomHex(32)

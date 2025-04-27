@@ -157,6 +157,23 @@ func (i *Item) FindIdx(filterFunc func(val *Item) bool) int {
 	return idx
 }
 
+// Filter 过滤数组元素, 返回一个新的 item 对象
+//
+// 如果 i 不为数组, 返回空数组 item 对象
+func (i *Item) Filter(filterFunc func(val *Item) bool) *Item {
+	res := NewEmptyArr()
+	if i.jType != JsonTypeArr {
+		return res
+	}
+	i.RangeArr(func(_ int, value *Item) error {
+		if filterFunc(value) {
+			res.Append(value)
+		}
+		return nil
+	})
+	return res
+}
+
 // Map 将数组中的元素按照指定规则映射之后返回一个新数组
 func (i *Item) Map(mapFunc func(val *Item) any) []any {
 	if i.jType != JsonTypeArr {
