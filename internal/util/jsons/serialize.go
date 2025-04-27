@@ -1,8 +1,8 @@
 package jsons
 
 import (
+	"encoding/json"
 	"fmt"
-	"reflect"
 	"strings"
 	"sync"
 )
@@ -54,12 +54,9 @@ func (i *Item) String() string {
 			return "null"
 		}
 
-		t := reflect.TypeOf(i.val)
-		if t.Kind() == reflect.String {
-			str := reflect.ValueOf(i.val).String()
-			return fmt.Sprintf(`"%v"`, strings.ReplaceAll(str, `"`, `\"`))
-		}
-		return fmt.Sprintf("%v", i.val)
+		bytes, _ := json.Marshal(i.val)
+		str := string(bytes)
+		return str
 	case JsonTypeObj:
 		sb := strings.Builder{}
 		sb.WriteString("{")

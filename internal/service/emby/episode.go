@@ -38,7 +38,7 @@ func ResortEpisodes(c *gin.Context) {
 	resJson := res.Data
 	https.CloneHeader(c, respHeader)
 	defer func() {
-		c.JSON(res.Code, resJson.Struct())
+		jsons.OkResp(c, resJson)
 	}()
 
 	// 4 处理数据

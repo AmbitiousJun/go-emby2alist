@@ -210,9 +210,8 @@ func ProxyAddItemsPreviewInfo(c *gin.Context) {
 
 	// 预响应请求
 	defer func() {
-		resp.Header.Del("Content-Length")
 		https.CloneHeader(c, resp.Header)
-		c.JSON(http.StatusOK, resJson.Struct())
+		jsons.OkResp(c, resJson)
 	}()
 
 	// 获取 Items 数组
