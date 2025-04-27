@@ -380,7 +380,6 @@ func LoadCacheItems(c *gin.Context) {
 	}
 	resJson := res.Data
 	defer func() {
-		c.Writer.Header().Del("Content-Length")
 		c.JSON(res.Code, resJson.Struct())
 	}()
 
@@ -392,6 +391,9 @@ func LoadCacheItems(c *gin.Context) {
 	// 只处理特定类型的 Items 响应
 	itemType, _ := resJson.Attr("Type").String()
 	if !ValidCacheItemsTypeRegex.MatchString(itemType) {
+		if itemType == "Person" {
+			c.Writer.Header().Del("Content-Length")
+		}
 		return
 	}
 
