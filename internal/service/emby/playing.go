@@ -104,23 +104,32 @@ func sendPlayingProgress(kType ApiKeyType, kName, apiKey string, body *jsons.Ite
 		return
 	}
 
-	log.Printf(colors.ToGray("开始发送辅助 Progress 进度记录, 内容: %v"), body)
-	remote := config.C.Emby.Host + "/emby/Sessions/Playing/Progress"
-	header := make(http.Header)
-	header.Set("Content-Type", "application/json")
-	if kType == Query {
-		remote += fmt.Sprintf("?%s=%s", kName, apiKey)
-	} else {
-		header.Set(kName, apiKey)
+	inner := func(remote string) error {
+		header := make(http.Header)
+		header.Set("Content-Type", "application/json")
+		if kType == Query {
+			remote += fmt.Sprintf("?%s=%s", kName, apiKey)
+		} else {
+			header.Set(kName, apiKey)
+		}
+		resp, err := https.Request(http.MethodPost, remote, header, io.NopCloser(bytes.NewBuffer([]byte(body.String()))))
+		if err != nil {
+			return err
+		}
+		defer resp.Body.Close()
+		if resp.StatusCode != http.StatusNoContent {
+			return fmt.Errorf("源服务器返回错误状态: %v", resp.Status)
+		}
+		return nil
 	}
-	resp, err := https.Request(http.MethodPost, remote, header, io.NopCloser(bytes.NewBuffer([]byte(body.String()))))
-	if err != nil {
-		log.Printf(colors.ToYellow("辅助发送 Progress 请求失败: %v"), err)
+
+	log.Printf(colors.ToGray("开始发送辅助 Progress 进度记录, 内容: %v"), body)
+	if err := inner(config.C.Emby.Host + "/emby/Sessions/Playing/Progress"); err != nil {
+		log.Printf(colors.ToYellow("辅助发送 Progress 进度记录失败: %v"), err)
 		return
 	}
-	defer resp.Body.Close()
-	if resp.StatusCode != http.StatusNoContent {
-		log.Printf(colors.ToYellow("辅助发送 Progress 请求失败, 源服务器返回状态码: %v"), resp.StatusCode)
+	if err := inner(config.C.Emby.Host + "/emby/Sessions/Playing/Stopped"); err != nil {
+		log.Printf(colors.ToYellow("辅助发送 Progress 进度记录失败: %v"), err)
 		return
 	}
 	log.Println(colors.ToGreen("辅助发送 Progress 进度记录成功"))
