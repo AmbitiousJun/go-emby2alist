@@ -32,7 +32,8 @@ var loadAllCustomCssJs = sync.OnceFunc(func() {
 			return []byte{}, nil
 		}
 
-		u, err := url.Parse(string(originBytes))
+		str := strings.TrimSpace(string(originBytes))
+		u, err := url.Parse(str)
 		if err != nil {
 			// 非远程地址
 			return originBytes, nil
@@ -43,6 +44,9 @@ var loadAllCustomCssJs = sync.OnceFunc(func() {
 			return nil, fmt.Errorf("远程加载失败: %s, err: %v", u.String(), err)
 		}
 		defer resp.Body.Close()
+		if !https.IsSuccessCode(resp.StatusCode) {
+			return nil, fmt.Errorf("远程错误响应: %s, err: %s", u.String(), resp.Status)
+		}
 
 		bytes, err := io.ReadAll(resp.Body)
 		if err != nil {
