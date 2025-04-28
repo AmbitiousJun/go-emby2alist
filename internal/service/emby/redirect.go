@@ -76,8 +76,9 @@ func Redirect2AlistLink(c *gin.Context) {
 	// 4 如果是远程地址 (strm), 重定向处理
 	if urls.IsRemote(embyPath) {
 		finalPath := config.C.Emby.Strm.MapPath(embyPath)
+		finalPath = getFinalRedirectLink(finalPath, c.Request.Header.Clone())
 		log.Printf(colors.ToGreen("重定向 strm: %s"), finalPath)
-		c.Header(cache.HeaderKeyExpired, "-1")
+		c.Header(cache.HeaderKeyExpired, cache.Duration(time.Minute*10))
 		c.Redirect(http.StatusTemporaryRedirect, finalPath)
 		return
 	}
@@ -179,4 +180,23 @@ func checkErr(c *gin.Context, err error) bool {
 	log.Printf(colors.ToRed("代理接口失败: %v, 回源处理"), err)
 	ProxyOrigin(c)
 	return true
+}
+
+// getFinalRedirectLink 尝试对带有重定向的原始链接进行内部请求, 返回最终链接
+//
+// 请求中途出现任何失败都会返回原始链接
+func getFinalRedirectLink(originLink string, header http.Header) string {
+	finalLink, resp, err := https.RequestRedirect(http.MethodGet, originLink, header, nil, true)
+	if err != nil {
+		log.Printf(colors.ToYellow("内部重定向失败: %v"), err)
+		return originLink
+	}
+	defer resp.Body.Close()
+
+	if !https.IsSuccessCode(resp.StatusCode) {
+		log.Printf(colors.ToYellow("内部重定向失败: %s"), resp.Status)
+		return originLink
+	}
+
+	return finalLink
 }
