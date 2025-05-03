@@ -192,11 +192,5 @@ func getFinalRedirectLink(originLink string, header http.Header) string {
 		return originLink
 	}
 	defer resp.Body.Close()
-
-	if !https.IsSuccessCode(resp.StatusCode) {
-		log.Printf(colors.ToYellow("内部重定向失败: %s"), resp.Status)
-		return originLink
-	}
-
 	return finalLink
 }
