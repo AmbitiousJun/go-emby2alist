@@ -9,6 +9,7 @@ import (
 	"log"
 	"net"
 	"net/http"
+	"path"
 	"strconv"
 	"strings"
 	"time"
@@ -103,13 +104,21 @@ func RequestRedirect(method, url string, header http.Header, body io.ReadCloser,
 	}
 
 	// 3 对重定向响应的处理
-	if autoRedirect && IsRedirectCode(resp.StatusCode) {
-		loc := resp.Header.Get("Location")
-		if strings.HasPrefix(loc, "/") {
-			// 需要拼接上当前请求的前缀后再进行重定向
-			loc = fmt.Sprintf("%s://%s%s", req.URL.Scheme, req.URL.Host, loc)
-		}
+	if !autoRedirect || !IsRedirectCode(resp.StatusCode) {
+		return url, resp, err
+	}
+	loc := resp.Header.Get("Location")
+
+	if strings.HasPrefix(loc, "http") {
 		return RequestRedirect(method, loc, header, body, autoRedirect)
 	}
-	return url, resp, err
+
+	if strings.HasPrefix(loc, "/") {
+		loc = fmt.Sprintf("%s://%s%s", req.URL.Scheme, req.URL.Host, loc)
+		return RequestRedirect(method, loc, header, body, autoRedirect)
+	}
+
+	dirPath := path.Dir(req.URL.Path)
+	loc = fmt.Sprintf("%s://%s%s/%s", req.URL.Scheme, req.URL.Host, dirPath, loc)
+	return RequestRedirect(method, loc, header, body, autoRedirect)
 }
