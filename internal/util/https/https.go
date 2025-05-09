@@ -108,17 +108,18 @@ func RequestRedirect(method, url string, header http.Header, body io.ReadCloser,
 		return url, resp, err
 	}
 	loc := resp.Header.Get("Location")
+	newBody := io.NopCloser(bytes.NewBuffer(bodyBytes))
 
 	if strings.HasPrefix(loc, "http") {
-		return RequestRedirect(method, loc, header, body, autoRedirect)
+		return RequestRedirect(method, loc, header, newBody, autoRedirect)
 	}
 
 	if strings.HasPrefix(loc, "/") {
 		loc = fmt.Sprintf("%s://%s%s", req.URL.Scheme, req.URL.Host, loc)
-		return RequestRedirect(method, loc, header, body, autoRedirect)
+		return RequestRedirect(method, loc, header, newBody, autoRedirect)
 	}
 
 	dirPath := path.Dir(req.URL.Path)
 	loc = fmt.Sprintf("%s://%s%s/%s", req.URL.Scheme, req.URL.Host, dirPath, loc)
-	return RequestRedirect(method, loc, header, body, autoRedirect)
+	return RequestRedirect(method, loc, header, newBody, autoRedirect)
 }
