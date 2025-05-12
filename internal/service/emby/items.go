@@ -155,17 +155,13 @@ func RandomItemsWithLimit(c *gin.Context) {
 		checkErr(c, fmt.Errorf("错误的响应码: %v", resp.StatusCode))
 		return
 	}
-	bodyBytes, err := io.ReadAll(resp.Body)
-	if checkErr(c, err) {
-		return
-	}
 
+	c.Status(resp.StatusCode)
 	https.CloneHeader(c, resp.Header)
 	c.Header(cache.HeaderKeyExpired, cache.Duration(time.Hour))
 	c.Header(cache.HeaderKeySpace, ItemsCacheSpace)
 	c.Header(cache.HeaderKeySpaceKey, calcRandomItemsCacheKey(c))
-	c.Status(resp.StatusCode)
-	c.Writer.Write(bodyBytes)
+	io.Copy(c.Writer, resp.Body)
 }
 
 // calcRandomItemsCacheKey 计算 random items 在缓存空间中的 key 值
