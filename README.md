@@ -317,11 +317,12 @@ docker-compose up -d --build
 
 **示例脚本：**
 
-| 描述               | 获取脚本                                                     | 自用优化版本                                                 |
-| ------------------ | ------------------------------------------------------------ | ------------------------------------------------------------ |
-| 生成外部播放器按钮 | [ExternalPlayers.js](https://emby-external-url.7o7o.cc/embyWebAddExternalUrl/embyLaunchPotplayer.js) | ---                                                          |
-| 首页轮播图         | [emby-swiper.js](https://raw.githubusercontent.com/newday-life/emby-web-mod/refs/heads/main/emby-swiper/emby-swiper.js) | [媒体库合并 + 每日清空缓存](https://github.com/AmbitiousJun/emby-css-js/raw/refs/heads/main/custom-js/emby-swiper.js) |
-| 隐藏无图片演员     | [actorPlus.js](https://raw.githubusercontent.com/newday-life/emby-web-mod/refs/heads/main/actorPlus/actorPlus.js) | ---                                                          |
+| 描述                  | 获取脚本                                                     | 自用优化版本                                                 |
+| --------------------- | ------------------------------------------------------------ | ------------------------------------------------------------ |
+| 生成外部播放器按钮    | [ExternalPlayers.js](https://emby-external-url.7o7o.cc/embyWebAddExternalUrl/embyLaunchPotplayer.js) | ---                                                          |
+| 首页轮播图            | [emby-swiper.js](https://raw.githubusercontent.com/newday-life/emby-web-mod/refs/heads/main/emby-swiper/emby-swiper.js) | [媒体库合并 + 每日清空缓存](https://github.com/AmbitiousJun/emby-css-js/raw/refs/heads/main/custom-js/emby-swiper.js) |
+| 隐藏无图片演员        | [actorPlus.js](https://raw.githubusercontent.com/newday-life/emby-web-mod/refs/heads/main/actorPlus/actorPlus.js) | ---                                                          |
+| 键盘 w/s 控制播放音量 | [audio-keyboard.js](https://github.com/AmbitiousJun/emby-css-js/blob/main/custom-js/audio-keyboard.js) | ---                                                          |
 
 ## 自定义注入 web css 样式表
 
