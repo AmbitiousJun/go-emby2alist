@@ -8,6 +8,7 @@ services:
       - TZ=Asia/Shanghai
       - GIN_MODE=release
     container_name: go-emby2alist
+    restart: always
     volumes:
       - ./config.yml:/app/config.yml
       - ./ssl:/app/ssl
