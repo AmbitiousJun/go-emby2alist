@@ -131,14 +131,9 @@ func Redirect2AlistLink(c *gin.Context) {
 			return false
 		}
 		defer resp.Body.Close()
-		bodyBytes, err := io.ReadAll(resp.Body)
-		if checkErr(c, err) {
-			return true
-		}
 		c.Status(resp.StatusCode)
 		https.CloneHeader(c, resp.Header)
-		c.Writer.Write(bodyBytes)
-		c.Writer.Flush()
+		io.Copy(c.Writer, resp.Body)
 		return true
 	}
 
