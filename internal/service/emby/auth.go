@@ -95,7 +95,7 @@ func ApiKeyChecker() gin.HandlerFunc {
 			header = make(http.Header)
 			header.Set(kName, apiKey)
 		}
-		_, resp, err := https.RequestRedirect(http.MethodGet, u, header, nil, true)
+		resp, err := https.Request(http.MethodGet, u, header, nil)
 		if err != nil {
 			log.Printf(colors.ToRed("鉴权失败: %v"), err)
 			c.Abort()

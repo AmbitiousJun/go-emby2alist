@@ -452,7 +452,7 @@ func fetchFullPlaybackInfo(c *gin.Context, itemInfo ItemInfo) (*jsons.Item, erro
 	if itemInfo.ApiKeyType == Header {
 		header.Set(itemInfo.ApiKeyName, itemInfo.ApiKey)
 	}
-	_, resp, err := https.RequestRedirect(http.MethodPost, u.String(), header, reqBody, true)
+	resp, err := https.Request(http.MethodPost, u.String(), header, reqBody)
 	if err != nil {
 		return nil, fmt.Errorf("获取全量 PlaybackInfo 失败: %v", err)
 	}

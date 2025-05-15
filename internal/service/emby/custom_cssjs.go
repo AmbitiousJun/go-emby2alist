@@ -39,7 +39,7 @@ var loadAllCustomCssJs = sync.OnceFunc(func() {
 			return originBytes, nil
 		}
 
-		_, resp, err := https.RequestRedirect(http.MethodGet, u.String(), nil, nil, true)
+		resp, err := https.Request(http.MethodGet, u.String(), nil, nil)
 		if err != nil {
 			return nil, fmt.Errorf("远程加载失败: %s, err: %v", u.String(), err)
 		}
@@ -134,7 +134,7 @@ var loadAllCustomCssJs = sync.OnceFunc(func() {
 // ProxyIndexHtml 代理 index.html 注入自定义脚本样式文件
 func ProxyIndexHtml(c *gin.Context) {
 	embyHost := config.C.Emby.Host
-	_, resp, err := https.RequestRedirect(c.Request.Method, embyHost+c.Request.URL.String(), c.Request.Header, c.Request.Body, true)
+	resp, err := https.Request(c.Request.Method, embyHost+c.Request.URL.String(), c.Request.Header, c.Request.Body)
 	if checkErr(c, err) {
 		return
 	}

@@ -74,7 +74,7 @@ func MapBody(body map[string]any) io.ReadCloser {
 
 // Request 发起 http 请求获取响应
 func Request(method, url string, header http.Header, body io.ReadCloser) (*http.Response, error) {
-	_, resp, err := RequestRedirect(method, url, header, body, false)
+	_, resp, err := RequestRedirect(method, url, header, body, true)
 	return resp, err
 }
 

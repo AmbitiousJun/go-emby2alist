@@ -125,7 +125,7 @@ func Redirect2AlistLink(c *gin.Context) {
 		q.Set(QueryApiKeyName, itemInfo.ApiKey)
 		q.Set("alist_path", path)
 		u.RawQuery = q.Encode()
-		_, resp, err := https.RequestRedirect(http.MethodGet, u.String(), nil, nil, true)
+		resp, err := https.Request(http.MethodGet, u.String(), nil, nil)
 		if err != nil {
 			allErrors.WriteString(fmt.Sprintf("代理转码 m3u 失败: %v;", err))
 			return false

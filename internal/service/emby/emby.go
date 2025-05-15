@@ -121,7 +121,7 @@ func TestProxyUri(c *gin.Context) bool {
 	infos.Body = string(bodyBytes)
 
 	origin := config.C.Emby.Host
-	_, resp, err := https.RequestRedirect(infos.Method, origin+infos.Uri, c.Request.Header, io.NopCloser(bytes.NewBuffer(bodyBytes)), true)
+	resp, err := https.Request(infos.Method, origin+infos.Uri, c.Request.Header, io.NopCloser(bytes.NewBuffer(bodyBytes)))
 	if err != nil {
 		log.Printf(colors.ToRed("测试 uri 执行异常: %v"), err)
 		return false

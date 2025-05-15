@@ -45,7 +45,7 @@ func RawFetch(uri, method string, header http.Header, body io.ReadCloser) (model
 		header.Set("Content-Type", "application/json;charset=utf-8")
 	}
 
-	_, resp, err := https.RequestRedirect(method, u, header, body, true)
+	resp, err := https.Request(method, u, header, body)
 	if err != nil {
 		return model.HttpRes[*jsons.Item]{Code: http.StatusBadRequest, Msg: "请求发送失败: " + err.Error()}, nil
 	}
