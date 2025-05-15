@@ -2,6 +2,7 @@ package web
 
 import (
 	"log"
+	"net/http"
 	"regexp"
 
 	"github.com/AmbitiousJun/go-emby2alist/internal/constant"
@@ -13,6 +14,11 @@ const MatchRouteKey = "matchRoute"
 
 // globalDftHandler 全局默认兜底的请求处理器
 func globalDftHandler(c *gin.Context) {
+	if c.Request.Method == http.MethodHead {
+		c.String(http.StatusOK, "")
+		return
+	}
+
 	// 依次匹配路由规则, 找到其他的处理器
 	for _, rule := range rules {
 		reg := rule[0].(*regexp.Regexp)
