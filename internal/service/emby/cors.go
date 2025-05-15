@@ -15,7 +15,7 @@ func ChangeBaseVideoModuleCorsDefined(c *gin.Context) {
 	// 1 代理请求
 	embyHost := config.C.Emby.Host
 	c.Request.Header.Del("Accept-Encoding")
-	resp, err := https.Request(c.Request.Method, embyHost+c.Request.URL.String(), c.Request.Header, c.Request.Body)
+	_, resp, err := https.RequestRedirect(c.Request.Method, embyHost+c.Request.URL.String(), c.Request.Header, c.Request.Body, true)
 	if checkErr(c, err) {
 		return
 	}

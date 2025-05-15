@@ -139,7 +139,7 @@ func Fetch(uri, method string, header http.Header, body map[string]any) model.Ht
 	header.Set("Content-Type", "application/json;charset=utf-8")
 	header.Set("Authorization", token)
 
-	resp, err := https.Request(method, host+uri, header, https.MapBody(body))
+	_, resp, err := https.RequestRedirect(method, host+uri, header, https.MapBody(body), true)
 	if err != nil {
 		return model.HttpRes[*jsons.Item]{Code: http.StatusBadRequest, Msg: "请求发送失败: " + err.Error()}
 	}
