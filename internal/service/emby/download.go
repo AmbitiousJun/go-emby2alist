@@ -140,7 +140,7 @@ func DownloadStrategyChecker() gin.HandlerFunc {
 
 		if strategy == config.DlStrategyOrigin {
 			remote := config.C.Emby.Host + c.Request.URL.String()
-			resp, err := https.Request(c.Request.Method, remote, c.Request.Header, c.Request.Body)
+			_, resp, err := https.RequestRedirect(c.Request.Method, remote, c.Request.Header, c.Request.Body, true)
 			if checkErr(c, err) {
 				return
 			}

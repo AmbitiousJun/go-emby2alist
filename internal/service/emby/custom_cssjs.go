@@ -134,7 +134,7 @@ var loadAllCustomCssJs = sync.OnceFunc(func() {
 // ProxyIndexHtml 代理 index.html 注入自定义脚本样式文件
 func ProxyIndexHtml(c *gin.Context) {
 	embyHost := config.C.Emby.Host
-	resp, err := https.Request(c.Request.Method, embyHost+c.Request.URL.String(), c.Request.Header, c.Request.Body)
+	_, resp, err := https.RequestRedirect(c.Request.Method, embyHost+c.Request.URL.String(), c.Request.Header, c.Request.Body, true)
 	if checkErr(c, err) {
 		return
 	}
