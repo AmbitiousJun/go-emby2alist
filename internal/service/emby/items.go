@@ -1,6 +1,7 @@
 package emby
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -61,7 +62,6 @@ func ResortRandomItems(c *gin.Context) {
 		if checkErr(c, err) {
 			return
 		}
-		defer resp.Body.Close()
 
 		if resp.StatusCode != http.StatusOK {
 			checkErr(c, fmt.Errorf("错误的响应码: %d", resp.StatusCode))
@@ -70,6 +70,7 @@ func ResortRandomItems(c *gin.Context) {
 
 		// 转换 json 响应
 		bodyBytes, err = io.ReadAll(resp.Body)
+		resp.Body.Close()
 		if checkErr(c, err) {
 			return
 		}
@@ -87,7 +88,7 @@ func ResortRandomItems(c *gin.Context) {
 		c.Status(code)
 		header.Del("Content-Length")
 		https.CloneHeader(c, header)
-		c.Writer.Write(respBody)
+		io.Copy(c.Writer, bytes.NewBuffer(respBody))
 	}
 
 	// 对 item 内部结构不关心, 故使用原始的 json 序列化提高处理速度
@@ -107,30 +108,11 @@ func ResortRandomItems(c *gin.Context) {
 		return
 	}
 
-	// idxChan 使用异步的方式生成随机索引塞到通道中
-	idxChan := make(chan int, itemLen)
-	go func() {
-		idxArr := make([]int, itemLen)
-		for idx := range idxArr {
-			idxArr[idx] = idx
-		}
-		tot := itemLen
-		for tot > 0 {
-			randomIdx := rand.Intn(tot)
-			idxChan <- idxArr[randomIdx]
-			// 将当前元素与最后一个元素交换, 总个数 -1
-			idxArr[tot-1], idxArr[randomIdx] = idxArr[randomIdx], idxArr[tot-1]
-			tot--
-		}
-		close(idxChan)
-	}()
+	rand.Shuffle(itemLen, func(i, j int) {
+		resItems[i], resItems[j] = resItems[j], resItems[i]
+	})
 
-	newItems := make([]json.RawMessage, 0)
-	for newIdx := range idxChan {
-		newItems = append(newItems, resItems[newIdx])
-	}
-
-	newItemsBytes, _ := json.Marshal(newItems)
+	newItemsBytes, _ := json.Marshal(resItems)
 	resMain["Items"] = newItemsBytes
 	newBodyBytes, _ := json.Marshal(resMain)
 	writeRespErr(nil, newBodyBytes)
@@ -158,7 +140,7 @@ func RandomItemsWithLimit(c *gin.Context) {
 
 	c.Status(resp.StatusCode)
 	https.CloneHeader(c, resp.Header)
-	c.Header(cache.HeaderKeyExpired, cache.Duration(time.Hour))
+	c.Header(cache.HeaderKeyExpired, cache.Duration(time.Hour*3))
 	c.Header(cache.HeaderKeySpace, ItemsCacheSpace)
 	c.Header(cache.HeaderKeySpaceKey, calcRandomItemsCacheKey(c))
 	io.Copy(c.Writer, resp.Body)
