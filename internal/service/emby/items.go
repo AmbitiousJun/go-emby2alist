@@ -88,6 +88,7 @@ func ResortRandomItems(c *gin.Context) {
 		c.Status(code)
 		header.Del("Content-Length")
 		https.CloneHeader(c, header)
+		c.Header("Content-Length", strconv.Itoa(len(respBody)))
 		io.Copy(c.Writer, bytes.NewBuffer(respBody))
 	}
 
