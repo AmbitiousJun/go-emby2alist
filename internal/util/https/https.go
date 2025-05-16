@@ -15,6 +15,12 @@ import (
 	"time"
 )
 
+const (
+
+	// MaxRedirectDepth 重定向的最大深度
+	MaxRedirectDepth = 10
+)
+
 var client *http.Client
 
 // RedirectCodes 有重定向含义的 http 响应码
@@ -83,43 +89,52 @@ func Request(method, url string, header http.Header, body io.ReadCloser) (*http.
 // 如果一个请求有多次重定向并且进行了 autoRedirect,
 // 则最后一次重定向的 url 会作为第一个参数返回
 func RequestRedirect(method, url string, header http.Header, body io.ReadCloser, autoRedirect bool) (string, *http.Response, error) {
-	// 1 转换请求
-	var bodyBytes []byte
-	if body != nil {
-		var err error
-		if bodyBytes, err = io.ReadAll(body); err != nil {
-			return "", nil, fmt.Errorf("读取请求体失败: %v", err)
+	var inner func(method, url string, header http.Header, body io.ReadCloser, autoRedirect bool, depth int) (string, *http.Response, error)
+	inner = func(method, url string, header http.Header, body io.ReadCloser, autoRedirect bool, depth int) (string, *http.Response, error) {
+		if depth >= MaxRedirectDepth {
+			return url, nil, fmt.Errorf("重定向次数过多: %s", url)
 		}
-	}
-	req, err := http.NewRequest(method, url, bytes.NewBuffer(bodyBytes))
-	if err != nil {
-		return "", nil, fmt.Errorf("创建请求失败: %v", err)
-	}
-	req.Header = header
 
-	// 2 发出请求
-	resp, err := client.Do(req)
-	if err != nil {
-		return url, resp, err
+		// 1 转换请求
+		var bodyBytes []byte
+		if body != nil {
+			var err error
+			if bodyBytes, err = io.ReadAll(body); err != nil {
+				return "", nil, fmt.Errorf("读取请求体失败: %v", err)
+			}
+		}
+		req, err := http.NewRequest(method, url, bytes.NewBuffer(bodyBytes))
+		if err != nil {
+			return "", nil, fmt.Errorf("创建请求失败: %v", err)
+		}
+		req.Header = header
+
+		// 2 发出请求
+		resp, err := client.Do(req)
+		if err != nil {
+			return url, resp, err
+		}
+
+		// 3 对重定向响应的处理
+		if !autoRedirect || !IsRedirectCode(resp.StatusCode) {
+			return url, resp, err
+		}
+		loc := resp.Header.Get("Location")
+		newBody := io.NopCloser(bytes.NewBuffer(bodyBytes))
+
+		if strings.HasPrefix(loc, "http") {
+			return inner(method, loc, header, newBody, autoRedirect, depth+1)
+		}
+
+		if strings.HasPrefix(loc, "/") {
+			loc = fmt.Sprintf("%s://%s%s", req.URL.Scheme, req.URL.Host, loc)
+			return inner(method, loc, header, newBody, autoRedirect, depth+1)
+		}
+
+		dirPath := path.Dir(req.URL.Path)
+		loc = fmt.Sprintf("%s://%s%s/%s", req.URL.Scheme, req.URL.Host, dirPath, loc)
+		return inner(method, loc, header, newBody, autoRedirect, depth+1)
 	}
 
-	// 3 对重定向响应的处理
-	if !autoRedirect || !IsRedirectCode(resp.StatusCode) {
-		return url, resp, err
-	}
-	loc := resp.Header.Get("Location")
-	newBody := io.NopCloser(bytes.NewBuffer(bodyBytes))
-
-	if strings.HasPrefix(loc, "http") {
-		return RequestRedirect(method, loc, header, newBody, autoRedirect)
-	}
-
-	if strings.HasPrefix(loc, "/") {
-		loc = fmt.Sprintf("%s://%s%s", req.URL.Scheme, req.URL.Host, loc)
-		return RequestRedirect(method, loc, header, newBody, autoRedirect)
-	}
-
-	dirPath := path.Dir(req.URL.Path)
-	loc = fmt.Sprintf("%s://%s%s/%s", req.URL.Scheme, req.URL.Host, dirPath, loc)
-	return RequestRedirect(method, loc, header, newBody, autoRedirect)
+	return inner(method, url, header, body, autoRedirect, 0)
 }
