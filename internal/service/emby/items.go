@@ -1,7 +1,6 @@
 package emby
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -88,8 +87,8 @@ func ResortRandomItems(c *gin.Context) {
 		c.Status(code)
 		header.Del("Content-Length")
 		https.CloneHeader(c, header)
-		c.Header("Content-Length", strconv.Itoa(len(respBody)))
-		io.Copy(c.Writer, bytes.NewBuffer(respBody))
+		c.Writer.Write(respBody)
+		c.Writer.Flush()
 	}
 
 	// 对 item 内部结构不关心, 故使用原始的 json 序列化提高处理速度
