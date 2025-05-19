@@ -53,7 +53,7 @@ func getEmbyFileLocalPath(itemInfo ItemInfo) (string, error) {
 	var path string
 	var defaultPath string
 
-	reqId, _ := url.QueryUnescape(itemInfo.MsInfo.RawId)
+	reqId := itemInfo.MsInfo.RawId
 	// 获取指定 MediaSourceId 的 Path
 	mediaSources.RangeArr(func(_ int, value *jsons.Item) error {
 		if strs.AnyEmpty(defaultPath) {
@@ -65,7 +65,7 @@ func getEmbyFileLocalPath(itemInfo ItemInfo) (string, error) {
 			return jsons.ErrBreakRange
 		}
 
-		curId, _ := url.QueryUnescape(value.Attr("Id").Val().(string))
+		curId := value.Attr("Id").Val().(string)
 		if curId == reqId {
 			path, _ = value.Attr("Path").String()
 			return jsons.ErrBreakRange
@@ -169,14 +169,14 @@ func findVideoPreviewInfos(source *jsons.Item, originName, clientApiKey string, 
 				source.Attr("Id").Val(), MediaSourceIdSegment,
 				templateId, MediaSourceIdSegment,
 				format, MediaSourceIdSegment,
-				url.QueryEscape(alistPathRes.Path),
+				alist.PathEncode(alistPathRes.Path),
 			)
 			copySource.Attr("Id").Set(newId)
 
 			// 设置转码代理播放链接
 			tu, _ := url.Parse(strings.ReplaceAll(MasterM3U8UrlTemplate, "${itemId}", itemId))
 			q := tu.Query()
-			q.Set("alist_path", alistPathRes.Path)
+			q.Set("alist_path", alist.PathEncode(alistPathRes.Path))
 			q.Set("template_id", templateId)
 			q.Set(QueryApiKeyName, clientApiKey)
 			tu.RawQuery = q.Encode()
@@ -250,7 +250,7 @@ func addSubtitles2MediaStreams(source, subtitleList *jsons.Item, alistPath, temp
 
 		u, _ := url.Parse(fmt.Sprintf("/Videos/%s/%s/Subtitles/%d/0/Stream.vtt", itemId, fakeId, idx))
 		q := u.Query()
-		q.Set("alist_path", alistPath)
+		q.Set("alist_path", alist.PathEncode(alistPath))
 		q.Set("template_id", templateId)
 		q.Set("sub_name", subName)
 		q.Set(QueryApiKeyName, clientApiKey)

@@ -224,10 +224,7 @@ func useCacheSpacePlaybackInfo(c *gin.Context, itemInfo ItemInfo) bool {
 	if c == nil {
 		return false
 	}
-	reqId, err := url.QueryUnescape(itemInfo.MsInfo.RawId)
-	if err != nil {
-		return false
-	}
+	reqId := itemInfo.MsInfo.RawId
 
 	if !config.C.Cache.Enable {
 		// 未开启缓存功能
@@ -310,7 +307,7 @@ func useCacheSpacePlaybackInfo(c *gin.Context, itemInfo ItemInfo) bool {
 		}
 		newMediaSources := jsons.NewEmptyArr()
 		mediaSources.RangeArr(func(index int, value *jsons.Item) error {
-			cacheId, err := url.QueryUnescape(value.Attr("Id").Val().(string))
+			cacheId := value.Attr("Id").Val().(string)
 			if err == nil && cacheId == reqId {
 				newMediaSources.Append(value)
 				updateCache(spaceCache, jsonBody, index)
@@ -355,7 +352,7 @@ func useCacheSpacePlaybackInfo(c *gin.Context, itemInfo ItemInfo) bool {
 	}
 
 	// 如果是单个查询, 则手动请求一次全量
-	if _, err = fetchFullPlaybackInfo(c, itemInfo); err != nil {
+	if _, err := fetchFullPlaybackInfo(c, itemInfo); err != nil {
 		log.Printf(colors.ToRed("更新缓存空间 PlaybackInfo 信息异常: %v"), err)
 		c.String(http.StatusInternalServerError, "查无缓存, 请稍后尝试重新播放")
 		return true

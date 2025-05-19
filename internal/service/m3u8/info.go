@@ -123,7 +123,7 @@ func (i *Info) MasterFunc(cntMapper func() string, clientApiKey string) string {
 	for _, subInfo := range i.Subtitles {
 		u, _ := url.Parse("proxy_subtitle")
 		q := u.Query()
-		q.Set("alist_path", i.AlistPath)
+		q.Set("alist_path", alist.PathEncode(i.AlistPath))
 		q.Set("template_id", i.TemplateId)
 		q.Set("sub_name", urls.ResolveResourceName(subInfo.Url))
 		q.Set(emby.QueryApiKeyName, clientApiKey)
@@ -180,7 +180,7 @@ func (i *Info) ProxyContent(main bool, routePrefix, clientApiKey string) string 
 		return i.MasterFunc(func() string {
 			u, _ := url.Parse(baseRoute.String())
 			q := u.Query()
-			q.Set("alist_path", i.AlistPath)
+			q.Set("alist_path", alist.PathEncode(i.AlistPath))
 			q.Set("template_id", i.TemplateId)
 			q.Set(emby.QueryApiKeyName, clientApiKey)
 			q.Set("type", "main")
@@ -194,7 +194,7 @@ func (i *Info) ProxyContent(main bool, routePrefix, clientApiKey string) string 
 		u, _ := url.Parse(baseRoute.String())
 		q := u.Query()
 		q.Set("idx", strconv.Itoa(idx))
-		q.Set("alist_path", i.AlistPath)
+		q.Set("alist_path", alist.PathEncode(i.AlistPath))
 		q.Set("template_id", i.TemplateId)
 		q.Set(emby.QueryApiKeyName, clientApiKey)
 		u.RawQuery = q.Encode()

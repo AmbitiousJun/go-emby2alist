@@ -2,14 +2,12 @@ package m3u8
 
 import (
 	"errors"
-	"fmt"
 	"io"
 	"log"
 	"net/http"
-	"net/url"
 	"strconv"
-	"strings"
 
+	"github.com/AmbitiousJun/go-emby2alist/internal/service/alist"
 	"github.com/AmbitiousJun/go-emby2alist/internal/util/colors"
 	"github.com/AmbitiousJun/go-emby2alist/internal/util/https"
 	"github.com/AmbitiousJun/go-emby2alist/internal/util/strs"
@@ -28,11 +26,7 @@ func baseCheck(c *gin.Context) (ProxyParams, error) {
 		return ProxyParams{}, err
 	}
 
-	alistPath, err := url.QueryUnescape(strings.TrimSpace(params.AlistPath))
-	if err != nil {
-		return ProxyParams{}, fmt.Errorf("alistPath 转换失败: %v", err)
-	}
-	params.AlistPath = alistPath
+	params.AlistPath = alist.PathDecode(params.AlistPath)
 
 	if params.AlistPath == "" || params.TemplateId == "" || params.ApiKey == "" {
 		return ProxyParams{}, errors.New("参数不足")

@@ -123,7 +123,7 @@ func Redirect2AlistLink(c *gin.Context) {
 		q := u.Query()
 		q.Set("template_id", itemInfo.MsInfo.TemplateId)
 		q.Set(QueryApiKeyName, itemInfo.ApiKey)
-		q.Set("alist_path", path)
+		q.Set("alist_path", alist.PathEncode(path))
 		u.RawQuery = q.Encode()
 		resp, err := https.Request(http.MethodGet, u.String(), nil, nil)
 		if err != nil {
