@@ -76,28 +76,6 @@ func PlayingProgressHelper(c *gin.Context) {
 	ProxyOrigin(c)
 }
 
-// PlayedItemsIntercepter 拦截剧集标记请求, 中断辅助请求
-func PlayedItemsIntercepter(c *gin.Context) {
-	ProxyOrigin(c)
-
-	// 取出 token
-	kType, kName, apiKey := getApiKey(c)
-
-	// 解析 itemId
-	itemInfo, err := resolveItemInfo(c)
-	if err != nil {
-		log.Printf(colors.ToYellow("解析 itemId 失败: %v"), err)
-		return
-	}
-
-	// 构造请求体
-	body := jsons.NewEmptyObj()
-	body.Put("ItemId", jsons.NewByVal(itemInfo.Id))
-	body.Put("PlaySessionId", jsons.NewByVal(randoms.RandomHex(32)))
-	body.Put("PositionTicks", jsons.NewByVal(0))
-	go sendPlayingProgress(kType, kName, apiKey, body)
-}
-
 // sendPlayingProgress 发送辅助播放进度请求
 func sendPlayingProgress(kType ApiKeyType, kName, apiKey string, body *jsons.Item) {
 	if body == nil {
