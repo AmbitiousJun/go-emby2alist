@@ -14,7 +14,7 @@
 </div>
 
 <div align="center">
-  使用 Go 语言编写的网盘直链反向代理服务，为 Emby + Alist 组合提供更好的使用体验。
+  Go 语言编写的 Emby + Alist 网盘直链反向代理服务，深度适配阿里云盘转码播放，配置简单，DockerCompose 一键部署
 </div>
 
 ## 小白必看
