@@ -319,6 +319,8 @@ func resolveItemInfo(c *gin.Context) (ItemInfo, error) {
 		q.Set(itemInfo.ApiKeyName, itemInfo.ApiKey)
 	}
 	q.Set("reqformat", "json")
+	q.Set("IsPlayback", "false")
+	q.Set("AutoOpenLiveStream", "false")
 	if !msInfo.Empty {
 		q.Set("MediaSourceId", msInfo.OriginId)
 	}
