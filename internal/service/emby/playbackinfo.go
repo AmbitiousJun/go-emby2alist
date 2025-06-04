@@ -2,7 +2,6 @@ package emby
 
 import (
 	"bytes"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -48,8 +47,7 @@ var (
 func TransferPlaybackInfo(c *gin.Context) {
 	// 1 解析资源信息
 	itemInfo, err := resolveItemInfo(c)
-	itemInfoBytes, _ := json.Marshal(itemInfo)
-	log.Printf(colors.ToBlue("ItemInfo 解析结果: %s"), string(itemInfoBytes))
+	log.Printf(colors.ToBlue("ItemInfo 解析结果: %s"), itemInfo)
 	if checkErr(c, err) {
 		return
 	}
@@ -402,7 +400,7 @@ func LoadCacheItems(c *gin.Context) {
 	if err != nil {
 		return
 	}
-	log.Printf(colors.ToBlue("itemInfo 解析结果: %s"), jsons.NewByVal(itemInfo))
+	log.Printf(colors.ToBlue("itemInfo 解析结果: %s"), itemInfo)
 
 	// coverMediaSources 解析 PlaybackInfo 中的 MediaSources 属性
 	// 并覆盖到当前请求的响应中
