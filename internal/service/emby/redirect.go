@@ -15,7 +15,6 @@ import (
 	"github.com/AmbitiousJun/go-emby2alist/internal/service/path"
 	"github.com/AmbitiousJun/go-emby2alist/internal/util/colors"
 	"github.com/AmbitiousJun/go-emby2alist/internal/util/https"
-	"github.com/AmbitiousJun/go-emby2alist/internal/util/jsons"
 	"github.com/AmbitiousJun/go-emby2alist/internal/util/strs"
 	"github.com/AmbitiousJun/go-emby2alist/internal/util/urls"
 	"github.com/AmbitiousJun/go-emby2alist/internal/web/cache"
@@ -50,7 +49,7 @@ func Redirect2AlistLink(c *gin.Context) {
 	if checkErr(c, err) {
 		return
 	}
-	log.Printf(colors.ToBlue("解析到的 itemInfo: %v"), jsons.NewByVal(itemInfo))
+	log.Printf(colors.ToBlue("解析到的 itemInfo: %v"), itemInfo)
 
 	// 2 如果请求的是转码资源, 重定向到本地的 m3u8 代理服务
 	msInfo := itemInfo.MsInfo

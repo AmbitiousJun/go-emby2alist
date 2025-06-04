@@ -25,7 +25,7 @@ func HandleSyncDownload(c *gin.Context) {
 	if checkErr(c, err) {
 		return
 	}
-	log.Printf(colors.ToBlue("解析出来的 itemInfo 信息: %v"), jsons.NewByVal(itemInfo))
+	log.Printf(colors.ToBlue("解析出来的 itemInfo 信息: %v"), itemInfo)
 	if itemInfo.Id == "" {
 		checkErr(c, errors.New("JobItems id 为空"))
 		return
