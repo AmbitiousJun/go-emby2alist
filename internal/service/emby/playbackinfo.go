@@ -2,6 +2,7 @@ package emby
 
 import (
 	"bytes"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -47,7 +48,8 @@ var (
 func TransferPlaybackInfo(c *gin.Context) {
 	// 1 解析资源信息
 	itemInfo, err := resolveItemInfo(c)
-	log.Printf(colors.ToBlue("ItemInfo 解析结果: %s"), jsons.NewByVal(itemInfo))
+	itemInfoBytes, _ := json.Marshal(itemInfo)
+	log.Printf(colors.ToBlue("ItemInfo 解析结果: %s"), string(itemInfoBytes))
 	if checkErr(c, err) {
 		return
 	}
@@ -80,6 +82,7 @@ func TransferPlaybackInfo(c *gin.Context) {
 	mediaSources, ok := resJson.Attr("MediaSources").Done()
 	if !ok || mediaSources.Type() != jsons.JsonTypeArr {
 		checkErr(c, errors.New("获取不到 MediaSources 属性"))
+		return
 	}
 
 	if mediaSources.Empty() {
