@@ -177,3 +177,8 @@ func RedirectOrigin(c *gin.Context) {
 	origin := config.C.Emby.Host
 	c.Redirect(http.StatusPermanentRedirect, origin+c.Request.URL.String())
 }
+
+// RedirectIndexHtml 重定向到 web 首页
+func RedirectIndexHtml(c *gin.Context) {
+	c.Redirect(http.StatusTemporaryRedirect, "/web/index.html")
+}
