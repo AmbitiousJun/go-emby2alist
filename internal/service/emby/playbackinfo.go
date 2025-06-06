@@ -17,6 +17,7 @@ import (
 	"github.com/AmbitiousJun/go-emby2alist/internal/util/colors"
 	"github.com/AmbitiousJun/go-emby2alist/internal/util/https"
 	"github.com/AmbitiousJun/go-emby2alist/internal/util/jsons"
+	"github.com/AmbitiousJun/go-emby2alist/internal/util/urls"
 	"github.com/AmbitiousJun/go-emby2alist/internal/web/cache"
 
 	"github.com/gin-gonic/gin"
@@ -130,6 +131,11 @@ func TransferPlaybackInfo(c *gin.Context) {
 		}
 		name = source.Attr("Name").Val().(string)
 		source.Attr("Name").Set(fmt.Sprintf("(原画) %s", name))
+
+		// path 解码
+		if path, ok := source.Attr("Path").String(); ok {
+			source.Attr("Path").Set(urls.Unescape(path))
+		}
 
 		source.Put("SupportsTranscoding", jsons.NewByVal(false))
 		source.DelKey("TranscodingUrl")
@@ -375,6 +381,12 @@ func LoadCacheItems(c *gin.Context) {
 		return
 	}
 	resJson := res.Data
+
+	// path 参数解码
+	if path, ok := resJson.Attr("Path").String(); ok {
+		resJson.Attr("Path").Set(urls.Unescape(path))
+	}
+
 	defer func() {
 		jsons.OkResp(c, resJson)
 	}()

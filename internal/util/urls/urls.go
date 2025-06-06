@@ -80,3 +80,22 @@ func AppendArgs(rawUrl string, kvs ...string) string {
 	u.RawQuery = q.Encode()
 	return u.String()
 }
+
+// Unescape 将 rawUrl 进行 url query 解码, 解码失败返回原始值
+func Unescape(rawUrl string) string {
+	if !IsRemote(rawUrl) {
+		return rawUrl
+	}
+
+	dc, err := url.QueryUnescape(rawUrl)
+	if err != nil {
+		return rawUrl
+	}
+
+	dc, err = url.PathUnescape(dc)
+	if err != nil {
+		return rawUrl
+	}
+
+	return dc
+}
