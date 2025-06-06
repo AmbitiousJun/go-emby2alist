@@ -15,6 +15,7 @@ import (
 	"github.com/AmbitiousJun/go-emby2alist/internal/util/colors"
 	"github.com/AmbitiousJun/go-emby2alist/internal/util/https"
 	"github.com/AmbitiousJun/go-emby2alist/internal/util/jsons"
+	"github.com/AmbitiousJun/go-emby2alist/internal/util/urls"
 	"github.com/AmbitiousJun/go-emby2alist/internal/web/cache"
 
 	"github.com/gin-gonic/gin"
@@ -212,6 +213,10 @@ func ProxyAddItemsPreviewInfo(c *gin.Context) {
 			originName := findMediaSourceName(ms)
 			allTplIds := getAllPreviewTemplateIds()
 			ms.Put("Name", jsons.NewByVal("(原画) "+originName))
+
+			if path, ok := ms.Attr("Path").String(); ok {
+				ms.Attr("Path").Set(urls.Unescape(path))
+			}
 
 			for _, tplId := range allTplIds {
 				copyMs := jsons.NewByVal(ms.Struct())
