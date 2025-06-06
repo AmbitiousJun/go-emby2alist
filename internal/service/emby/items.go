@@ -162,12 +162,6 @@ func calcRandomItemsCacheKey(c *gin.Context) string {
 
 // ProxyAddItemsPreviewInfo 代理 Items 接口, 并附带上转码版本信息
 func ProxyAddItemsPreviewInfo(c *gin.Context) {
-	// 检查用户是否启用了转码版本获取
-	if !config.C.VideoPreview.Enable {
-		ProxyOrigin(c)
-		return
-	}
-
 	// 代理请求
 	embyHost := config.C.Emby.Host
 	c.Request.Header.Del("Accept-Encoding")
@@ -218,6 +212,11 @@ func ProxyAddItemsPreviewInfo(c *gin.Context) {
 				ms.Attr("Path").Set(urls.Unescape(path))
 			}
 
+			// 检查用户是否启用了转码版本获取
+			if !config.C.VideoPreview.Enable {
+				return nil
+			}
+
 			for _, tplId := range allTplIds {
 				copyMs := jsons.NewByVal(ms.Struct())
 				copyMs.Put("Name", jsons.NewByVal(fmt.Sprintf("(%s) %s", tplId, originName)))
@@ -231,4 +230,51 @@ func ProxyAddItemsPreviewInfo(c *gin.Context) {
 		mediaSources.Append(toAdd...)
 		return nil
 	})
+}
+
+// ProxyLatestItems 代理 Latest 请求
+func ProxyLatestItems(c *gin.Context) {
+	// 代理请求
+	embyHost := config.C.Emby.Host
+	c.Request.Header.Del("Accept-Encoding")
+	resp, err := https.Request(c.Request.Method, embyHost+c.Request.URL.String(), c.Request.Header, c.Request.Body)
+	if checkErr(c, err) {
+		return
+	}
+	defer resp.Body.Close()
+
+	// 检查响应, 读取为 JSON
+	if resp.StatusCode != http.StatusOK {
+		checkErr(c, fmt.Errorf("emby 远程返回了错误的响应码: %d", resp.StatusCode))
+		return
+	}
+	resJson, err := jsons.Read(resp.Body)
+	if checkErr(c, err) {
+		return
+	}
+
+	// 预响应请求
+	defer func() {
+		https.CloneHeader(c, resp.Header)
+		jsons.OkResp(c, resJson)
+	}()
+
+	// 遍历 MediaSources 解码 path
+	if resJson.Type() != jsons.JsonTypeArr {
+		return
+	}
+	resJson.RangeArr(func(_ int, item *jsons.Item) error {
+		mediaSources, ok := item.Attr("MediaSources").Done()
+		if !ok || mediaSources.Type() != jsons.JsonTypeArr || mediaSources.Empty() {
+			return nil
+		}
+		mediaSources.RangeArr(func(_ int, ms *jsons.Item) error {
+			if path, ok := ms.Attr("Path").String(); ok {
+				ms.Attr("Path").Set(urls.Unescape(path))
+			}
+			return nil
+		})
+		return nil
+	})
+
 }
