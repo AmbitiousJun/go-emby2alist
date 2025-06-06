@@ -36,6 +36,7 @@ const (
 	Reg_VideoModWebDefined = `(?i)^/web/modules/htmlvideoplayer/plugin.js`
 	Reg_Proxy2Origin       = `^/$|(?i)^.*(/web|/users|/artists|/genres|/similar|/shows|/system|/remote|/scheduledtasks)`
 
+	Reg_Root        = `(?i)^/$`
 	Reg_IndexHtml   = `(?i)^/web/index\.html`
 	Route_CustomJs  = `/ge2a/custom.js`
 	Route_CustomCss = `/ge2a/custom.css`

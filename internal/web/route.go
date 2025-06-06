@@ -75,6 +75,9 @@ func initRulePatterns() {
 		// 响应自定义样式
 		{constant.Route_CustomCss, emby.ProxyCustomCss},
 
+		// 根路径重定向到首页
+		{constant.Reg_Root, emby.RedirectIndexHtml},
+
 		// 其余资源走重定向回源
 		{constant.Reg_All, emby.ProxyOrigin},
 	})
