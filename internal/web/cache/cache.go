@@ -38,7 +38,7 @@ var CacheKeyIgnoreParams = map[string]struct{}{
 	"X-Streammusic-Audioid": {}, "X-Streammusic-Savepath": {},
 
 	// IP
-	"X-Forwarded-For": {}, "X-Real-IP": {}, "Forwarded": {}, "Client-IP": {},
+	"X-Forwarded-For": {}, "X-Real-IP": {}, "X-Real-Ip": {}, "Forwarded": {}, "Client-IP": {},
 	"True-Client-IP": {}, "CF-Connecting-IP": {}, "X-Cluster-Client-IP": {},
 	"Fastly-Client-IP": {}, "X-Client-IP": {}, "X-ProxyUser-IP": {},
 	"Via": {}, "Forwarded-For": {}, "X-From-Cdn": {},
