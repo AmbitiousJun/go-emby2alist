@@ -4,7 +4,6 @@ go 1.24.2
 
 require (
 	github.com/gin-gonic/gin v1.10.0
-	github.com/pires/go-proxyproto v0.8.1
 	golang.org/x/sync v0.13.0
 	gopkg.in/yaml.v3 v3.0.1
 )
