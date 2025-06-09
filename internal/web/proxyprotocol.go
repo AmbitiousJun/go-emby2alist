@@ -3,10 +3,12 @@ package web
 import (
 	"bufio"
 	"io"
+	"log"
 	"net"
 	"strings"
 	"time"
 
+	"github.com/AmbitiousJun/go-emby2alist/internal/util/colors"
 	"github.com/gin-gonic/gin"
 	"github.com/pires/go-proxyproto"
 )
@@ -17,12 +19,14 @@ func initProxyProtocolLn(port string) (net.Listener, error) {
 	if err != nil {
 		return nil, err
 	}
-	return newHybridListener(ln), nil
+	// return newHybridListener(ln), nil
+	return &proxyproto.Listener{Listener: ln}, nil
 }
 
 // proxyProtocolRealIPSetter 将 gin 上下文中的 RealIP 设置为 PROXY 协议中传递的 IP 地址的中间件
 func proxyProtocolRealIPSetter() gin.HandlerFunc {
 	return func(c *gin.Context) {
+		log.Printf(colors.ToYellow("RemoteAddr: %s"), c.Request.RemoteAddr)
 		host, _, err := net.SplitHostPort(c.Request.RemoteAddr)
 		if err == nil {
 			c.Request.Header.Set("X-Real-IP", host)
@@ -31,16 +35,16 @@ func proxyProtocolRealIPSetter() gin.HandlerFunc {
 	}
 }
 
-// hybridListener wraps a net.Listener to support both PROXY protocol and plain TCP
-type hybridListener struct {
+// HybridListener wraps a net.Listener to support both PROXY protocol and plain TCP
+type HybridListener struct {
 	net.Listener
 }
 
-func newHybridListener(ln net.Listener) net.Listener {
-	return &hybridListener{Listener: ln}
+func NewHybridListener(ln net.Listener) net.Listener {
+	return &HybridListener{Listener: ln}
 }
 
-func (hl *hybridListener) Accept() (net.Conn, error) {
+func (hl *HybridListener) Accept() (net.Conn, error) {
 	conn, err := hl.Listener.Accept()
 	if err != nil {
 		return nil, err
@@ -59,6 +63,7 @@ func (hl *hybridListener) Accept() (net.Conn, error) {
 	}
 
 	str := string(peek)
+	log.Printf(colors.ToYellow("TCP connection prefix: [%s]"), str)
 	if strings.HasPrefix(str, "PROXY ") {
 		// Wrap with proxyproto if starts with PROXY
 		return proxyproto.NewConn(&connWrapper{Conn: conn, reader: reader}), nil
