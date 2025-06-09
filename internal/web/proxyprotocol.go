@@ -19,8 +19,7 @@ func initProxyProtocolLn(port string) (net.Listener, error) {
 	if err != nil {
 		return nil, err
 	}
-	// return newHybridListener(ln), nil
-	return &proxyproto.Listener{Listener: ln}, nil
+	return NewHybridListener(ln), nil
 }
 
 // proxyProtocolRealIPSetter 将 gin 上下文中的 RealIP 设置为 PROXY 协议中传递的 IP 地址的中间件
@@ -53,7 +52,7 @@ func (hl *HybridListener) Accept() (net.Conn, error) {
 	// peek the first few bytes
 	conn.SetReadDeadline(time.Now().Add(2 * time.Second))
 	reader := bufio.NewReader(conn)
-	peek, err := reader.Peek(16)
+	peek, err := reader.Peek(32)
 	// clear deadline
 	conn.SetReadDeadline(time.Time{})
 
@@ -66,7 +65,10 @@ func (hl *HybridListener) Accept() (net.Conn, error) {
 	log.Printf(colors.ToYellow("TCP connection prefix: [%s]"), str)
 	if strings.HasPrefix(str, "PROXY ") {
 		// Wrap with proxyproto if starts with PROXY
-		return proxyproto.NewConn(&connWrapper{Conn: conn, reader: reader}), nil
+		pxyConn := proxyproto.NewConn(&connWrapper{Conn: conn, reader: reader})
+		log.Printf(colors.ToYellow("TCP connection RemoteAddr: [%s]"), pxyConn.RemoteAddr())
+		log.Printf(colors.ToYellow("TCP connection LocalAddr: [%s]"), pxyConn.LocalAddr())
+		return pxyConn, nil
 	}
 
 	// Otherwise, return plain connection
