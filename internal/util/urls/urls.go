@@ -81,14 +81,9 @@ func AppendArgs(rawUrl string, kvs ...string) string {
 	return u.String()
 }
 
-// Unescape 将 rawUrl 进行 url query 解码, 解码失败返回原始值
+// Unescape 将 rawUrl 进行 url 解码, 解码失败返回原始值
 func Unescape(rawUrl string) string {
-	dc, err := url.QueryUnescape(rawUrl)
-	if err != nil {
-		return rawUrl
-	}
-
-	dc, err = url.PathUnescape(dc)
+	dc, err := url.PathUnescape(rawUrl)
 	if err != nil {
 		return rawUrl
 	}
