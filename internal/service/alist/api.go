@@ -18,6 +18,7 @@ func FetchResource(fi FetchInfo) model.HttpRes[Resource] {
 	if strs.AnyEmpty(fi.Path) {
 		return model.HttpRes[Resource]{Code: http.StatusBadRequest, Msg: "参数 path 不能为空"}
 	}
+	fi.Header = CleanHeader(fi.Header)
 
 	if !fi.UseTranscode {
 		// 请求原画资源
