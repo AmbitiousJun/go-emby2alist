@@ -30,18 +30,21 @@ type AlistPathRes struct {
 func Emby2Alist(embyPath string) AlistPathRes {
 	pathRoutes := strings.Builder{}
 	pathRoutes.WriteString("[")
-	pathRoutes.WriteString("\n1 => " + embyPath)
+	pathRoutes.WriteString("\n【原始路径】 => " + embyPath)
 
 	embyPath = urls.TransferSlash(embyPath)
-	pathRoutes.WriteString("\n2 => " + embyPath)
+	pathRoutes.WriteString("\n\n【Windows 反斜杠转换】 => " + embyPath)
 
 	embyMount := config.C.Emby.MountPath
 	alistFilePath := strings.TrimPrefix(embyPath, embyMount)
-	pathRoutes.WriteString("\n3 => " + alistFilePath)
+	pathRoutes.WriteString("\n\n【移除 mount-path】 => " + alistFilePath)
+
+	alistFilePath = urls.Unescape(alistFilePath)
+	pathRoutes.WriteString("\n\n【URL 解码】 => " + alistFilePath)
 
 	if mapPath, ok := config.C.Path.MapEmby2Alist(alistFilePath); ok {
 		alistFilePath = mapPath
-		pathRoutes.WriteString("\n4 => " + alistFilePath)
+		pathRoutes.WriteString("\n\n【命中 emby2alist 映射】 => " + alistFilePath)
 	}
 	pathRoutes.WriteString("\n]")
 	log.Printf(colors.ToGray("embyPath 转换路径: %s"), pathRoutes.String())

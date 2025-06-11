@@ -42,3 +42,24 @@ func TestIsRemote(t *testing.T) {
 		})
 	}
 }
+
+func TestUnescape(t *testing.T) {
+	type args struct {
+		rawUrl string
+	}
+	tests := []struct {
+		name string
+		args args
+		want string
+	}{
+		{name: "1", args: args{rawUrl: "/mnt/alist/189/Anime/%E5%87%A1%E4%BA%BA%E4%BF%AE%E4%BB%99%E4%BC%A0%20%282020%29/Season%201/S01E002.2160p.WEB-DL.H264.AAC.mp4"}, want: "/mnt/alist/189/Anime/凡人修仙传 (2020)/Season 1/S01E002.2160p.WEB-DL.H264.AAC.mp4"},
+		{name: "2", args: args{rawUrl: "http://alist:5244/d/%E8%BF%90%E5%8A%A8/%E5%AE%89%E5%B0%8F%E9%9B%A8%E8%B7%B3%E7%BB%B3%E8%AF%BE%20(2021)/%E5%AE%89%E5%B0%8F%E9%9B%A8%E8%B7%B3%E7%BB%B3%E8%AF%BE.S01E04.8000%E6%AC%A1.67%E5%88%86%E9%92%9F.1080p.mp4?sign=uuUXEJ0g5rdD4cGc1ZA-Pk00nhp9Vo0GdMxdGRrKT_c=:0"}, want: "http://alist:5244/d/运动/安小雨跳绳课 (2021)/安小雨跳绳课.S01E04.8000次.67分钟.1080p.mp4?sign=uuUXEJ0g5rdD4cGc1ZA-Pk00nhp9Vo0GdMxdGRrKT_c=:0"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := urls.Unescape(tt.args.rawUrl); got != tt.want {
+				t.Errorf("Unescape() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
