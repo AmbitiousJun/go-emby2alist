@@ -71,6 +71,11 @@ func ProxyOrigin(c *gin.Context) {
 		return
 	}
 	origin := config.C.Emby.Host
+
+	// 传递客户端 IP 到 emby
+	c.Request.Header.Set("X-Forwarded-For", c.ClientIP())
+	c.Request.Header.Set("X-Real-IP", c.ClientIP())
+
 	if err := https.ProxyRequest(c, origin, true); err != nil {
 		log.Printf(colors.ToRed("代理异常: %v"), err)
 	}
