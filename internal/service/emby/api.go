@@ -45,7 +45,7 @@ func RawFetch(uri, method string, header http.Header, body io.ReadCloser) (model
 		header.Set("Content-Type", "application/json;charset=utf-8")
 	}
 
-	resp, err := https.Request(method, u, header, body)
+	resp, err := https.Request(method, u).Header(header).Body(body).Do()
 	if err != nil {
 		return model.HttpRes[*jsons.Item]{Code: http.StatusBadRequest, Msg: "请求发送失败: " + err.Error()}, nil
 	}

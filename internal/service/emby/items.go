@@ -58,7 +58,10 @@ func ResortRandomItems(c *gin.Context) {
 	} else {
 		// 请求原始列表
 		u := strings.ReplaceAll(https.ClientRequestUrl(c), "/Items", "/Items/with_limit")
-		resp, err := https.Request(http.MethodGet, u, c.Request.Header, c.Request.Body)
+		resp, err := https.Request(http.MethodGet, u).
+			Header(c.Request.Header).
+			Body(c.Request.Body).
+			Do()
 		if checkErr(c, err) {
 			return
 		}
@@ -129,7 +132,10 @@ func RandomItemsWithLimit(c *gin.Context) {
 	u.RawQuery = q.Encode()
 	embyHost := config.C.Emby.Host
 	c.Request.Header.Del("Accept-Encoding")
-	resp, err := https.Request(c.Request.Method, embyHost+u.String(), c.Request.Header, c.Request.Body)
+	resp, err := https.Request(c.Request.Method, embyHost+u.String()).
+		Header(c.Request.Header).
+		Body(c.Request.Body).
+		Do()
 	if checkErr(c, err) {
 		return
 	}
@@ -165,7 +171,10 @@ func ProxyAddItemsPreviewInfo(c *gin.Context) {
 	// 代理请求
 	embyHost := config.C.Emby.Host
 	c.Request.Header.Del("Accept-Encoding")
-	resp, err := https.Request(c.Request.Method, embyHost+c.Request.URL.String(), c.Request.Header, c.Request.Body)
+	resp, err := https.Request(c.Request.Method, embyHost+c.Request.URL.String()).
+		Header(c.Request.Header).
+		Body(c.Request.Body).
+		Do()
 	if checkErr(c, err) {
 		return
 	}
@@ -237,7 +246,10 @@ func ProxyLatestItems(c *gin.Context) {
 	// 代理请求
 	embyHost := config.C.Emby.Host
 	c.Request.Header.Del("Accept-Encoding")
-	resp, err := https.Request(c.Request.Method, embyHost+c.Request.URL.String(), c.Request.Header, c.Request.Body)
+	resp, err := https.Request(c.Request.Method, embyHost+c.Request.URL.String()).
+		Header(c.Request.Header).
+		Body(c.Request.Body).
+		Do()
 	if checkErr(c, err) {
 		return
 	}

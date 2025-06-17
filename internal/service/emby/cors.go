@@ -14,7 +14,7 @@ import (
 func ChangeBaseVideoModuleCorsDefined(c *gin.Context) {
 	// 1 代理请求
 	embyHost := config.C.Emby.Host
-	resp, err := https.Request(c.Request.Method, embyHost+c.Request.URL.String(), nil, c.Request.Body)
+	resp, err := https.Request(c.Request.Method, embyHost+c.Request.URL.String()).Body(c.Request.Body).Do()
 	if checkErr(c, err) {
 		return
 	}

@@ -90,7 +90,7 @@ func sendPlayingProgress(kType ApiKeyType, kName, apiKey string, body *jsons.Ite
 		} else {
 			header.Set(kName, apiKey)
 		}
-		resp, err := https.Request(http.MethodPost, remote, header, io.NopCloser(bytes.NewBuffer([]byte(body.String()))))
+		resp, err := https.Post(remote).Header(header).Body(io.NopCloser(bytes.NewBuffer([]byte(body.String())))).Do()
 		if err != nil {
 			return err
 		}
