@@ -90,34 +90,17 @@ func ProxyRequest(c *gin.Context, remote string, withUri bool) error {
 	// 2 拷贝 query 参数
 	rmtUrl.RawQuery = c.Request.URL.RawQuery
 
-	// 3 创建请求
-	var bodyBuffer io.Reader = nil
-	if c.Request.Body != nil {
-		reqBodyBytes, err := io.ReadAll(c.Request.Body)
-		if err != nil {
-			return fmt.Errorf("读取请求体失败: %v", err)
-		}
-		if len(reqBodyBytes) > 0 {
-			bodyBuffer = bytes.NewBuffer(reqBodyBytes)
-		}
-	}
-
-	req, err := http.NewRequest(c.Request.Method, rmtUrl.String(), bodyBuffer)
+	// 3 发送请求
+	resp, err := Request(c.Request.Method, rmtUrl.String()).
+		Header(c.Request.Header).
+		Body(c.Request.Body).
+		Do()
 	if err != nil {
-		return fmt.Errorf("初始化请求失败: %v", err)
-	}
-
-	// 4 拷贝请求头
-	req.Header = c.Request.Header
-
-	// 5 发起请求
-	resp, err := client.Do(req)
-	if err != nil {
-		return fmt.Errorf("请求失败: %v", err)
+		return fmt.Errorf("发送请求失败: %v", err)
 	}
 	defer resp.Body.Close()
 
-	// 6 回写响应头
+	// 4 回写响应头
 	c.Status(resp.StatusCode)
 	for key, values := range resp.Header {
 		for _, value := range values {
@@ -125,7 +108,7 @@ func ProxyRequest(c *gin.Context, remote string, withUri bool) error {
 		}
 	}
 
-	// 7 回写响应体
-	io.Copy(c.Writer, resp.Body)
-	return nil
+	// 5 回写响应体
+	_, err = io.Copy(c.Writer, resp.Body)
+	return err
 }
