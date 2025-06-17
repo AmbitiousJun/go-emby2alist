@@ -83,13 +83,20 @@ func (r *RequestHolder) Body(body io.ReadCloser) *RequestHolder {
 	return r
 }
 
-// Do 发起请求 不允许自动重定向
+// Do 发起请求 自动重定向
 func (r *RequestHolder) Do() (*http.Response, error) {
+	r.redirect = true
 	_, resp, err := r.execute()
 	return resp, err
 }
 
-// DoRedirect 发起请求 允许自动重定向
+// DoSingle 发起请求 不自动重定向
+func (r *RequestHolder) DoSingle() (*http.Response, error) {
+	_, resp, err := r.execute()
+	return resp, err
+}
+
+// DoRedirect 发起请求 自动重定向 获取最终地址
 func (r *RequestHolder) DoRedirect() (string, *http.Response, error) {
 	r.redirect = true
 	return r.execute()
