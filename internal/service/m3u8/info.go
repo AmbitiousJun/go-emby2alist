@@ -83,7 +83,7 @@ func NewByRemote(url string, header http.Header) (*Info, error) {
 	baseUrl := url[:lastSepPos+1]
 
 	// 2 请求远程地址
-	resp, err := https.Request(http.MethodGet, url, header, nil)
+	resp, err := https.Get(url).Header(header).Do()
 	if err != nil {
 		return nil, fmt.Errorf("请求远程地址失败, url: %s, err: %v", url, err)
 	}

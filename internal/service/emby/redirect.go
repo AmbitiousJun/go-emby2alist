@@ -124,7 +124,7 @@ func Redirect2AlistLink(c *gin.Context) {
 		q.Set(QueryApiKeyName, itemInfo.ApiKey)
 		q.Set("alist_path", alist.PathEncode(path))
 		u.RawQuery = q.Encode()
-		resp, err := https.Request(http.MethodGet, u.String(), nil, nil)
+		resp, err := https.Get(u.String()).Do()
 		if err != nil {
 			allErrors.WriteString(fmt.Sprintf("代理转码 m3u 失败: %v;", err))
 			return false
@@ -180,7 +180,7 @@ func checkErr(c *gin.Context, err error) bool {
 //
 // 请求中途出现任何失败都会返回原始链接
 func getFinalRedirectLink(originLink string, header http.Header) string {
-	finalLink, resp, err := https.RequestRedirect(http.MethodGet, originLink, header, nil, true)
+	finalLink, resp, err := https.Get(originLink).Header(header).DoRedirect()
 	if err != nil {
 		log.Printf(colors.ToYellow("内部重定向失败: %v"), err)
 		return originLink

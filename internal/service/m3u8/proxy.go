@@ -124,7 +124,7 @@ func ProxySubtitle(c *gin.Context) {
 
 	proxySubtitle := func(link string) {
 		log.Printf(colors.ToGreen("代理字幕: %s"), link)
-		resp, err := https.Request(http.MethodGet, link, nil, nil)
+		resp, err := https.Get(link).Do()
 		if err != nil {
 			log.Printf(colors.ToRed("代理字幕失败: %v"), err)
 			c.String(http.StatusInternalServerError, "代理字幕失败, 请检查日志")
