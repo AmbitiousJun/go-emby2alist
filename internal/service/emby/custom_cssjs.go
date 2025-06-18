@@ -140,6 +140,7 @@ func ProxyIndexHtml(c *gin.Context) {
 	defer resp.Body.Close()
 
 	if !https.IsSuccessCode(resp.StatusCode) {
+		checkErr(c, fmt.Errorf("远程返回错误响应: %v", resp.Status))
 		return
 	}
 
