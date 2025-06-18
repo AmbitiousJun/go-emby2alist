@@ -71,36 +71,39 @@ func CloneHeader(c *gin.Context, header http.Header) {
 	}
 }
 
-// ProxyRequest 代理请求
-func ProxyRequest(c *gin.Context, remote string, withUri bool) error {
+// ProxyRequest 代理请求, 返回远程响应
+func ProxyRequest(c *gin.Context, remote string) (*http.Response, error) {
+	if c == nil || remote == "" {
+		return nil, errors.New("参数为空")
+	}
+
+	// 1 解析远程地址
+	rmtUrl, err := url.Parse(remote + c.Request.URL.String())
+	if err != nil {
+		return nil, fmt.Errorf("解析远程地址失败: %v", err)
+	}
+
+	// 2 发送请求
+	return Request(c.Request.Method, rmtUrl.String()).
+		Header(c.Request.Header).
+		Body(c.Request.Body).
+		Do()
+}
+
+// ProxyPass 代理转发请求
+func ProxyPass(c *gin.Context, remote string) error {
 	if c == nil || remote == "" {
 		return errors.New("参数为空")
 	}
 
-	if withUri {
-		remote = remote + c.Request.URL.String()
-	}
-
-	// 1 解析远程地址
-	rmtUrl, err := url.Parse(remote)
+	// 1 代理请求
+	resp, err := ProxyRequest(c, remote)
 	if err != nil {
-		return fmt.Errorf("解析远程地址失败: %v", err)
-	}
-
-	// 2 拷贝 query 参数
-	rmtUrl.RawQuery = c.Request.URL.RawQuery
-
-	// 3 发送请求
-	resp, err := Request(c.Request.Method, rmtUrl.String()).
-		Header(c.Request.Header).
-		Body(c.Request.Body).
-		Do()
-	if err != nil {
-		return fmt.Errorf("发送请求失败: %v", err)
+		return fmt.Errorf("代理请求失败: %v", err)
 	}
 	defer resp.Body.Close()
 
-	// 4 回写响应头
+	// 2 回写响应头
 	c.Status(resp.StatusCode)
 	for key, values := range resp.Header {
 		for _, value := range values {
@@ -108,7 +111,7 @@ func ProxyRequest(c *gin.Context, remote string, withUri bool) error {
 		}
 	}
 
-	// 5 回写响应体
+	// 3 回写响应体
 	_, err = io.Copy(c.Writer, resp.Body)
 	return err
 }

@@ -18,7 +18,7 @@ import (
 func ResortEpisodes(c *gin.Context) {
 	// 1 检查配置是否开启
 	if !config.C.Emby.EpisodesUnplayPrior {
-		checkErr(c, https.ProxyRequest(c, config.C.Emby.Host, true))
+		checkErr(c, https.ProxyPass(c, config.C.Emby.Host))
 		return
 	}
 
