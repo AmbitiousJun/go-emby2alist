@@ -3,7 +3,6 @@ package emby
 import (
 	"errors"
 	"fmt"
-	"io"
 	"log"
 	"net/http"
 	"net/url"
@@ -139,15 +138,9 @@ func DownloadStrategyChecker() gin.HandlerFunc {
 		}
 
 		if strategy == config.DlStrategyOrigin {
-			remote := config.C.Emby.Host + c.Request.URL.String()
-			resp, err := https.Request(c.Request.Method, remote).Header(c.Request.Header).Body(c.Request.Body).Do()
-			if checkErr(c, err) {
-				return
+			if err := https.ProxyPass(c, config.C.Emby.Host); err != nil {
+				log.Printf(colors.ToRed("下载接口代理失败: %v"), err)
 			}
-			defer resp.Body.Close()
-			c.Status(resp.StatusCode)
-			https.CloneHeader(c, resp.Header)
-			io.Copy(c.Writer, resp.Body)
 		}
 
 	}

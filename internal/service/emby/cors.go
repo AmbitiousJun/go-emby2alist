@@ -13,8 +13,9 @@ import (
 // ChangeBaseVideoModuleCorsDefined 调整 emby 的播放器 cors 配置, 使其支持跨域播放
 func ChangeBaseVideoModuleCorsDefined(c *gin.Context) {
 	// 1 代理请求
-	embyHost := config.C.Emby.Host
-	resp, err := https.Request(c.Request.Method, embyHost+c.Request.URL.String()).Body(c.Request.Body).Do()
+	c.Request.Header.Del("If-Modified-Since")
+	c.Request.Header.Del("If-None-Match")
+	resp, err := https.ProxyRequest(c, config.C.Emby.Host)
 	if checkErr(c, err) {
 		return
 	}

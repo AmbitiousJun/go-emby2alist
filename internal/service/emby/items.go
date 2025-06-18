@@ -169,12 +169,8 @@ func calcRandomItemsCacheKey(c *gin.Context) string {
 // ProxyAddItemsPreviewInfo 代理 Items 接口, 并附带上转码版本信息
 func ProxyAddItemsPreviewInfo(c *gin.Context) {
 	// 代理请求
-	embyHost := config.C.Emby.Host
 	c.Request.Header.Del("Accept-Encoding")
-	resp, err := https.Request(c.Request.Method, embyHost+c.Request.URL.String()).
-		Header(c.Request.Header).
-		Body(c.Request.Body).
-		Do()
+	resp, err := https.ProxyRequest(c, config.C.Emby.Host)
 	if checkErr(c, err) {
 		return
 	}
@@ -244,12 +240,8 @@ func ProxyAddItemsPreviewInfo(c *gin.Context) {
 // ProxyLatestItems 代理 Latest 请求
 func ProxyLatestItems(c *gin.Context) {
 	// 代理请求
-	embyHost := config.C.Emby.Host
 	c.Request.Header.Del("Accept-Encoding")
-	resp, err := https.Request(c.Request.Method, embyHost+c.Request.URL.String()).
-		Header(c.Request.Header).
-		Body(c.Request.Body).
-		Do()
+	resp, err := https.ProxyRequest(c, config.C.Emby.Host)
 	if checkErr(c, err) {
 		return
 	}
