@@ -105,11 +105,7 @@ func ProxyPass(c *gin.Context, remote string) error {
 
 	// 2 回写响应头
 	c.Status(resp.StatusCode)
-	for key, values := range resp.Header {
-		for _, value := range values {
-			c.Header(key, value)
-		}
-	}
+	CloneHeader(c, resp.Header)
 
 	// 3 回写响应体
 	_, err = io.Copy(c.Writer, resp.Body)
