@@ -4,8 +4,8 @@ import (
 	"log"
 	"testing"
 
-	"github.com/AmbitiousJun/go-emby2alist/internal/config"
-	"github.com/AmbitiousJun/go-emby2alist/internal/service/m3u8"
+	"github.com/AmbitiousJun/go-emby2openlist/internal/config"
+	"github.com/AmbitiousJun/go-emby2openlist/internal/service/m3u8"
 )
 
 func TestPlaylistCache(t *testing.T) {

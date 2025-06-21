@@ -5,7 +5,7 @@ import (
 	"log"
 	"testing"
 
-	"github.com/AmbitiousJun/go-emby2alist/internal/util/urls"
+	"github.com/AmbitiousJun/go-emby2openlist/internal/util/urls"
 )
 
 func TestResolveResourceName(t *testing.T) {

@@ -6,8 +6,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/AmbitiousJun/go-emby2alist/internal/util/colors"
-	"github.com/AmbitiousJun/go-emby2alist/internal/util/urls"
+	"github.com/AmbitiousJun/go-emby2openlist/internal/util/colors"
+	"github.com/AmbitiousJun/go-emby2openlist/internal/util/urls"
 )
 
 const (

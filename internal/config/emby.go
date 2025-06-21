@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/AmbitiousJun/go-emby2alist/internal/util/maps"
-	"github.com/AmbitiousJun/go-emby2alist/internal/util/randoms"
-	"github.com/AmbitiousJun/go-emby2alist/internal/util/strs"
+	"github.com/AmbitiousJun/go-emby2openlist/internal/util/maps"
+	"github.com/AmbitiousJun/go-emby2openlist/internal/util/randoms"
+	"github.com/AmbitiousJun/go-emby2openlist/internal/util/strs"
 )
 
 // PeStrategy 代理异常策略类型

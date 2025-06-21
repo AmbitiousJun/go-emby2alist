@@ -1,7 +1,7 @@
 package colors
 
 import (
-	"github.com/AmbitiousJun/go-emby2alist/internal/setup"
+	"github.com/AmbitiousJun/go-emby2openlist/internal/setup"
 )
 
 // 日志颜色输出常量

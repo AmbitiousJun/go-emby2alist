@@ -3,10 +3,10 @@ package main
 import (
 	"log"
 
-	"github.com/AmbitiousJun/go-emby2alist/internal/config"
-	"github.com/AmbitiousJun/go-emby2alist/internal/constant"
-	"github.com/AmbitiousJun/go-emby2alist/internal/util/colors"
-	"github.com/AmbitiousJun/go-emby2alist/internal/web"
+	"github.com/AmbitiousJun/go-emby2openlist/internal/config"
+	"github.com/AmbitiousJun/go-emby2openlist/internal/constant"
+	"github.com/AmbitiousJun/go-emby2openlist/internal/util/colors"
+	"github.com/AmbitiousJun/go-emby2openlist/internal/web"
 )
 
 func main() {

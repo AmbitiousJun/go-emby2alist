@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/AmbitiousJun/go-emby2alist/internal/util/strs"
+	"github.com/AmbitiousJun/go-emby2openlist/internal/util/strs"
 )
 
 // IsRemote 检查一个地址是否是远程地址

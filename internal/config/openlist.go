@@ -3,7 +3,7 @@ package config
 import (
 	"errors"
 
-	"github.com/AmbitiousJun/go-emby2alist/internal/util/strs"
+	"github.com/AmbitiousJun/go-emby2openlist/internal/util/strs"
 )
 
 type Openlist struct {

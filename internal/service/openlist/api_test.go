@@ -5,8 +5,8 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/AmbitiousJun/go-emby2alist/internal/config"
-	"github.com/AmbitiousJun/go-emby2alist/internal/service/openlist"
+	"github.com/AmbitiousJun/go-emby2openlist/internal/config"
+	"github.com/AmbitiousJun/go-emby2openlist/internal/service/openlist"
 )
 
 func TestFetch(t *testing.T) {
