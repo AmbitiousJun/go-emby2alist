@@ -31,5 +31,5 @@ jobs:
           platforms: linux/386,linux/arm/v7,linux/amd64,linux/arm64
           push: true
           tags: |
-            ambitiousjun/go-emby2alist:${{ github.ref_name }}
-            ambitiousjun/go-emby2alist:latest
+            ambitiousjun/go-emby2openlist:${{ github.ref_name }}
+            ambitiousjun/go-emby2openlist:latest
