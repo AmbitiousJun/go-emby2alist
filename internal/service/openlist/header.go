@@ -2,7 +2,7 @@ package openlist
 
 import "net/http"
 
-var alistHeaderKeys = []string{"User-Agent"}
+var openlistHeaderKeys = []string{"User-Agent"}
 
 // CleanHeader 清理请求头
 func CleanHeader(header http.Header) http.Header {
@@ -11,7 +11,7 @@ func CleanHeader(header http.Header) http.Header {
 	}
 
 	newHeader := make(http.Header)
-	for _, key := range alistHeaderKeys {
+	for _, key := range openlistHeaderKeys {
 		if value := header.Get(key); value != "" {
 			newHeader.Add(key, value)
 		}

@@ -17,11 +17,11 @@ func ProxySubtitles(c *gin.Context) {
 	}
 
 	// 判断是否带有转码字幕参数
-	alistPath := c.Query("alist_path")
+	openlistPath := c.Query("openlist_path")
 	templateId := c.Query("template_id")
 	subName := c.Query("sub_name")
 	apiKey := c.Query(QueryApiKeyName)
-	if strs.AllNotEmpty(alistPath, templateId, subName, apiKey) {
+	if strs.AllNotEmpty(openlistPath, templateId, subName, apiKey) {
 		u, _ := url.Parse("/videos/proxy_subtitle")
 		u.RawQuery = c.Request.URL.RawQuery
 		c.Redirect(http.StatusTemporaryRedirect, u.String())

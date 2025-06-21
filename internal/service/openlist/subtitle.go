@@ -2,7 +2,7 @@ package openlist
 
 var (
 
-	// langDisplayNames 将 alist 的字幕代码转换成对应名称
+	// langDisplayNames 将 openlist 的字幕代码转换成对应名称
 	langDisplayNames = map[string]string{
 		"chi": "简体中文",
 		"eng": "English",

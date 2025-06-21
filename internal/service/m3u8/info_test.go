@@ -407,7 +407,7 @@ func TestConvert(t *testing.T) {
 		log.Fatal(err)
 	}
 	// log.Println(info.Content())
-	info.AlistPath = "/电视剧/xxx"
+	info.OpenlistPath = "/电视剧/xxx"
 	info.TemplateId = "FHD"
 	log.Println(info.ProxyContent(true, "", ""))
 }
@@ -415,8 +415,8 @@ func TestConvert(t *testing.T) {
 func TestUpdateContent(t *testing.T) {
 	config.ReadFromFile("../../../config.yml")
 	info := m3u8.Info{
-		AlistPath:  "/运动/安小雨跳绳课 (2021)/安小雨跳绳课.S01E01.3000次.25分钟.1080p.mp4",
-		TemplateId: "FHD",
+		OpenlistPath: "/运动/安小雨跳绳课 (2021)/安小雨跳绳课.S01E01.3000次.25分钟.1080p.mp4",
+		TemplateId:   "FHD",
 	}
 	if err := info.UpdateContent(); err != nil {
 		log.Fatal(err)

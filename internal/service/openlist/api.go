@@ -13,7 +13,7 @@ import (
 	"github.com/AmbitiousJun/go-emby2openlist/internal/util/strs"
 )
 
-// FetchResource 请求 alist 资源 url 直链
+// FetchResource 请求 openlist 资源 url 直链
 func FetchResource(fi FetchInfo) model.HttpRes[Resource] {
 	if strs.AnyEmpty(fi.Path) {
 		return model.HttpRes[Resource]{Code: http.StatusBadRequest, Msg: "参数 path 不能为空"}
@@ -84,7 +84,7 @@ func FetchResource(fi FetchInfo) model.HttpRes[Resource] {
 	return model.HttpRes[Resource]{Code: http.StatusOK, Data: Resource{Url: link, Subtitles: subtitles}}
 }
 
-// FetchFsList 请求 alist "/api/fs/list" 接口
+// FetchFsList 请求 openlist "/api/fs/list" 接口
 //
 // 传入 path 与接口的 path 作用一致
 func FetchFsList(path string, header http.Header) model.HttpRes[*jsons.Item] {
@@ -98,7 +98,7 @@ func FetchFsList(path string, header http.Header) model.HttpRes[*jsons.Item] {
 	})
 }
 
-// FetchFsGet 请求 alist "/api/fs/get" 接口
+// FetchFsGet 请求 openlist "/api/fs/get" 接口
 //
 // 传入 path 与接口的 path 作用一致
 func FetchFsGet(path string, header http.Header) model.HttpRes[*jsons.Item] {
@@ -113,7 +113,7 @@ func FetchFsGet(path string, header http.Header) model.HttpRes[*jsons.Item] {
 	})
 }
 
-// FetchFsOther 请求 alist "/api/fs/other" 接口
+// FetchFsOther 请求 openlist "/api/fs/other" 接口
 //
 // 传入 path 与接口的 path 作用一致
 func FetchFsOther(path string, header http.Header) model.HttpRes[*jsons.Item] {
@@ -128,7 +128,7 @@ func FetchFsOther(path string, header http.Header) model.HttpRes[*jsons.Item] {
 	})
 }
 
-// Fetch 请求 alist api
+// Fetch 请求 openlist api
 func Fetch(uri, method string, header http.Header, body map[string]any) model.HttpRes[*jsons.Item] {
 	host := config.C.Openlist.Host
 	token := config.C.Openlist.Token

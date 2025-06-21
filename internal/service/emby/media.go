@@ -91,12 +91,12 @@ func findVideoPreviewInfos(source *jsons.Item, originName, clientApiKey string, 
 		return
 	}
 
-	// 转换 alist 绝对路径
-	alistPathRes := path.Emby2Openlist(source.Attr("Path").Val().(string))
+	// 转换 openlist 绝对路径
+	openlistPathRes := path.Emby2Openlist(source.Attr("Path").Val().(string))
 	var transcodingList, subtitleList *jsons.Item
 	firstFetchSuccess := false
-	if alistPathRes.Success {
-		res := openlist.FetchFsOther(alistPathRes.Path, nil)
+	if openlistPathRes.Success {
+		res := openlist.FetchFsOther(openlistPathRes.Path, nil)
 
 		if res.Code == http.StatusOK {
 			if list, ok := res.Data.Attr("video_preview_play_info").Attr("live_transcoding_task_list").Done(); ok {
@@ -114,17 +114,17 @@ func findVideoPreviewInfos(source *jsons.Item, originName, clientApiKey string, 
 		}
 	}
 
-	// 首次请求失败, 遍历 alist 所有根目录, 重新请求
+	// 首次请求失败, 遍历 openlist 所有根目录, 重新请求
 	if !firstFetchSuccess {
-		paths, err := alistPathRes.Range()
+		paths, err := openlistPathRes.Range()
 		if err != nil {
-			log.Printf("转换 alist 路径异常: %v", err)
+			log.Printf("转换 openlist 路径异常: %v", err)
 			resChan <- nil
 			return
 		}
 
-		for i := 0; i < len(paths); i++ {
-			res := openlist.FetchFsOther(paths[i], nil)
+		for _, path := range paths {
+			res := openlist.FetchFsOther(path, nil)
 			if res.Code == http.StatusOK {
 				if list, ok := res.Data.Attr("video_preview_play_info").Attr("live_transcoding_task_list").Done(); ok {
 					transcodingList = list
@@ -169,14 +169,14 @@ func findVideoPreviewInfos(source *jsons.Item, originName, clientApiKey string, 
 				source.Attr("Id").Val(), MediaSourceIdSegment,
 				templateId, MediaSourceIdSegment,
 				format, MediaSourceIdSegment,
-				openlist.PathEncode(alistPathRes.Path),
+				openlist.PathEncode(openlistPathRes.Path),
 			)
 			copySource.Attr("Id").Set(newId)
 
 			// 设置转码代理播放链接
 			tu, _ := url.Parse(strings.ReplaceAll(MasterM3U8UrlTemplate, "${itemId}", itemId))
 			q := tu.Query()
-			q.Set("alist_path", openlist.PathEncode(alistPathRes.Path))
+			q.Set("openlist_path", openlist.PathEncode(openlistPathRes.Path))
 			q.Set("template_id", templateId)
 			q.Set(QueryApiKeyName, clientApiKey)
 			tu.RawQuery = q.Encode()
@@ -191,7 +191,7 @@ func findVideoPreviewInfos(source *jsons.Item, originName, clientApiKey string, 
 			copySource.Put("SupportsDirectStream", jsons.NewByVal(false))
 
 			// 设置转码字幕
-			addSubtitles2MediaStreams(copySource, subtitleList, alistPathRes.Path, templateId, clientApiKey)
+			addSubtitles2MediaStreams(copySource, subtitleList, openlistPathRes.Path, templateId, clientApiKey)
 
 			res[idx] = copySource
 		}()
@@ -213,8 +213,8 @@ func findVideoPreviewInfos(source *jsons.Item, originName, clientApiKey string, 
 
 // addSubtitles2MediaStreams 添加转码字幕到 PlaybackInfo 的 MediaStreams 项中
 //
-// subtitleList 是请求 alist 转码信息接口获取到的字幕列表
-func addSubtitles2MediaStreams(source, subtitleList *jsons.Item, alistPath, templateId, clientApiKey string) {
+// subtitleList 是请求 openlist 转码信息接口获取到的字幕列表
+func addSubtitles2MediaStreams(source, subtitleList *jsons.Item, openlistPath, templateId, clientApiKey string) {
 	// 1 json 参数类型校验
 	if source == nil || subtitleList == nil || subtitleList.Empty() {
 		return
@@ -250,7 +250,7 @@ func addSubtitles2MediaStreams(source, subtitleList *jsons.Item, alistPath, temp
 
 		u, _ := url.Parse(fmt.Sprintf("/Videos/%s/%s/Subtitles/%d/0/Stream.vtt", itemId, fakeId, idx))
 		q := u.Query()
-		q.Set("alist_path", openlist.PathEncode(alistPath))
+		q.Set("openlist_path", openlist.PathEncode(openlistPath))
 		q.Set("template_id", templateId)
 		q.Set("sub_name", subName)
 		q.Set(QueryApiKeyName, clientApiKey)
@@ -388,7 +388,7 @@ func resolveMediaSourceId(id string) (MsInfo, error) {
 		res.OriginId = segments[0]
 		res.TemplateId = segments[1]
 		res.Format = segments[2]
-		res.AlistPath = segments[3]
+		res.OpenlistPath = segments[3]
 		res.SourceNamePrefix = fmt.Sprintf("%s_%s", res.TemplateId, res.Format)
 		return res, nil
 	}
