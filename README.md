@@ -2,19 +2,19 @@
   <img height="150px" src="./assets/logo.png"></img>
 </div>
 
-<h1 align="center">go-emby2alist</h1>
+<h1 align="center">go-emby2openlist</h1>
 
 <div align="center">
-  <a href="https://github.com/AmbitiousJun/go-emby2alist/tree/v1.7.5"><img src="https://img.shields.io/github/v/tag/AmbitiousJun/go-emby2alist"></img></a>
-  <a href="https://hub.docker.com/r/ambitiousjun/go-emby2alist/tags"><img src="https://img.shields.io/docker/image-size/ambitiousjun/go-emby2alist/v1.7.5"></img></a>
-  <a href="https://hub.docker.com/r/ambitiousjun/go-emby2alist/tags"><img src="https://img.shields.io/docker/pulls/ambitiousjun/go-emby2alist"></img></a>
-  <a href="https://goreportcard.com/report/github.com/AmbitiousJun/go-emby2alist"><img src="https://goreportcard.com/badge/github.com/AmbitiousJun/go-emby2alist"></img></a>
-  <img src="https://img.shields.io/github/stars/AmbitiousJun/go-emby2alist"></img>
-  <img src="https://img.shields.io/github/license/AmbitiousJun/go-emby2alist"></img>
+  <a href="https://github.com/AmbitiousJun/go-emby2openlist/tree/v1.7.5"><img src="https://img.shields.io/github/v/tag/AmbitiousJun/go-emby2openlist"></img></a>
+  <a href="https://hub.docker.com/r/ambitiousjun/go-emby2openlist/tags"><img src="https://img.shields.io/docker/image-size/ambitiousjun/go-emby2openlist/v1.7.5"></img></a>
+  <a href="https://hub.docker.com/r/ambitiousjun/go-emby2openlist/tags"><img src="https://img.shields.io/docker/pulls/ambitiousjun/go-emby2openlist"></img></a>
+  <a href="https://goreportcard.com/report/github.com/AmbitiousJun/go-emby2openlist"><img src="https://goreportcard.com/badge/github.com/AmbitiousJun/go-emby2openlist"></img></a>
+  <img src="https://img.shields.io/github/stars/AmbitiousJun/go-emby2openlist"></img>
+  <img src="https://img.shields.io/github/license/AmbitiousJun/go-emby2openlist"></img>
 </div>
 
 <div align="center">
-  Go 语言编写的 Emby + Alist 网盘直链反向代理服务，深度适配阿里云盘转码播放。
+  Go 语言编写的 Emby + OpenList 网盘直链反向代理服务，深度适配阿里云盘转码播放。
 </div>
 
 ## 小白必看
@@ -23,9 +23,9 @@
 
 正常情况下，Emby 通过磁盘挂载的形式间接读取网盘资源，走的是服务器代理模式，看一个视频时数据链路是：
 
-> 客户端 => Emby 源服务器 => 磁盘挂载服务 => Alist => 网盘
+> 客户端 => Emby 源服务器 => 磁盘挂载服务 => OpenList => 网盘
 >
-> 客户端 <= Emby 源服务器 <= 磁盘挂载服务（将视频数据加载到本地，再给 Emby 读取） <= Alist <= 网盘
+> 客户端 <= Emby 源服务器 <= 磁盘挂载服务（将视频数据加载到本地，再给 Emby 读取） <= OpenList <= 网盘
 
 这种情况有以下局限：
 
@@ -43,9 +43,9 @@
 
 对于客户端来说，这一步和直连源服务器看不出差别
 
-> 客户端 => Emby 反代服务器 => Alist => 网盘 （请求视频直链）
+> 客户端 => Emby 反代服务器 => OpenList => 网盘 （请求视频直链）
 >
-> 客户端 <= Emby 反代服务器 <= Alist <= 网盘 （返回视频直链，并给出重定向响应）
+> 客户端 <= Emby 反代服务器 <= OpenList <= 网盘 （返回视频直链，并给出重定向响应）
 >
 > 客户端 => 网盘（客户端拿着网盘的直链直接观看，此时已经没有服务器的事情了，故不会再消耗服务器流量）
 
@@ -62,13 +62,13 @@
 
 ## 功能
 
-- Alist 网盘原画直链播放
+- OpenList 网盘原画直链播放
 
 - Strm 直链播放
 
-- Alist 网盘转码直链播放
+- OpenList 网盘转码直链播放
 
-  > 该功能是通过请求 Alist 的 `/api/fs/other` 接口来实现转码直链获取
+  > 该功能是通过请求 OpenList 的 `/api/fs/other` 接口来实现转码直链获取
   >
   > 该接口并不是对所有网盘驱动都支持，目前已知 Aliyun_Open 可以正常体验
   >
@@ -120,7 +120,7 @@
 
 - 直链缓存（为了兼容阿里云盘，直链缓存时间目前固定为 10 分钟，其他云盘暂无测试）
 
-- 大接口缓存（Alist 转码资源是通过代理并修改 PlaybackInfo 接口实现，请求比较耗时，每次大约 2~3 秒左右，目前已经利用 Go 语言的并发优势，尽力地将接口处理逻辑异步化，快的话 1 秒即可请求完成，该接口的缓存时间目前固定为 12 小时，后续如果出现异常再作调整）
+- 大接口缓存（OpenList 转码资源是通过代理并修改 PlaybackInfo 接口实现，请求比较耗时，每次大约 2~3 秒左右，目前已经利用 Go 语言的并发优势，尽力地将接口处理逻辑异步化，快的话 1 秒即可请求完成，该接口的缓存时间目前固定为 12 小时，后续如果出现异常再作调整）
 
 - 自定义注入 js/css（web）
 
@@ -145,11 +145,11 @@
 
 ## 使用说明
 
-1. 已有自己的 Emby、Alist 服务器
+1. 已有自己的 Emby、OpenList 服务器
 
-2. Emby 的媒体库路径（本地磁盘路径）是和 Alist 挂载路径能够对应上的
+2. Emby 的媒体库路径（本地磁盘路径）是和 OpenList 挂载路径能够对应上的
 
-   > 这一步前缀对应不上没关系，可以在配置中配置前缀映射 `path.emby2alist` 解决
+   > 这一步前缀对应不上没关系，可以在配置中配置前缀映射 `path.emby2openlist` 解决
 
 3. 需要有一个中间服务，将网盘的文件数据挂载到系统本地磁盘上，才能被 Emby 读取到
 
@@ -157,13 +157,13 @@
    >
    > 
    >
-   > 如果你的网盘跟我一样是阿里云盘，推荐使用 cd2 直接连接阿里云盘，然后根路径和 Alist 保持即可
+   > 如果你的网盘跟我一样是阿里云盘，推荐使用 cd2 直接连接阿里云盘，然后根路径和 OpenList 保持即可
    >
    > 在 cd2 中，找到一个 `最大缓存大小` 的配置，推荐将其设为一个极小值（我是 1MB），这样在刮削的时候就不会消耗太多三方权益包的流量
    >
    > 
    >
-   > ⚠️ 不推荐中间服务直接去连接 Alist 的 WebDav 服务，如果 Alist Token 刷新失败或者是请求频繁被暂时屏蔽，会导致系统本地的挂载路径丢失，Emby 就会认为资源被删除了，然后元数据就丢了，再重新挂载回来后就需要重新刮削了。
+   > ⚠️ 不推荐中间服务直接去连接 OpenList 的 WebDav 服务，如果 OpenList Token 刷新失败或者是请求频繁被暂时屏蔽，会导致系统本地的挂载路径丢失，Emby 就会认为资源被删除了，然后元数据就丢了，再重新挂载回来后就需要重新刮削了。
 
 4. 服务器有安装 Docker
 
@@ -188,8 +188,8 @@
 1. 获取代码
 
 ```shell
-git clone --branch v1.7.5 --depth 1 https://ghproxy.cc/https://github.com/AmbitiousJun/go-emby2alist
-cd go-emby2alist
+git clone --branch v1.7.5 --depth 1 https://ghfast.top/https://github.com/AmbitiousJun/go-emby2openlist
+cd go-emby2openlist
 ```
 
 2. 拷贝配置
@@ -217,7 +217,7 @@ docker-compose up -d --build
 6. 日志查看
 
 ```shell
-docker logs -f go-emby2alist -n 1000
+docker logs -f go-emby2openlist -n 1000
 ```
 
 7. 修改配置的时候需要重新启动容器
@@ -258,7 +258,7 @@ docker image prune -f
 
 1. 准备配置
 
-参考[示例配置](https://github.com/AmbitiousJun/go-emby2alist/blob/v1.7.5/config-example.yml)，配置好自己的服务器信息，保存并命名为 `config.yml`
+参考[示例配置](https://github.com/AmbitiousJun/go-emby2openlist/blob/v1.7.5/config-example.yml)，配置好自己的服务器信息，保存并命名为 `config.yml`
 
 2. 创建 docker-compose 文件
 
@@ -267,12 +267,12 @@ docker image prune -f
 ```yaml
 version: "3.1"
 services:
-  go-emby2alist:
-    image: ambitiousjun/go-emby2alist:v1.7.5
+  go-emby2openlist:
+    image: ambitiousjun/go-emby2openlist:v1.7.5
     environment:
       - TZ=Asia/Shanghai
       - GIN_MODE=release
-    container_name: go-emby2alist
+    container_name: go-emby2openlist
     restart: always
     volumes:
       - ./config.yml:/app/config.yml
@@ -356,7 +356,7 @@ docker-compose up -d --build
 
    > ❌ 现阶段无法阻止播放带字幕资源时，Emby 调用 FFmpeg 去提取字幕导致的服务器流量消耗问题
    >
-   > 尝试调研过手动利用 FFmpeg 将 Alist 直链字幕直接提取出来，但发现无论怎样 FFmpeg 都必须将整个视频下载到本地才能输出完整的字幕文件 😌
+   > 尝试调研过手动利用 FFmpeg 将 OpenList 直链字幕直接提取出来，但发现无论怎样 FFmpeg 都必须将整个视频下载到本地才能输出完整的字幕文件 😌
    >
    > 遂放弃
    
@@ -368,10 +368,10 @@ docker-compose up -d --build
 
 ## Star History
 
-<a href="https://star-history.com/#AmbitiousJun/go-emby2alist&Date">
+<a href="https://star-history.com/#AmbitiousJun/go-emby2openlist&Date">
  <picture>
-   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=AmbitiousJun/go-emby2alist&type=Date&theme=dark" />
-   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=AmbitiousJun/go-emby2alist&type=Date" />
-   <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=AmbitiousJun/go-emby2alist&type=Date" />
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=AmbitiousJun/go-emby2openlist&type=Date&theme=dark" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=AmbitiousJun/go-emby2openlist&type=Date" />
+   <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=AmbitiousJun/go-emby2openlist&type=Date" />
  </picture>
 </a>
