@@ -2,7 +2,7 @@ package constant
 
 const (
 	CurrentVersion = "v1.7.5"
-	RepoAddr       = "https://github.com/AmbitiousJun/go-emby2alist"
+	RepoAddr       = "https://github.com/AmbitiousJun/go-emby2openlist"
 )
 
 const (
@@ -39,8 +39,8 @@ const (
 
 	Reg_Root        = `(?i)^/$`
 	Reg_IndexHtml   = `(?i)^/web/index\.html`
-	Route_CustomJs  = `/ge2a/custom.js`
-	Route_CustomCss = `/ge2a/custom.css`
+	Route_CustomJs  = `/ge2o/custom.js`
+	Route_CustomCss = `/ge2o/custom.css`
 
 	Reg_All = `.*`
 )

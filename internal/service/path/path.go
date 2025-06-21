@@ -6,15 +6,15 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/AmbitiousJun/go-emby2alist/internal/config"
-	"github.com/AmbitiousJun/go-emby2alist/internal/service/alist"
-	"github.com/AmbitiousJun/go-emby2alist/internal/util/colors"
-	"github.com/AmbitiousJun/go-emby2alist/internal/util/jsons"
-	"github.com/AmbitiousJun/go-emby2alist/internal/util/urls"
+	"github.com/AmbitiousJun/go-emby2openlist/internal/config"
+	"github.com/AmbitiousJun/go-emby2openlist/internal/service/openlist"
+	"github.com/AmbitiousJun/go-emby2openlist/internal/util/colors"
+	"github.com/AmbitiousJun/go-emby2openlist/internal/util/jsons"
+	"github.com/AmbitiousJun/go-emby2openlist/internal/util/urls"
 )
 
-// AlistPathRes 路径转换结果
-type AlistPathRes struct {
+// OpenlistPathRes 路径转换结果
+type OpenlistPathRes struct {
 
 	// Success 转换是否成功
 	Success bool
@@ -22,12 +22,12 @@ type AlistPathRes struct {
 	// Path 转换后的路径
 	Path string
 
-	// Range 遍历所有 Alist 根路径生成的子路径
+	// Range 遍历所有 Openlist 根路径生成的子路径
 	Range func() ([]string, error)
 }
 
-// Emby2Alist Emby 资源路径转 Alist 资源路径
-func Emby2Alist(embyPath string) AlistPathRes {
+// Emby2Openlist Emby 资源路径转 Openlist 资源路径
+func Emby2Openlist(embyPath string) OpenlistPathRes {
 	pathRoutes := strings.Builder{}
 	pathRoutes.WriteString("[")
 	pathRoutes.WriteString("\n【原始路径】 => " + embyPath)
@@ -36,34 +36,34 @@ func Emby2Alist(embyPath string) AlistPathRes {
 	pathRoutes.WriteString("\n\n【Windows 反斜杠转换】 => " + embyPath)
 
 	embyMount := config.C.Emby.MountPath
-	alistFilePath := strings.TrimPrefix(embyPath, embyMount)
-	pathRoutes.WriteString("\n\n【移除 mount-path】 => " + alistFilePath)
+	openlistFilePath := strings.TrimPrefix(embyPath, embyMount)
+	pathRoutes.WriteString("\n\n【移除 mount-path】 => " + openlistFilePath)
 
-	alistFilePath = urls.Unescape(alistFilePath)
-	pathRoutes.WriteString("\n\n【URL 解码】 => " + alistFilePath)
+	openlistFilePath = urls.Unescape(openlistFilePath)
+	pathRoutes.WriteString("\n\n【URL 解码】 => " + openlistFilePath)
 
-	if mapPath, ok := config.C.Path.MapEmby2Alist(alistFilePath); ok {
-		alistFilePath = mapPath
-		pathRoutes.WriteString("\n\n【命中 emby2alist 映射】 => " + alistFilePath)
+	if mapPath, ok := config.C.Path.MapEmby2Openlist(openlistFilePath); ok {
+		openlistFilePath = mapPath
+		pathRoutes.WriteString("\n\n【命中 emby2openlist 映射】 => " + openlistFilePath)
 	}
 	pathRoutes.WriteString("\n]")
 	log.Printf(colors.ToGray("embyPath 转换路径: %s"), pathRoutes.String())
 
 	rangeFunc := func() ([]string, error) {
-		filePath, err := SplitFromSecondSlash(alistFilePath)
+		filePath, err := SplitFromSecondSlash(openlistFilePath)
 		if err != nil {
-			return nil, fmt.Errorf("alistFilePath 解析异常: %s, error: %v", alistFilePath, err)
+			return nil, fmt.Errorf("openlistFilePath 解析异常: %s, error: %v", openlistFilePath, err)
 		}
 
-		res := alist.FetchFsList("/", nil)
+		res := openlist.FetchFsList("/", nil)
 		if res.Code != http.StatusOK {
-			return nil, fmt.Errorf("请求 alist fs list 接口异常: %s", res.Msg)
+			return nil, fmt.Errorf("请求 openlist fs list 接口异常: %s", res.Msg)
 		}
 
 		paths := make([]string, 0)
 		content, ok := res.Data.Attr("content").Done()
 		if !ok || content.Type() != jsons.JsonTypeArr {
-			return nil, fmt.Errorf("alist fs list 接口响应异常, 原始响应: %v", jsons.NewByObj(res))
+			return nil, fmt.Errorf("openlist fs list 接口响应异常, 原始响应: %v", jsons.NewByObj(res))
 		}
 
 		content.RangeArr(func(_ int, value *jsons.Item) error {
@@ -78,9 +78,9 @@ func Emby2Alist(embyPath string) AlistPathRes {
 		return paths, nil
 	}
 
-	return AlistPathRes{
+	return OpenlistPathRes{
 		Success: true,
-		Path:    alistFilePath,
+		Path:    openlistFilePath,
 		Range:   rangeFunc,
 	}
 }

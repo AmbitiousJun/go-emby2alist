@@ -6,8 +6,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/AmbitiousJun/go-emby2alist/internal/util/colors"
-	"github.com/AmbitiousJun/go-emby2alist/internal/util/urls"
+	"github.com/AmbitiousJun/go-emby2openlist/internal/util/colors"
+	"github.com/AmbitiousJun/go-emby2openlist/internal/util/urls"
 )
 
 const (
@@ -25,13 +25,13 @@ func init() {
 }
 
 // GetPlaylist 获取 m3u 播放列表, 返回 m3u 文本
-var GetPlaylist func(alistPath, templateId string, proxy, main bool, routePrefix, clientApiKey string) (string, bool)
+var GetPlaylist func(openlistPath, templateId string, proxy, main bool, routePrefix, clientApiKey string) (string, bool)
 
 // GetTsLink 获取 m3u 播放列表中的某个 ts 链接
-var GetTsLink func(alistPath, templateId string, idx int) (string, bool)
+var GetTsLink func(openlistPath, templateId string, idx int) (string, bool)
 
 // GetSubtitleLink 获取字幕链接
-var GetSubtitleLink func(alistPath, templateId, subName string) (string, bool)
+var GetSubtitleLink func(openlistPath, templateId, subName string) (string, bool)
 
 // preMaintainInfoChan 预处理通道
 //
@@ -44,12 +44,12 @@ var preMaintainInfoChan = make(chan Info, PreChanSize)
 // 当 gouroutine 处理完一个任务时, group - 1
 var preChanHandlingGroup = sync.WaitGroup{}
 
-// PushPlaylistAsync 将一个 alist 转码资源异步缓存到内存中
+// PushPlaylistAsync 将一个 openlist 转码资源异步缓存到内存中
 func PushPlaylistAsync(info Info) {
-	if info.AlistPath == "" || info.TemplateId == "" {
+	if info.OpenlistPath == "" || info.TemplateId == "" {
 		return
 	}
-	info = Info{AlistPath: info.AlistPath, TemplateId: info.TemplateId}
+	info = Info{OpenlistPath: info.OpenlistPath, TemplateId: info.TemplateId}
 	preChanHandlingGroup.Add(1)
 	doneOnce := sync.OnceFunc(preChanHandlingGroup.Done)
 	go func() {
@@ -83,17 +83,17 @@ func loopMaintainPlaylist() {
 	removeTimeMillis := time.Hour.Milliseconds()
 
 	// publicApiUpdateMutex 对外部暴露的 api 的内部实现中
-	// 如果涉及到更新的操作, 需要获取这个锁, 避免频繁请求 alist
+	// 如果涉及到更新的操作, 需要获取这个锁, 避免频繁请求 openlist
 	publicApiUpdateMutex := sync.Mutex{}
 
 	// printErr 打印错误日志
 	printErr := func(info *Info, err error) {
-		log.Printf(colors.ToRed("playlist 更新失败, path: %s, template: %s, err: %v"), info.AlistPath, info.TemplateId, err)
+		log.Printf(colors.ToRed("playlist 更新失败, path: %s, template: %s, err: %v"), info.OpenlistPath, info.TemplateId, err)
 	}
 
 	// calcMapKey 计算 info 在 map 中的 key
 	calcMapKey := func(info Info) string {
-		return info.AlistPath + info.TemplateId
+		return info.OpenlistPath + info.TemplateId
 	}
 
 	// beforeNow 判断一个时间是不是在当前时间之前
@@ -105,8 +105,8 @@ func loopMaintainPlaylist() {
 	//
 	// 如果内存中 map 已经能查询到 info 信息, 直接返回
 	// 否则会等待预处理通道处理完毕后再次判断
-	queryInfo := func(alistPath, templateId string) (info *Info) {
-		key := calcMapKey(Info{AlistPath: alistPath, TemplateId: templateId})
+	queryInfo := func(openlistPath, templateId string) (info *Info) {
+		key := calcMapKey(Info{OpenlistPath: openlistPath, TemplateId: templateId})
 		var ok bool
 		info, ok = infoMap[key]
 
@@ -143,8 +143,8 @@ func loopMaintainPlaylist() {
 		return nil
 	}
 
-	GetPlaylist = func(alistPath, templateId string, proxy, main bool, routePrefix, clientApiKey string) (string, bool) {
-		info := queryInfo(alistPath, templateId)
+	GetPlaylist = func(openlistPath, templateId string, proxy, main bool, routePrefix, clientApiKey string) (string, bool) {
+		info := queryInfo(openlistPath, templateId)
 		if info == nil {
 			return "", false
 		}
@@ -154,16 +154,16 @@ func loopMaintainPlaylist() {
 		return info.Content(), true
 	}
 
-	GetTsLink = func(alistPath, templateId string, idx int) (string, bool) {
-		info := queryInfo(alistPath, templateId)
+	GetTsLink = func(openlistPath, templateId string, idx int) (string, bool) {
+		info := queryInfo(openlistPath, templateId)
 		if info == nil {
 			return "", false
 		}
 		return info.GetTsLink(idx)
 	}
 
-	GetSubtitleLink = func(alistPath, templateId, subName string) (string, bool) {
-		info := queryInfo(alistPath, templateId)
+	GetSubtitleLink = func(openlistPath, templateId, subName string) (string, bool) {
+		info := queryInfo(openlistPath, templateId)
 		if info == nil {
 			return "", false
 		}
@@ -200,12 +200,12 @@ func loopMaintainPlaylist() {
 		tot, active := len(cpArr), 0
 
 		for _, info := range cpArr {
-			key := calcMapKey(Info{AlistPath: info.AlistPath, TemplateId: info.TemplateId})
+			key := calcMapKey(Info{OpenlistPath: info.OpenlistPath, TemplateId: info.TemplateId})
 
 			// 长时间未读, 移除
 			if beforeNow(info.LastUpdate + removeTimeMillis) {
 				removeInfo(key)
-				log.Printf(colors.ToGray("playlist 长时间未被更新, 已移除, alistPath: %s, templateId: %s"), info.AlistPath, info.TemplateId)
+				log.Printf(colors.ToGray("playlist 长时间未被更新, 已移除, openlistPath: %s, templateId: %s"), info.OpenlistPath, info.TemplateId)
 				tot--
 				continue
 			}
@@ -232,7 +232,7 @@ func loopMaintainPlaylist() {
 
 	// addInfo 添加 info 到内存中
 	addInfo := func(preInfo Info) {
-		if preInfo.AlistPath == "" || preInfo.TemplateId == "" {
+		if preInfo.OpenlistPath == "" || preInfo.TemplateId == "" {
 			return
 		}
 		key := calcMapKey(preInfo)
@@ -267,8 +267,8 @@ func loopMaintainPlaylist() {
 		toDeletes := make([]*Info, len(infoArr)-MaxPlaylistNum)
 		copy(toDeletes, infoArr)
 		for _, toDel := range toDeletes {
-			removeInfo(calcMapKey(Info{AlistPath: toDel.AlistPath, TemplateId: toDel.TemplateId}))
-			log.Printf(colors.ToGray("playlist 被淘汰并从内存中移除, alistPath: %s, templateId: %s"), toDel.AlistPath, toDel.TemplateId)
+			removeInfo(calcMapKey(Info{OpenlistPath: toDel.OpenlistPath, TemplateId: toDel.TemplateId}))
+			log.Printf(colors.ToGray("playlist 被淘汰并从内存中移除, openlistPath: %s, templateId: %s"), toDel.OpenlistPath, toDel.TemplateId)
 		}
 	}
 

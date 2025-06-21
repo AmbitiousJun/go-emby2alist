@@ -11,11 +11,11 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/AmbitiousJun/go-emby2alist/internal/config"
-	"github.com/AmbitiousJun/go-emby2alist/internal/util/colors"
-	"github.com/AmbitiousJun/go-emby2alist/internal/util/https"
-	"github.com/AmbitiousJun/go-emby2alist/internal/util/jsons"
-	"github.com/AmbitiousJun/go-emby2alist/internal/web/webport"
+	"github.com/AmbitiousJun/go-emby2openlist/internal/config"
+	"github.com/AmbitiousJun/go-emby2openlist/internal/util/colors"
+	"github.com/AmbitiousJun/go-emby2openlist/internal/util/https"
+	"github.com/AmbitiousJun/go-emby2openlist/internal/util/jsons"
+	"github.com/AmbitiousJun/go-emby2openlist/internal/web/webport"
 
 	"github.com/gin-gonic/gin"
 )

@@ -33,13 +33,13 @@ emby:
   local-media-root: /data/local
 
 # 该配置仅针对通过磁盘挂载方式接入的网盘, 如果你使用的是 strm, 可忽略该配置
-alist:
-  host: http://192.168.0.109:5244            # alist 访问地址
-  token: alist-xxxxx                         # alist api key 可以在 alist 管理后台查看
+openlist:
+  host: http://192.168.0.109:5244            # openlist 访问地址
+  token: openlist-xxxxx                      # openlist api key 可以在 openlist 管理后台查看
 
 # 该配置项目前只对阿里云盘生效, 如果你使用的是其他网盘, 请直接将 enable 设置为 false
 video-preview:
-  enable: true                               # 是否开启 alist 转码资源信息获取
+  enable: true                               # 是否开启 openlist 转码资源信息获取
   containers:                                # 对哪些视频容器获取转码资源信息
     - mp4
     - mkv
@@ -48,10 +48,10 @@ video-preview:
     - SD
 
 path:
-  # emby 挂载路径和 alist 真实路径之间的前缀映射
-  # 冒号左边表示本地挂载路径, 冒号右边表示 alist 的真实路径
+  # emby 挂载路径和 openlist 真实路径之间的前缀映射
+  # 冒号左边表示本地挂载路径, 冒号右边表示 openlist 的真实路径
   # 这个配置请再三确认配置正确, 可以减少很多不必要的网络请求
-  emby2alist: 
+  emby2openlist: 
     - /movie:/电影
     - /music:/音乐
     - /show:/综艺

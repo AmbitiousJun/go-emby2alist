@@ -1,12 +1,12 @@
-package alist_test
+package openlist_test
 
 import (
 	"log"
 	"net/http"
 	"testing"
 
-	"github.com/AmbitiousJun/go-emby2alist/internal/config"
-	"github.com/AmbitiousJun/go-emby2alist/internal/service/alist"
+	"github.com/AmbitiousJun/go-emby2openlist/internal/config"
+	"github.com/AmbitiousJun/go-emby2openlist/internal/service/openlist"
 )
 
 func TestFetch(t *testing.T) {
@@ -15,7 +15,7 @@ func TestFetch(t *testing.T) {
 		t.Error(err)
 		return
 	}
-	res := alist.Fetch("/api/fs/list", http.MethodPost, nil, map[string]any{
+	res := openlist.Fetch("/api/fs/list", http.MethodPost, nil, map[string]any{
 		"refresh":  true,
 		"password": "",
 		"path":     "/",

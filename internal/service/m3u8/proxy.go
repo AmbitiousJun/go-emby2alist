@@ -7,10 +7,10 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/AmbitiousJun/go-emby2alist/internal/service/alist"
-	"github.com/AmbitiousJun/go-emby2alist/internal/util/colors"
-	"github.com/AmbitiousJun/go-emby2alist/internal/util/https"
-	"github.com/AmbitiousJun/go-emby2alist/internal/util/strs"
+	"github.com/AmbitiousJun/go-emby2openlist/internal/service/openlist"
+	"github.com/AmbitiousJun/go-emby2openlist/internal/util/colors"
+	"github.com/AmbitiousJun/go-emby2openlist/internal/util/https"
+	"github.com/AmbitiousJun/go-emby2openlist/internal/util/strs"
 
 	"github.com/gin-gonic/gin"
 )
@@ -26,9 +26,9 @@ func baseCheck(c *gin.Context) (ProxyParams, error) {
 		return ProxyParams{}, err
 	}
 
-	params.AlistPath = alist.PathDecode(params.AlistPath)
+	params.OpenlistPath = openlist.PathDecode(params.OpenlistPath)
 
-	if params.AlistPath == "" || params.TemplateId == "" || params.ApiKey == "" {
+	if params.OpenlistPath == "" || params.TemplateId == "" || params.ApiKey == "" {
 		return ProxyParams{}, errors.New("参数不足")
 	}
 
@@ -52,17 +52,17 @@ func ProxyPlaylist(c *gin.Context) {
 	// ts 切片使用绝对路径
 	routePrefix := https.ClientRequestHost(c) + "/videos"
 
-	m3uContent, ok := GetPlaylist(params.AlistPath, params.TemplateId, true, true, routePrefix, params.ApiKey)
+	m3uContent, ok := GetPlaylist(params.OpenlistPath, params.TemplateId, true, true, routePrefix, params.ApiKey)
 	if ok {
 		okContent(m3uContent)
 		return
 	}
 
 	// 获取失败, 将当前请求的地址加入到预处理通道
-	PushPlaylistAsync(Info{AlistPath: params.AlistPath, TemplateId: params.TemplateId})
+	PushPlaylistAsync(Info{OpenlistPath: params.OpenlistPath, TemplateId: params.TemplateId})
 
 	// 重新获取一次
-	m3uContent, ok = GetPlaylist(params.AlistPath, params.TemplateId, true, true, routePrefix, params.ApiKey)
+	m3uContent, ok = GetPlaylist(params.OpenlistPath, params.TemplateId, true, true, routePrefix, params.ApiKey)
 	if ok {
 		okContent(m3uContent)
 		return
@@ -90,16 +90,16 @@ func ProxyTsLink(c *gin.Context) {
 		c.Redirect(http.StatusTemporaryRedirect, link)
 	}
 
-	tsLink, ok := GetTsLink(params.AlistPath, params.TemplateId, idx)
+	tsLink, ok := GetTsLink(params.OpenlistPath, params.TemplateId, idx)
 	if ok {
 		okRedirect(tsLink)
 		return
 	}
 
 	// 获取失败, 将当前请求的地址加入到预处理通道
-	PushPlaylistAsync(Info{AlistPath: params.AlistPath, TemplateId: params.TemplateId})
+	PushPlaylistAsync(Info{OpenlistPath: params.OpenlistPath, TemplateId: params.TemplateId})
 
-	tsLink, ok = GetTsLink(params.AlistPath, params.TemplateId, idx)
+	tsLink, ok = GetTsLink(params.OpenlistPath, params.TemplateId, idx)
 	if ok {
 		okRedirect(tsLink)
 		return
@@ -140,16 +140,16 @@ func ProxySubtitle(c *gin.Context) {
 		}
 	}
 
-	subtitleLink, ok := GetSubtitleLink(params.AlistPath, params.TemplateId, subName)
+	subtitleLink, ok := GetSubtitleLink(params.OpenlistPath, params.TemplateId, subName)
 	if ok {
 		proxySubtitle(subtitleLink)
 		return
 	}
 
 	// 获取失败, 将当前请求的地址加入到预处理通道
-	PushPlaylistAsync(Info{AlistPath: params.AlistPath, TemplateId: params.TemplateId})
+	PushPlaylistAsync(Info{OpenlistPath: params.OpenlistPath, TemplateId: params.TemplateId})
 
-	subtitleLink, ok = GetSubtitleLink(params.AlistPath, params.TemplateId, subName)
+	subtitleLink, ok = GetSubtitleLink(params.OpenlistPath, params.TemplateId, subName)
 	if ok {
 		proxySubtitle(subtitleLink)
 		return

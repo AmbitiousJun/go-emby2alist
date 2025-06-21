@@ -10,14 +10,14 @@ import (
 	"strings"
 	"time"
 
-	"github.com/AmbitiousJun/go-emby2alist/internal/config"
-	"github.com/AmbitiousJun/go-emby2alist/internal/service/alist"
-	"github.com/AmbitiousJun/go-emby2alist/internal/service/path"
-	"github.com/AmbitiousJun/go-emby2alist/internal/util/colors"
-	"github.com/AmbitiousJun/go-emby2alist/internal/util/https"
-	"github.com/AmbitiousJun/go-emby2alist/internal/util/strs"
-	"github.com/AmbitiousJun/go-emby2alist/internal/util/urls"
-	"github.com/AmbitiousJun/go-emby2alist/internal/web/cache"
+	"github.com/AmbitiousJun/go-emby2openlist/internal/config"
+	"github.com/AmbitiousJun/go-emby2openlist/internal/service/openlist"
+	"github.com/AmbitiousJun/go-emby2openlist/internal/service/path"
+	"github.com/AmbitiousJun/go-emby2openlist/internal/util/colors"
+	"github.com/AmbitiousJun/go-emby2openlist/internal/util/https"
+	"github.com/AmbitiousJun/go-emby2openlist/internal/util/strs"
+	"github.com/AmbitiousJun/go-emby2openlist/internal/util/urls"
+	"github.com/AmbitiousJun/go-emby2openlist/internal/web/cache"
 
 	"github.com/gin-gonic/gin"
 )
@@ -27,23 +27,23 @@ func Redirect2Transcode(c *gin.Context) {
 	// 只有三个必要的参数都获取到时, 才跳转到本地 ts 代理
 	templateId := c.Query("template_id")
 	apiKey := c.Query(QueryApiKeyName)
-	alistPath := c.Query("alist_path")
-	if strs.AnyEmpty(templateId, apiKey, alistPath) {
+	openlistPath := c.Query("openlist_path")
+	if strs.AnyEmpty(templateId, apiKey, openlistPath) {
 		ProxyOrigin(c)
 		return
 	}
 	log.Println(colors.ToBlue("检测到自定义的转码 m3u8 请求, 重定向到本地代理接口"))
 	tu, _ := url.Parse("/videos/proxy_playlist")
 	q := tu.Query()
-	q.Set("alist_path", alistPath)
+	q.Set("openlist_path", openlistPath)
 	q.Set(QueryApiKeyName, apiKey)
 	q.Set("template_id", templateId)
 	tu.RawQuery = q.Encode()
 	c.Redirect(http.StatusTemporaryRedirect, tu.String())
 }
 
-// Redirect2AlistLink 重定向资源到 alist 网盘直链
-func Redirect2AlistLink(c *gin.Context) {
+// Redirect2OpenlistLink 重定向资源到 openlist 网盘直链
+func Redirect2OpenlistLink(c *gin.Context) {
 	// 1 解析要请求的资源信息
 	itemInfo, err := resolveItemInfo(c)
 	if checkErr(c, err) {
@@ -54,12 +54,12 @@ func Redirect2AlistLink(c *gin.Context) {
 	// 2 如果请求的是转码资源, 重定向到本地的 m3u8 代理服务
 	msInfo := itemInfo.MsInfo
 	useTranscode := !msInfo.Empty && msInfo.Transcode
-	if useTranscode && msInfo.AlistPath != "" {
+	if useTranscode && msInfo.OpenlistPath != "" {
 		u, _ := url.Parse(strings.ReplaceAll(MasterM3U8UrlTemplate, "${itemId}", itemInfo.Id))
 		q := u.Query()
 		q.Set("template_id", itemInfo.MsInfo.TemplateId)
 		q.Set(QueryApiKeyName, itemInfo.ApiKey)
-		q.Set("alist_path", itemInfo.MsInfo.AlistPath)
+		q.Set("openlist_path", itemInfo.MsInfo.OpenlistPath)
 		u.RawQuery = q.Encode()
 		log.Printf(colors.ToGreen("重定向 playlist: %s"), u.String())
 		c.Redirect(http.StatusTemporaryRedirect, u.String())
@@ -89,23 +89,23 @@ func Redirect2AlistLink(c *gin.Context) {
 		return
 	}
 
-	// 6 请求 alist 资源
-	fi := alist.FetchInfo{
+	// 6 请求 openlist 资源
+	fi := openlist.FetchInfo{
 		Header:       c.Request.Header.Clone(),
 		UseTranscode: useTranscode,
 		Format:       msInfo.TemplateId,
 	}
-	alistPathRes := path.Emby2Alist(embyPath)
+	openlistPathRes := path.Emby2Openlist(embyPath)
 
 	allErrors := strings.Builder{}
-	// handleAlistResource 根据传递的 path 请求 alist 资源
-	handleAlistResource := func(path string) bool {
-		log.Printf(colors.ToBlue("尝试请求 Alist 资源: %s"), path)
+	// handleOpenlistResource 根据传递的 path 请求 openlist 资源
+	handleOpenlistResource := func(path string) bool {
+		log.Printf(colors.ToBlue("尝试请求 Openlist 资源: %s"), path)
 		fi.Path = path
-		res := alist.FetchResource(fi)
+		res := openlist.FetchResource(fi)
 
 		if res.Code != http.StatusOK {
-			allErrors.WriteString(fmt.Sprintf("请求 Alist 失败, code: %d, msg: %s, path: %s;", res.Code, res.Msg, path))
+			allErrors.WriteString(fmt.Sprintf("请求 Openlist 失败, code: %d, msg: %s, path: %s;", res.Code, res.Msg, path))
 			return false
 		}
 
@@ -122,7 +122,7 @@ func Redirect2AlistLink(c *gin.Context) {
 		q := u.Query()
 		q.Set("template_id", itemInfo.MsInfo.TemplateId)
 		q.Set(QueryApiKeyName, itemInfo.ApiKey)
-		q.Set("alist_path", alist.PathEncode(path))
+		q.Set("openlist_path", openlist.PathEncode(path))
 		u.RawQuery = q.Encode()
 		resp, err := https.Get(u.String()).Do()
 		if err != nil {
@@ -136,15 +136,15 @@ func Redirect2AlistLink(c *gin.Context) {
 		return true
 	}
 
-	if alistPathRes.Success && handleAlistResource(alistPathRes.Path) {
+	if openlistPathRes.Success && handleOpenlistResource(openlistPathRes.Path) {
 		return
 	}
-	paths, err := alistPathRes.Range()
+	paths, err := openlistPathRes.Range()
 	if checkErr(c, err) {
 		return
 	}
 	if slices.ContainsFunc(paths, func(path string) bool {
-		return handleAlistResource(path)
+		return handleOpenlistResource(path)
 	}) {
 		return
 	}

@@ -3,10 +3,10 @@ package main
 import (
 	"log"
 
-	"github.com/AmbitiousJun/go-emby2alist/internal/config"
-	"github.com/AmbitiousJun/go-emby2alist/internal/constant"
-	"github.com/AmbitiousJun/go-emby2alist/internal/util/colors"
-	"github.com/AmbitiousJun/go-emby2alist/internal/web"
+	"github.com/AmbitiousJun/go-emby2openlist/internal/config"
+	"github.com/AmbitiousJun/go-emby2openlist/internal/constant"
+	"github.com/AmbitiousJun/go-emby2openlist/internal/util/colors"
+	"github.com/AmbitiousJun/go-emby2openlist/internal/web"
 )
 
 func main() {
@@ -25,13 +25,15 @@ func main() {
 
 func printBanner() {
 	log.Printf(colors.ToYellow(`
-                                  _           ____       _ _     _   
-  __ _  ___         ___ _ __ ___ | |__  _   _|___ \ __ _| (_)___| |_ 
- / _| |/ _ \ _____ / _ \ '_ | _ \| '_ \| | | | __) / _| | | / __| __|
-| (_| | (_) |_____|  __/ | | | | | |_) | |_| |/ __/ (_| | | \__ \ |_ 
- \__, |\___/       \___|_| |_| |_|_.__/ \__, |_____\__,_|_|_|___/\__|
- |___/                                  |___/                        
- 
+                                 _           ___                        _ _     _   
+                                | |         |__ \                      | (_)   | |  
+  __ _  ___ ______ ___ _ __ ___ | |__  _   _   ) |___  _ __   ___ _ __ | |_ ___| |_ 
+ / _| |/ _ \______/ _ \ '_ | _ \| '_ \| | | | / // _ \| '_ \ / _ \ '_ \| | / __| __|
+| (_| | (_) |    |  __/ | | | | | |_) | |_| |/ /| (_) | |_) |  __/ | | | | \__ \ |_ 
+ \__, |\___/      \___|_| |_| |_|_.__/ \__, |____\___/| .__/ \___|_| |_|_|_|___/\__|
+  __/ |                                 __/ |         | |                           
+ |___/                                 |___/          |_|                           
+
  Repository: %s
     Version: %s
 	`), constant.RepoAddr, constant.CurrentVersion)

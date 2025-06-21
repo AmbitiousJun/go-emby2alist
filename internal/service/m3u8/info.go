@@ -12,12 +12,12 @@ import (
 	"strings"
 	"time"
 
-	"github.com/AmbitiousJun/go-emby2alist/internal/service/alist"
-	"github.com/AmbitiousJun/go-emby2alist/internal/service/emby"
-	"github.com/AmbitiousJun/go-emby2alist/internal/util/colors"
-	"github.com/AmbitiousJun/go-emby2alist/internal/util/https"
-	"github.com/AmbitiousJun/go-emby2alist/internal/util/strs"
-	"github.com/AmbitiousJun/go-emby2alist/internal/util/urls"
+	"github.com/AmbitiousJun/go-emby2openlist/internal/service/emby"
+	"github.com/AmbitiousJun/go-emby2openlist/internal/service/openlist"
+	"github.com/AmbitiousJun/go-emby2openlist/internal/util/colors"
+	"github.com/AmbitiousJun/go-emby2openlist/internal/util/https"
+	"github.com/AmbitiousJun/go-emby2openlist/internal/util/strs"
+	"github.com/AmbitiousJun/go-emby2openlist/internal/util/urls"
 )
 
 // NewByContent 根据 m3u8 文本初始化一个 info 对象
@@ -123,7 +123,7 @@ func (i *Info) MasterFunc(cntMapper func() string, clientApiKey string) string {
 	for _, subInfo := range i.Subtitles {
 		u, _ := url.Parse("proxy_subtitle")
 		q := u.Query()
-		q.Set("alist_path", alist.PathEncode(i.AlistPath))
+		q.Set("openlist_path", openlist.PathEncode(i.OpenlistPath))
 		q.Set("template_id", i.TemplateId)
 		q.Set("sub_name", urls.ResolveResourceName(subInfo.Url))
 		q.Set(emby.QueryApiKeyName, clientApiKey)
@@ -180,7 +180,7 @@ func (i *Info) ProxyContent(main bool, routePrefix, clientApiKey string) string 
 		return i.MasterFunc(func() string {
 			u, _ := url.Parse(baseRoute.String())
 			q := u.Query()
-			q.Set("alist_path", alist.PathEncode(i.AlistPath))
+			q.Set("openlist_path", openlist.PathEncode(i.OpenlistPath))
 			q.Set("template_id", i.TemplateId)
 			q.Set(emby.QueryApiKeyName, clientApiKey)
 			q.Set("type", "main")
@@ -194,7 +194,7 @@ func (i *Info) ProxyContent(main bool, routePrefix, clientApiKey string) string 
 		u, _ := url.Parse(baseRoute.String())
 		q := u.Query()
 		q.Set("idx", strconv.Itoa(idx))
-		q.Set("alist_path", alist.PathEncode(i.AlistPath))
+		q.Set("openlist_path", openlist.PathEncode(i.OpenlistPath))
 		q.Set("template_id", i.TemplateId)
 		q.Set(emby.QueryApiKeyName, clientApiKey)
 		u.RawQuery = q.Encode()
@@ -209,23 +209,23 @@ func (i *Info) Content() string {
 	})
 }
 
-// UpdateContent 从 alist 获取最新的 m3u8 并更新对象
+// UpdateContent 从 openlist 获取最新的 m3u8 并更新对象
 //
-// 通过 AlistPath 和 TemplateId 定位到唯一一个转码资源地址
+// 通过 OpenlistPath 和 TemplateId 定位到唯一一个转码资源地址
 func (i *Info) UpdateContent() error {
-	if i.AlistPath == "" || i.TemplateId == "" {
+	if i.OpenlistPath == "" || i.TemplateId == "" {
 		return errors.New("参数为设置, 无法更新")
 	}
-	log.Printf(colors.ToPurple("更新 playlist, alistPath: %s, templateId: %s"), i.AlistPath, i.TemplateId)
+	log.Printf(colors.ToPurple("更新 playlist, openlistPath: %s, templateId: %s"), i.OpenlistPath, i.TemplateId)
 
-	// 请求 alist 资源
-	res := alist.FetchResource(alist.FetchInfo{
-		Path:         i.AlistPath,
+	// 请求 openlist 资源
+	res := openlist.FetchResource(openlist.FetchInfo{
+		Path:         i.OpenlistPath,
 		UseTranscode: true,
 		Format:       i.TemplateId,
 	})
 	if res.Code != http.StatusOK {
-		return errors.New("请求 alist 失败: " + res.Msg)
+		return errors.New("请求 openlist 失败: " + res.Msg)
 	}
 
 	// 解析地址
@@ -239,7 +239,7 @@ func (i *Info) UpdateContent() error {
 	i.HeadComments = append(([]string)(nil), newInfo.HeadComments...)
 	i.TailComments = append(([]string)(nil), newInfo.TailComments...)
 	i.RemoteTsInfos = append(([]*TsInfo)(nil), newInfo.RemoteTsInfos...)
-	i.Subtitles = append(([]alist.SubtitleInfo)(nil), res.Data.Subtitles...)
+	i.Subtitles = append(([]openlist.SubtitleInfo)(nil), res.Data.Subtitles...)
 	i.LastUpdate = time.Now().UnixMilli()
 	return nil
 }

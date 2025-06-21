@@ -1,13 +1,13 @@
 version: '3.1'
 services:
-  go-emby2alist:
+  go-emby2openlist:
     build:
       context: .
       dockerfile: Dockerfile
     environment:
       - TZ=Asia/Shanghai
       - GIN_MODE=release
-    container_name: go-emby2alist
+    container_name: go-emby2openlist
     restart: always
     volumes:
       - ./config.yml:/app/config.yml
