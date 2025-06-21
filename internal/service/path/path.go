@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	"github.com/AmbitiousJun/go-emby2alist/internal/config"
-	"github.com/AmbitiousJun/go-emby2alist/internal/service/alist"
+	"github.com/AmbitiousJun/go-emby2alist/internal/service/openlist"
 	"github.com/AmbitiousJun/go-emby2alist/internal/util/colors"
 	"github.com/AmbitiousJun/go-emby2alist/internal/util/jsons"
 	"github.com/AmbitiousJun/go-emby2alist/internal/util/urls"
@@ -55,7 +55,7 @@ func Emby2Openlist(embyPath string) OpenlistPathRes {
 			return nil, fmt.Errorf("openlistFilePath 解析异常: %s, error: %v", openlistFilePath, err)
 		}
 
-		res := alist.FetchFsList("/", nil)
+		res := openlist.FetchFsList("/", nil)
 		if res.Code != http.StatusOK {
 			return nil, fmt.Errorf("请求 openlist fs list 接口异常: %s", res.Msg)
 		}

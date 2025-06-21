@@ -1,4 +1,4 @@
-package alist
+package openlist
 
 var (
 

@@ -12,8 +12,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/AmbitiousJun/go-emby2alist/internal/service/alist"
 	"github.com/AmbitiousJun/go-emby2alist/internal/service/emby"
+	"github.com/AmbitiousJun/go-emby2alist/internal/service/openlist"
 	"github.com/AmbitiousJun/go-emby2alist/internal/util/colors"
 	"github.com/AmbitiousJun/go-emby2alist/internal/util/https"
 	"github.com/AmbitiousJun/go-emby2alist/internal/util/strs"
@@ -123,7 +123,7 @@ func (i *Info) MasterFunc(cntMapper func() string, clientApiKey string) string {
 	for _, subInfo := range i.Subtitles {
 		u, _ := url.Parse("proxy_subtitle")
 		q := u.Query()
-		q.Set("alist_path", alist.PathEncode(i.AlistPath))
+		q.Set("alist_path", openlist.PathEncode(i.AlistPath))
 		q.Set("template_id", i.TemplateId)
 		q.Set("sub_name", urls.ResolveResourceName(subInfo.Url))
 		q.Set(emby.QueryApiKeyName, clientApiKey)
@@ -180,7 +180,7 @@ func (i *Info) ProxyContent(main bool, routePrefix, clientApiKey string) string 
 		return i.MasterFunc(func() string {
 			u, _ := url.Parse(baseRoute.String())
 			q := u.Query()
-			q.Set("alist_path", alist.PathEncode(i.AlistPath))
+			q.Set("alist_path", openlist.PathEncode(i.AlistPath))
 			q.Set("template_id", i.TemplateId)
 			q.Set(emby.QueryApiKeyName, clientApiKey)
 			q.Set("type", "main")
@@ -194,7 +194,7 @@ func (i *Info) ProxyContent(main bool, routePrefix, clientApiKey string) string 
 		u, _ := url.Parse(baseRoute.String())
 		q := u.Query()
 		q.Set("idx", strconv.Itoa(idx))
-		q.Set("alist_path", alist.PathEncode(i.AlistPath))
+		q.Set("alist_path", openlist.PathEncode(i.AlistPath))
 		q.Set("template_id", i.TemplateId)
 		q.Set(emby.QueryApiKeyName, clientApiKey)
 		u.RawQuery = q.Encode()
@@ -219,7 +219,7 @@ func (i *Info) UpdateContent() error {
 	log.Printf(colors.ToPurple("更新 playlist, alistPath: %s, templateId: %s"), i.AlistPath, i.TemplateId)
 
 	// 请求 alist 资源
-	res := alist.FetchResource(alist.FetchInfo{
+	res := openlist.FetchResource(openlist.FetchInfo{
 		Path:         i.AlistPath,
 		UseTranscode: true,
 		Format:       i.TemplateId,
@@ -239,7 +239,7 @@ func (i *Info) UpdateContent() error {
 	i.HeadComments = append(([]string)(nil), newInfo.HeadComments...)
 	i.TailComments = append(([]string)(nil), newInfo.TailComments...)
 	i.RemoteTsInfos = append(([]*TsInfo)(nil), newInfo.RemoteTsInfos...)
-	i.Subtitles = append(([]alist.SubtitleInfo)(nil), res.Data.Subtitles...)
+	i.Subtitles = append(([]openlist.SubtitleInfo)(nil), res.Data.Subtitles...)
 	i.LastUpdate = time.Now().UnixMilli()
 	return nil
 }

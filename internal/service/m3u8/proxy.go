@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/AmbitiousJun/go-emby2alist/internal/service/alist"
+	"github.com/AmbitiousJun/go-emby2alist/internal/service/openlist"
 	"github.com/AmbitiousJun/go-emby2alist/internal/util/colors"
 	"github.com/AmbitiousJun/go-emby2alist/internal/util/https"
 	"github.com/AmbitiousJun/go-emby2alist/internal/util/strs"
@@ -26,7 +26,7 @@ func baseCheck(c *gin.Context) (ProxyParams, error) {
 		return ProxyParams{}, err
 	}
 
-	params.AlistPath = alist.PathDecode(params.AlistPath)
+	params.AlistPath = openlist.PathDecode(params.AlistPath)
 
 	if params.AlistPath == "" || params.TemplateId == "" || params.ApiKey == "" {
 		return ProxyParams{}, errors.New("参数不足")

@@ -13,7 +13,7 @@ import (
 	"sync"
 
 	"github.com/AmbitiousJun/go-emby2alist/internal/config"
-	"github.com/AmbitiousJun/go-emby2alist/internal/service/alist"
+	"github.com/AmbitiousJun/go-emby2alist/internal/service/openlist"
 	"github.com/AmbitiousJun/go-emby2alist/internal/service/path"
 	"github.com/AmbitiousJun/go-emby2alist/internal/util/jsons"
 	"github.com/AmbitiousJun/go-emby2alist/internal/util/randoms"
@@ -96,7 +96,7 @@ func findVideoPreviewInfos(source *jsons.Item, originName, clientApiKey string, 
 	var transcodingList, subtitleList *jsons.Item
 	firstFetchSuccess := false
 	if alistPathRes.Success {
-		res := alist.FetchFsOther(alistPathRes.Path, nil)
+		res := openlist.FetchFsOther(alistPathRes.Path, nil)
 
 		if res.Code == http.StatusOK {
 			if list, ok := res.Data.Attr("video_preview_play_info").Attr("live_transcoding_task_list").Done(); ok {
@@ -124,7 +124,7 @@ func findVideoPreviewInfos(source *jsons.Item, originName, clientApiKey string, 
 		}
 
 		for i := 0; i < len(paths); i++ {
-			res := alist.FetchFsOther(paths[i], nil)
+			res := openlist.FetchFsOther(paths[i], nil)
 			if res.Code == http.StatusOK {
 				if list, ok := res.Data.Attr("video_preview_play_info").Attr("live_transcoding_task_list").Done(); ok {
 					transcodingList = list
@@ -169,14 +169,14 @@ func findVideoPreviewInfos(source *jsons.Item, originName, clientApiKey string, 
 				source.Attr("Id").Val(), MediaSourceIdSegment,
 				templateId, MediaSourceIdSegment,
 				format, MediaSourceIdSegment,
-				alist.PathEncode(alistPathRes.Path),
+				openlist.PathEncode(alistPathRes.Path),
 			)
 			copySource.Attr("Id").Set(newId)
 
 			// 设置转码代理播放链接
 			tu, _ := url.Parse(strings.ReplaceAll(MasterM3U8UrlTemplate, "${itemId}", itemId))
 			q := tu.Query()
-			q.Set("alist_path", alist.PathEncode(alistPathRes.Path))
+			q.Set("alist_path", openlist.PathEncode(alistPathRes.Path))
 			q.Set("template_id", templateId)
 			q.Set(QueryApiKeyName, clientApiKey)
 			tu.RawQuery = q.Encode()
@@ -242,7 +242,7 @@ func addSubtitles2MediaStreams(source, subtitleList *jsons.Item, alistPath, temp
 		subStream.Put("Language", jsons.NewByVal(lang))
 
 		subName := urls.ResolveResourceName(sub.Attr("url").Val().(string))
-		subStream.Put("DisplayTitle", jsons.NewByVal(alist.SubLangDisplayName(lang)))
+		subStream.Put("DisplayTitle", jsons.NewByVal(openlist.SubLangDisplayName(lang)))
 		subStream.Put("Title", jsons.NewByVal(fmt.Sprintf("(%s) %s", lang, subName)))
 
 		idx := curMediaStreamsSize + index
@@ -250,7 +250,7 @@ func addSubtitles2MediaStreams(source, subtitleList *jsons.Item, alistPath, temp
 
 		u, _ := url.Parse(fmt.Sprintf("/Videos/%s/%s/Subtitles/%d/0/Stream.vtt", itemId, fakeId, idx))
 		q := u.Query()
-		q.Set("alist_path", alist.PathEncode(alistPath))
+		q.Set("alist_path", openlist.PathEncode(alistPath))
 		q.Set("template_id", templateId)
 		q.Set("sub_name", subName)
 		q.Set(QueryApiKeyName, clientApiKey)

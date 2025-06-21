@@ -11,7 +11,7 @@ import (
 	"time"
 
 	"github.com/AmbitiousJun/go-emby2alist/internal/config"
-	"github.com/AmbitiousJun/go-emby2alist/internal/service/alist"
+	"github.com/AmbitiousJun/go-emby2alist/internal/service/openlist"
 	"github.com/AmbitiousJun/go-emby2alist/internal/service/path"
 	"github.com/AmbitiousJun/go-emby2alist/internal/util/colors"
 	"github.com/AmbitiousJun/go-emby2alist/internal/util/https"
@@ -90,7 +90,7 @@ func Redirect2AlistLink(c *gin.Context) {
 	}
 
 	// 6 请求 alist 资源
-	fi := alist.FetchInfo{
+	fi := openlist.FetchInfo{
 		Header:       c.Request.Header.Clone(),
 		UseTranscode: useTranscode,
 		Format:       msInfo.TemplateId,
@@ -102,7 +102,7 @@ func Redirect2AlistLink(c *gin.Context) {
 	handleAlistResource := func(path string) bool {
 		log.Printf(colors.ToBlue("尝试请求 Alist 资源: %s"), path)
 		fi.Path = path
-		res := alist.FetchResource(fi)
+		res := openlist.FetchResource(fi)
 
 		if res.Code != http.StatusOK {
 			allErrors.WriteString(fmt.Sprintf("请求 Alist 失败, code: %d, msg: %s, path: %s;", res.Code, res.Msg, path))
@@ -122,7 +122,7 @@ func Redirect2AlistLink(c *gin.Context) {
 		q := u.Query()
 		q.Set("template_id", itemInfo.MsInfo.TemplateId)
 		q.Set(QueryApiKeyName, itemInfo.ApiKey)
-		q.Set("alist_path", alist.PathEncode(path))
+		q.Set("alist_path", openlist.PathEncode(path))
 		u.RawQuery = q.Encode()
 		resp, err := https.Get(u.String()).Do()
 		if err != nil {
