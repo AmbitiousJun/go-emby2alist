@@ -20,7 +20,7 @@ func CustomLogger(port string) gin.HandlerFunc {
 
 		// 记录日志
 		fmt.Printf("%s %s | %s | %s | %s | %s %s | %s %s\n",
-			colors.ToYellow("[ge2a:"+constant.CurrentVersion+"]"),
+			colors.ToYellow("[ge2o:"+constant.CurrentVersion+"]"),
 			start.Format("2006-01-02 15:04:05"),
 			colorStatusCode(c.Writer.Status()),
 			time.Since(start),
