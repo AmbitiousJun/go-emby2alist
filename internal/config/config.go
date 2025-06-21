@@ -12,8 +12,8 @@ import (
 type Config struct {
 	// Emby emby 相关配置
 	Emby *Emby `yaml:"emby"`
-	// Alist alist 相关配置
-	Alist *Alist `yaml:"alist"`
+	// Openlist openlist 相关配置
+	Openlist *Openlist `yaml:"openlist"`
 	// VideoPreview 网盘转码链接代理配置
 	VideoPreview *VideoPreview `yaml:"video-preview"`
 	// Path 路径相关配置

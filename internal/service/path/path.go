@@ -42,7 +42,7 @@ func Emby2Alist(embyPath string) AlistPathRes {
 	alistFilePath = urls.Unescape(alistFilePath)
 	pathRoutes.WriteString("\n\n【URL 解码】 => " + alistFilePath)
 
-	if mapPath, ok := config.C.Path.MapEmby2Alist(alistFilePath); ok {
+	if mapPath, ok := config.C.Path.MapEmby2Openlist(alistFilePath); ok {
 		alistFilePath = mapPath
 		pathRoutes.WriteString("\n\n【命中 emby2alist 映射】 => " + alistFilePath)
 	}

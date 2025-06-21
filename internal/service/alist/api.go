@@ -130,8 +130,8 @@ func FetchFsOther(path string, header http.Header) model.HttpRes[*jsons.Item] {
 
 // Fetch 请求 alist api
 func Fetch(uri, method string, header http.Header, body map[string]any) model.HttpRes[*jsons.Item] {
-	host := config.C.Alist.Host
-	token := config.C.Alist.Token
+	host := config.C.Openlist.Host
+	token := config.C.Openlist.Token
 
 	// 1 发出请求
 	if header == nil {
