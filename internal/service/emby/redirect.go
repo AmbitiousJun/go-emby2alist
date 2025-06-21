@@ -95,7 +95,7 @@ func Redirect2AlistLink(c *gin.Context) {
 		UseTranscode: useTranscode,
 		Format:       msInfo.TemplateId,
 	}
-	alistPathRes := path.Emby2Alist(embyPath)
+	alistPathRes := path.Emby2Openlist(embyPath)
 
 	allErrors := strings.Builder{}
 	// handleAlistResource 根据传递的 path 请求 alist 资源

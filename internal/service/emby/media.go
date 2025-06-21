@@ -92,7 +92,7 @@ func findVideoPreviewInfos(source *jsons.Item, originName, clientApiKey string, 
 	}
 
 	// 转换 alist 绝对路径
-	alistPathRes := path.Emby2Alist(source.Attr("Path").Val().(string))
+	alistPathRes := path.Emby2Openlist(source.Attr("Path").Val().(string))
 	var transcodingList, subtitleList *jsons.Item
 	firstFetchSuccess := false
 	if alistPathRes.Success {
