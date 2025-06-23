@@ -1,11 +1,5 @@
 package config
 
-import (
-	"errors"
-
-	"github.com/AmbitiousJun/go-emby2openlist/internal/util/strs"
-)
-
 type Openlist struct {
 	// Token 访问 openlist 接口的密钥, 在 openlist 管理后台获取
 	Token string `yaml:"token"`
@@ -14,11 +8,5 @@ type Openlist struct {
 }
 
 func (a *Openlist) Init() error {
-	if strs.AnyEmpty(a.Token) {
-		return errors.New("openlist.token 配置不能为空")
-	}
-	if strs.AnyEmpty(a.Host) {
-		return errors.New("openlist.host 配置不能为空")
-	}
 	return nil
 }
