@@ -2,6 +2,7 @@ package emby
 
 import (
 	"bytes"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -15,6 +16,7 @@ import (
 	"github.com/AmbitiousJun/go-emby2openlist/internal/config"
 	"github.com/AmbitiousJun/go-emby2openlist/internal/service/openlist"
 	"github.com/AmbitiousJun/go-emby2openlist/internal/service/path"
+	"github.com/AmbitiousJun/go-emby2openlist/internal/util/https"
 	"github.com/AmbitiousJun/go-emby2openlist/internal/util/jsons"
 	"github.com/AmbitiousJun/go-emby2openlist/internal/util/randoms"
 	"github.com/AmbitiousJun/go-emby2openlist/internal/util/strs"
@@ -39,39 +41,54 @@ func getEmbyFileLocalPath(itemInfo ItemInfo) (string, error) {
 		header = http.Header{itemInfo.ApiKeyName: []string{itemInfo.ApiKey}}
 	}
 
-	res, _ := Fetch(itemInfo.PlaybackInfoUri, http.MethodPost, header, nil)
-	if res.Code != http.StatusOK {
-		return "", fmt.Errorf("请求 Emby 接口异常, error: %s", res.Msg)
+	resp, err := https.Post(config.C.Emby.Host + itemInfo.PlaybackInfoUri).Header(header).Do()
+	if err != nil {
+		return "", fmt.Errorf("请求 Emby 接口异常, error: %v", err)
 	}
-	body := res.Data
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		return "", fmt.Errorf("请求 Emby 接口异常, error: %s", resp.Status)
+	}
 
-	mediaSources, ok := body.Attr("MediaSources").Done()
-	if !ok {
-		return "", fmt.Errorf("获取不到 MediaSources, 原始响应: %v", body)
+	type MediaSourcesHolder struct {
+		MediaSources []struct {
+			Path string
+			Id   string
+		}
+	}
+
+	bodyBytes, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return "", fmt.Errorf("读取 Emby 响应异常, error: %v", err)
+	}
+	var holder MediaSourcesHolder
+	if err = json.Unmarshal(bodyBytes, &holder); err != nil {
+		return "", fmt.Errorf("解析 Emby 响应异常, error: %v, 原始响应: %s", err, string(bodyBytes))
+	}
+
+	if len(holder.MediaSources) == 0 {
+		return "", fmt.Errorf("获取不到 MediaSources, 原始响应: %v", string(bodyBytes))
 	}
 
 	var path string
 	var defaultPath string
 
-	reqId := itemInfo.MsInfo.RawId
+	reqId := itemInfo.MsInfo.OriginId
 	// 获取指定 MediaSourceId 的 Path
-	mediaSources.RangeArr(func(_ int, value *jsons.Item) error {
+	for _, value := range holder.MediaSources {
 		if strs.AnyEmpty(defaultPath) {
 			// 默认选择第一个路径
-			defaultPath, _ = value.Attr("Path").String()
+			defaultPath = value.Path
 		}
 		if itemInfo.MsInfo.Empty {
 			// 如果没有传递 MediaSourceId, 就使用默认的 Path
-			return jsons.ErrBreakRange
+			break
 		}
-
-		curId := value.Attr("Id").Val().(string)
-		if curId == reqId {
-			path, _ = value.Attr("Path").String()
-			return jsons.ErrBreakRange
+		if value.Id == reqId {
+			path = value.Path
+			break
 		}
-		return nil
-	})
+	}
 
 	if strs.AllNotEmpty(path) {
 		return path, nil
@@ -79,7 +96,7 @@ func getEmbyFileLocalPath(itemInfo ItemInfo) (string, error) {
 	if strs.AllNotEmpty(defaultPath) {
 		return defaultPath, nil
 	}
-	return "", fmt.Errorf("获取不到 Path 参数, 原始响应: %v", body)
+	return "", fmt.Errorf("获取不到 Path 参数, 原始响应: %v", string(bodyBytes))
 }
 
 // findVideoPreviewInfos 查找 source 的所有转码资源
@@ -337,14 +354,12 @@ func getRequestMediaSourceId(c *gin.Context) string {
 		return ""
 	}
 	c.Request.Body = io.NopCloser(bytes.NewBuffer(bodyBytes))
-	reqJson, err := jsons.New(string(bodyBytes))
-	if err != nil {
-		return ""
+
+	var BodyHolder struct {
+		MediaSourceId string
 	}
-	if msId, ok := reqJson.Attr("MediaSourceId").String(); ok {
-		return msId
-	}
-	return ""
+	json.Unmarshal(bodyBytes, &BodyHolder)
+	return BodyHolder.MediaSourceId
 }
 
 // resolveMediaSourceId 解析 MediaSourceId
