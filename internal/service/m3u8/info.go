@@ -239,7 +239,7 @@ func (i *Info) UpdateContent() error {
 	i.HeadComments = append(([]string)(nil), newInfo.HeadComments...)
 	i.TailComments = append(([]string)(nil), newInfo.TailComments...)
 	i.RemoteTsInfos = append(([]*TsInfo)(nil), newInfo.RemoteTsInfos...)
-	i.Subtitles = append(([]openlist.SubtitleInfo)(nil), res.Data.Subtitles...)
+	i.Subtitles = append(([]openlist.TranscodingSubtitleInfo)(nil), res.Data.Subtitles...)
 	i.LastUpdate = time.Now().UnixMilli()
 	return nil
 }
