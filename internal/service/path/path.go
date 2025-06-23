@@ -9,7 +9,6 @@ import (
 	"github.com/AmbitiousJun/go-emby2openlist/internal/config"
 	"github.com/AmbitiousJun/go-emby2openlist/internal/service/openlist"
 	"github.com/AmbitiousJun/go-emby2openlist/internal/util/colors"
-	"github.com/AmbitiousJun/go-emby2openlist/internal/util/jsons"
 	"github.com/AmbitiousJun/go-emby2openlist/internal/util/urls"
 )
 
@@ -61,20 +60,13 @@ func Emby2Openlist(embyPath string) OpenlistPathRes {
 		}
 
 		paths := make([]string, 0)
-		content, ok := res.Data.Attr("content").Done()
-		if !ok || content.Type() != jsons.JsonTypeArr {
-			return nil, fmt.Errorf("openlist fs list 接口响应异常, 原始响应: %v", jsons.NewByObj(res))
-		}
-
-		content.RangeArr(func(_ int, value *jsons.Item) error {
-			if value.Attr("is_dir").Val() == false {
-				return nil
+		for _, c := range res.Data.Content {
+			if !c.IsDir {
+				continue
 			}
-			newPath := fmt.Sprintf("/%s%s", value.Attr("name").Val(), filePath)
+			newPath := fmt.Sprintf("/%s%s", c.Name, filePath)
 			paths = append(paths, newPath)
-			return nil
-		})
-
+		}
 		return paths, nil
 	}
 

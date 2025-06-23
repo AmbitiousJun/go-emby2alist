@@ -24,13 +24,13 @@ var ValidM3U8Contents = map[string]struct{}{
 
 // Info 记录一个 m3u8 相关信息
 type Info struct {
-	OpenlistPath  string                  // 资源在 openlist 中的绝对路径
-	TemplateId    string                  // 转码资源模板 id
-	Subtitles     []openlist.SubtitleInfo // 字幕信息, 如果一个资源是含有字幕的, 会返回变体 m3u8
-	RemoteBase    string                  // 远程 m3u8 地址前缀
-	HeadComments  []string                // 头注释信息
-	TailComments  []string                // 尾注释信息
-	RemoteTsInfos []*TsInfo               // 远程的 ts URL 列表, 用于重定向
+	OpenlistPath  string                             // 资源在 openlist 中的绝对路径
+	TemplateId    string                             // 转码资源模板 id
+	Subtitles     []openlist.TranscodingSubtitleInfo // 字幕信息, 如果一个资源是含有字幕的, 会返回变体 m3u8
+	RemoteBase    string                             // 远程 m3u8 地址前缀
+	HeadComments  []string                           // 头注释信息
+	TailComments  []string                           // 尾注释信息
+	RemoteTsInfos []*TsInfo                          // 远程的 ts URL 列表, 用于重定向
 
 	// LastRead 客户端最后读取的时间戳 (毫秒)
 	//

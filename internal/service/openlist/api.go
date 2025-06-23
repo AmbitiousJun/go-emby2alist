@@ -1,9 +1,13 @@
 package openlist
 
 import (
+	"encoding/json"
 	"fmt"
+	"io"
 	"log"
 	"net/http"
+	"reflect"
+	"strings"
 
 	"github.com/AmbitiousJun/go-emby2openlist/internal/config"
 	"github.com/AmbitiousJun/go-emby2openlist/internal/model"
@@ -24,18 +28,13 @@ func FetchResource(fi FetchInfo) model.HttpRes[Resource] {
 		// 请求原画资源
 		res := FetchFsGet(fi.Path, fi.Header)
 		if res.Code == http.StatusOK {
-			if link, ok := res.Data.Attr("raw_url").String(); ok {
-				return model.HttpRes[Resource]{Code: http.StatusOK, Data: Resource{Url: link}}
-			}
-		}
-		if res.Msg == "" {
-			res.Msg = fmt.Sprintf("未知异常, 原始响应: %v", jsons.NewByObj(res))
+			return model.HttpRes[Resource]{Code: http.StatusOK, Data: Resource{Url: res.Data.RawUrl}}
 		}
 		return model.HttpRes[Resource]{Code: res.Code, Msg: res.Msg}
 	}
 
 	// 转码资源请求失败后, 递归请求原画资源
-	failedAndTryRaw := func(originRes model.HttpRes[*jsons.Item]) model.HttpRes[Resource] {
+	failedAndTryRaw := func(originRes model.HttpRes[FsOther]) model.HttpRes[Resource] {
 		if !fi.TryRawIfTranscodeFail {
 			return model.HttpRes[Resource]{Code: originRes.Code, Msg: originRes.Msg}
 		}
@@ -50,86 +49,101 @@ func FetchResource(fi FetchInfo) model.HttpRes[Resource] {
 		return failedAndTryRaw(res)
 	}
 
-	list, ok := res.Data.Attr("video_preview_play_info").Attr("live_transcoding_task_list").Done()
-	if !ok || list.Type() != jsons.JsonTypeArr {
+	// 匹配指定格式
+	taskList := res.Data.VideoPreviewPlayInfo.LiveTranscodingTaskList
+	if len(taskList) == 0 {
 		return failedAndTryRaw(res)
 	}
-	idx := list.FindIdx(func(val *jsons.Item) bool { return val.Attr("template_id").Val() == fi.Format })
+	var allFmts []string
+	idx := -1
+	for i, task := range taskList {
+		allFmts = append(allFmts, task.TemplateId)
+		if task.TemplateId == fi.Format {
+			idx = i
+			break
+		}
+	}
 	if idx == -1 {
-		allFmts := list.Map(func(val *jsons.Item) any { return val.Attr("template_id").Val() })
-		log.Printf(colors.ToRed("查找不到指定的格式: %s, 所有可用的格式: %v"), fi.Format, jsons.NewByArr(allFmts))
+		log.Printf(colors.ToRed("查找不到指定的格式: %s, 所有可用的格式: [%s]"), fi.Format, strings.Join(allFmts, ", "))
 		return failedAndTryRaw(res)
 	}
 
-	link, ok := list.Idx(idx).Attr("url").String()
-	if !ok {
+	link := taskList[idx].Url
+	if link == "" {
 		return failedAndTryRaw(res)
 	}
 
-	// 封装字幕链接, 封装失败也不返回失败
-	subtitles := make([]SubtitleInfo, 0)
-	subList, ok := res.Data.Attr("video_preview_play_info").Attr("live_transcoding_subtitle_task_list").Done()
-	if ok {
-		subList.RangeArr(func(_ int, value *jsons.Item) error {
-			lang, _ := value.Attr("language").String()
-			url, _ := value.Attr("url").String()
-			subtitles = append(subtitles, SubtitleInfo{
-				Lang: lang,
-				Url:  url,
-			})
-			return nil
-		})
+	return model.HttpRes[Resource]{
+		Code: http.StatusOK,
+		Data: Resource{
+			Url:       link,
+			Subtitles: res.Data.VideoPreviewPlayInfo.LiveTranscodingSubtitleTaskList,
+		},
 	}
-
-	return model.HttpRes[Resource]{Code: http.StatusOK, Data: Resource{Url: link, Subtitles: subtitles}}
 }
 
 // FetchFsList 请求 openlist "/api/fs/list" 接口
 //
 // 传入 path 与接口的 path 作用一致
-func FetchFsList(path string, header http.Header) model.HttpRes[*jsons.Item] {
+func FetchFsList(path string, header http.Header) model.HttpRes[FsList] {
 	if strs.AnyEmpty(path) {
-		return model.HttpRes[*jsons.Item]{Code: http.StatusBadRequest, Msg: "参数 path 不能为空"}
+		return model.HttpRes[FsList]{Code: http.StatusBadRequest, Msg: "参数 path 不能为空"}
 	}
-	return Fetch("/api/fs/list", http.MethodPost, header, map[string]any{
+
+	var res FsList
+	err := Fetch("/api/fs/list", http.MethodPost, header, map[string]any{
 		"refresh":  true,
 		"password": "",
 		"path":     path,
-	})
+	}, &res)
+	if err != nil {
+		return model.HttpRes[FsList]{Code: http.StatusInternalServerError, Msg: fmt.Sprintf("FsList 请求失败: %v", err)}
+	}
+	return model.HttpRes[FsList]{Code: http.StatusOK, Data: res}
 }
 
 // FetchFsGet 请求 openlist "/api/fs/get" 接口
 //
 // 传入 path 与接口的 path 作用一致
-func FetchFsGet(path string, header http.Header) model.HttpRes[*jsons.Item] {
+func FetchFsGet(path string, header http.Header) model.HttpRes[FsGet] {
 	if strs.AnyEmpty(path) {
-		return model.HttpRes[*jsons.Item]{Code: http.StatusBadRequest, Msg: "参数 path 不能为空"}
+		return model.HttpRes[FsGet]{Code: http.StatusBadRequest, Msg: "参数 path 不能为空"}
 	}
 
-	return Fetch("/api/fs/get", http.MethodPost, header, map[string]any{
+	var res FsGet
+	err := Fetch("/api/fs/get", http.MethodPost, header, map[string]any{
 		"refresh":  true,
 		"password": "",
 		"path":     path,
-	})
+	}, &res)
+	if err != nil {
+		return model.HttpRes[FsGet]{Code: http.StatusInternalServerError, Msg: fmt.Sprintf("FsGet 请求失败: %v", err)}
+	}
+	return model.HttpRes[FsGet]{Code: http.StatusOK, Data: res}
 }
 
 // FetchFsOther 请求 openlist "/api/fs/other" 接口
 //
 // 传入 path 与接口的 path 作用一致
-func FetchFsOther(path string, header http.Header) model.HttpRes[*jsons.Item] {
+func FetchFsOther(path string, header http.Header) model.HttpRes[FsOther] {
 	if strs.AnyEmpty(path) {
-		return model.HttpRes[*jsons.Item]{Code: http.StatusBadRequest, Msg: "参数 path 不能为空"}
+		return model.HttpRes[FsOther]{Code: http.StatusBadRequest, Msg: "参数 path 不能为空"}
 	}
 
-	return Fetch("/api/fs/other", http.MethodPost, header, map[string]any{
+	var res FsOther
+	err := Fetch("/api/fs/other", http.MethodPost, header, map[string]any{
 		"method":   "video_preview",
 		"password": "",
 		"path":     path,
-	})
+	}, &res)
+	if err != nil {
+		return model.HttpRes[FsOther]{Code: http.StatusInternalServerError, Msg: fmt.Sprintf("FsOther 请求失败: %v", err)}
+	}
+	return model.HttpRes[FsOther]{Code: http.StatusOK, Data: res}
 }
 
-// Fetch 请求 openlist api
-func Fetch(uri, method string, header http.Header, body map[string]any) model.HttpRes[*jsons.Item] {
+// Fetch 请求 openlist api, 响应封装在 v 指针指向的结构中
+func Fetch(uri, method string, header http.Header, body map[string]any, v any) error {
 	host := config.C.Openlist.Host
 	token := config.C.Openlist.Token
 
@@ -142,24 +156,31 @@ func Fetch(uri, method string, header http.Header, body map[string]any) model.Ht
 
 	resp, err := https.Request(method, host+uri).Header(header).Body(https.MapBody(body)).Do()
 	if err != nil {
-		return model.HttpRes[*jsons.Item]{Code: http.StatusBadRequest, Msg: "请求发送失败: " + err.Error()}
+		return fmt.Errorf("Fetch 请求失败: %v", err)
 	}
 	defer resp.Body.Close()
 
-	// 2 封装响应
-	result, err := jsons.Read(resp.Body)
+	// 2 检测响应状态是否正常
+	resBytes, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return model.HttpRes[*jsons.Item]{Code: http.StatusBadRequest, Msg: "解析响应体失败: " + err.Error()}
+		return fmt.Errorf("Fetch 请求读取响应失败: %v", err)
 	}
 
-	if code, ok := result.Attr("code").Int(); !ok || code != http.StatusOK {
-		message, _ := result.Attr("message").String()
-		return model.HttpRes[*jsons.Item]{Code: code, Msg: message}
+	var res RemoteCommonResult
+	if err = json.Unmarshal(resBytes, &res); err != nil {
+		return fmt.Errorf("Fetch 请求响应解析失败: %v, 响应内容: %v", err, string(resBytes))
+	}
+	if res.Code != http.StatusOK {
+		return fmt.Errorf("Fetch 请求响应状态异常: %d, 消息: %s", res.Code, res.Message)
 	}
 
-	if data, ok := result.Attr("data").Done(); ok {
-		return model.HttpRes[*jsons.Item]{Code: http.StatusOK, Data: data}
+	// 3 如果 v 参数为不为 nil 的指针, 写入响应数据
+	vf := reflect.ValueOf(v)
+	if vf.Kind() != reflect.Ptr || vf.IsNil() {
+		return nil
 	}
-
-	return model.HttpRes[*jsons.Item]{Code: http.StatusBadRequest, Msg: "未知异常, result: " + result.String()}
+	if err = json.Unmarshal(res.Data, v); err != nil {
+		return fmt.Errorf("Fetch 请求响应数据解析失败: %v, 响应内容: %s", err, string(res.Data))
+	}
+	return nil
 }
