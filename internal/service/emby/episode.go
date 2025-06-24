@@ -1,12 +1,15 @@
 package emby
 
 import (
+	"encoding/json"
 	"errors"
+	"io"
 	"net/http"
+	"slices"
+	"strconv"
 
 	"github.com/AmbitiousJun/go-emby2openlist/internal/config"
 	"github.com/AmbitiousJun/go-emby2openlist/internal/util/https"
-	"github.com/AmbitiousJun/go-emby2openlist/internal/util/jsons"
 
 	"github.com/gin-gonic/gin"
 )
@@ -30,42 +33,68 @@ func ResortEpisodes(c *gin.Context) {
 
 	// 3 代理请求
 	c.Request.Header.Del("Accept-Encoding")
-	res, respHeader := RawFetch(c.Request.URL.String(), c.Request.Method, c.Request.Header, c.Request.Body)
-	if res.Code != http.StatusOK {
-		checkErr(c, errors.New(res.Msg))
+	resp, err := https.ProxyRequest(c, config.C.Emby.Host)
+	if checkErr(c, err) {
 		return
 	}
-	resJson := res.Data
-	https.CloneHeader(c, respHeader)
-	defer func() {
-		jsons.OkResp(c, resJson)
-	}()
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		checkErr(c, errors.New(resp.Status))
+		return
+	}
 
 	// 4 处理数据
-	items, ok := resJson.Attr("Items").Done()
-	if !ok || items.Type() != jsons.JsonTypeArr {
+	bodyBytes, err := io.ReadAll(resp.Body)
+	if checkErr(c, err) {
 		return
 	}
-	playedItems, allItems := make([]*jsons.Item, 0), make([]*jsons.Item, 0)
-	items.RangeArr(func(_ int, value *jsons.Item) error {
+	type ItemsHolder struct {
+		Items            []json.RawMessage
+		TotalRecordCount int
+	}
+	var ih ItemsHolder
+	if err = json.Unmarshal(bodyBytes, &ih); checkErr(c, err) {
+		return
+	}
+	resp.Header.Del("Content-Length")
+	https.CloneHeader(c, resp.Header)
+	defer func() {
+		bytes, _ := json.Marshal(ih)
+		c.Header("Content-Length", strconv.Itoa(len(bytes)))
+		c.Writer.Write(bytes)
+	}()
+
+	if len(ih.Items) == 0 {
+		return
+	}
+
+	type ValueInner struct {
+		UserData struct {
+			Played bool
+		}
+	}
+	playedItems, allItems := make([]json.RawMessage, 0), make([]json.RawMessage, 0)
+	for idx, value := range ih.Items {
 		if len(allItems) > 0 {
 			// 找到第一个未播的剧集之后, 剩余剧集都当作是未播的
+			allItems = slices.Concat(allItems, ih.Items[idx:])
+			break
+		}
+
+		var vi ValueInner
+		if err := json.Unmarshal(value, &vi); err != nil {
 			allItems = append(allItems, value)
-			return nil
+			continue
 		}
 
-		if played, ok := value.Attr("UserData").Attr("Played").Bool(); ok && played {
+		if vi.UserData.Played {
 			playedItems = append(playedItems, value)
-			return nil
+			continue
 		}
-
 		allItems = append(allItems, value)
-		return nil
-	})
+	}
 
 	// 将已播的数据放在末尾
 	allItems = append(allItems, playedItems...)
-
-	resJson.Put("Items", jsons.NewByVal(allItems))
-	c.Writer.Header().Del("Content-Length")
+	ih.Items = allItems
 }
