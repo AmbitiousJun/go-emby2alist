@@ -45,81 +45,50 @@ func ResortRandomItems(c *gin.Context) {
 		return
 	}
 
-	// 优先从缓存空间中获取列表
-	var code int
-	var header http.Header
-	var bodyBytes []byte
+	// 从缓存空间中获取列表
 	spaceCache, ok := cache.GetSpaceCache(ItemsCacheSpace, calcRandomItemsCacheKey(c))
-	if ok {
-		bodyBytes = spaceCache.BodyBytes()
-		code = spaceCache.Code()
-		header = spaceCache.Headers()
-		log.Println(colors.ToBlue("使用缓存空间中的 random items 列表"))
-	} else {
-		// 请求原始列表
+
+	// 缓存空间没有数据时, 默认使用 emby 的原始随机结果
+	if !ok {
 		u := strings.ReplaceAll(https.ClientRequestUrl(c), "/Items", "/Items/with_limit")
-		resp, err := https.Request(http.MethodGet, u).
-			Header(c.Request.Header).
-			Body(c.Request.Body).
-			Do()
-		if checkErr(c, err) {
-			return
-		}
-
-		if resp.StatusCode != http.StatusOK {
-			checkErr(c, fmt.Errorf("错误的响应码: %d", resp.StatusCode))
-			return
-		}
-
-		// 转换 json 响应
-		bodyBytes, err = io.ReadAll(resp.Body)
-		resp.Body.Close()
-		if checkErr(c, err) {
-			return
-		}
-		code = resp.StatusCode
-		header = resp.Header
+		c.Redirect(http.StatusTemporaryRedirect, u)
+		return
 	}
 
-	// writeRespErr 响应客户端, 根据 err 自动判断
-	// 如果 err 不为空, 直接使用原始 bodyBytes
-	writeRespErr := func(err error, respBody []byte) {
+	bodyBytes := spaceCache.BodyBytes()
+	code := spaceCache.Code()
+	header := spaceCache.Headers()
+	log.Println(colors.ToBlue("使用缓存空间中的 random items 列表"))
+
+	// 响应客户端, 根据 err 自动判断
+	// 如果 err 不为空, 使用原始 bodyBytes
+	err = nil
+	var ih ItemsHolder
+	defer func() {
+		respBody, _ := json.Marshal(ih)
 		if err != nil {
 			log.Printf(colors.ToRed("随机排序接口非预期响应, err: %v, 返回原始响应"), err)
 			respBody = bodyBytes
 		}
+
 		c.Status(code)
-		header.Del("Content-Length")
+		header.Set("Content-Length", strconv.Itoa(len(respBody)))
 		https.CloneHeader(c, header)
 		c.Writer.Write(respBody)
-		c.Writer.Flush()
-	}
+	}()
 
 	// 对 item 内部结构不关心, 故使用原始的 json 序列化提高处理速度
-	var resMain map[string]json.RawMessage
-	if err := json.Unmarshal(bodyBytes, &resMain); err != nil {
-		writeRespErr(err, nil)
+	if err = json.Unmarshal(bodyBytes, &ih); err != nil {
 		return
 	}
-	var resItems []json.RawMessage
-	if err := json.Unmarshal(resMain["Items"], &resItems); err != nil {
-		writeRespErr(err, nil)
-		return
-	}
-	itemLen := len(resItems)
+
+	itemLen := len(ih.Items)
 	if itemLen == 0 {
-		writeRespErr(nil, bodyBytes)
 		return
 	}
-
 	rand.Shuffle(itemLen, func(i, j int) {
-		resItems[i], resItems[j] = resItems[j], resItems[i]
+		ih.Items[i], ih.Items[j] = ih.Items[j], ih.Items[i]
 	})
-
-	newItemsBytes, _ := json.Marshal(resItems)
-	resMain["Items"] = newItemsBytes
-	newBodyBytes, _ := json.Marshal(resMain)
-	writeRespErr(nil, newBodyBytes)
 }
 
 // RandomItemsWithLimit 代理原始的随机列表接口
