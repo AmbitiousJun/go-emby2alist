@@ -48,10 +48,6 @@ func ResortEpisodes(c *gin.Context) {
 	if checkErr(c, err) {
 		return
 	}
-	type ItemsHolder struct {
-		Items            []json.RawMessage
-		TotalRecordCount int
-	}
 	var ih ItemsHolder
 	if err = json.Unmarshal(bodyBytes, &ih); checkErr(c, err) {
 		return

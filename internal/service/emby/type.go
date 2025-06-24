@@ -1,6 +1,7 @@
 package emby
 
 import (
+	"encoding/json"
 	"fmt"
 )
 
@@ -36,4 +37,10 @@ type ItemInfo struct {
 func (ii ItemInfo) String() string {
 	return fmt.Sprintf("ItemInfo{Id: [%s], MsInfo: [%v], ApiKey: [%s], ApiKeyType: [%s], ApiKeyName: [%s], PlaybackInfoUri: [%s]}",
 		ii.Id, ii.MsInfo, ii.ApiKey, ii.ApiKeyType, ii.ApiKeyName, ii.PlaybackInfoUri)
+}
+
+// ItemsHolder Emby Items 接口响应接收结构
+type ItemsHolder struct {
+	Items            []json.RawMessage
+	TotalRecordCount int `json:",omitempty"`
 }
