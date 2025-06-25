@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
-	"sync"
 )
 
 // Struct 将 item 转换为结构体对象
@@ -14,32 +13,15 @@ func (i *Item) Struct() any {
 		return i.val
 	case JsonTypeObj:
 		m := make(map[string]any)
-		wg := sync.WaitGroup{}
-		mu := sync.Mutex{}
 		for key, value := range i.obj {
-			ck, cv := key, value
-			wg.Add(1)
-			go func() {
-				defer wg.Done()
-				mu.Lock()
-				defer mu.Unlock()
-				m[ck] = cv.Struct()
-			}()
+			m[key] = value.Struct()
 		}
-		wg.Wait()
 		return m
 	case JsonTypeArr:
-		a := make([]any, i.Len())
-		wg := sync.WaitGroup{}
-		for idx, value := range i.arr {
-			ci, cv := idx, value
-			wg.Add(1)
-			go func() {
-				defer wg.Done()
-				a[ci] = cv.Struct()
-			}()
+		a := make([]any, 0)
+		for _, value := range i.arr {
+			a = append(a, value.Struct())
 		}
-		wg.Wait()
 		return a
 	default:
 		return "Error jType"
@@ -62,7 +44,8 @@ func (i *Item) String() string {
 		sb.WriteString("{")
 		cur, tot := 0, len(i.obj)
 		for key, value := range i.obj {
-			sb.WriteString(fmt.Sprintf(`"%s":%s`, key, value.String()))
+			kb, _ := json.Marshal(key)
+			sb.WriteString(fmt.Sprintf(`%s:%s`, string(kb), value.String()))
 			cur++
 			if cur != tot {
 				sb.WriteString(",")
