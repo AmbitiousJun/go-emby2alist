@@ -7,12 +7,9 @@ import (
 	"io"
 	"log"
 	"reflect"
-	"strconv"
 	"strings"
-	"sync"
 
 	"github.com/AmbitiousJun/go-emby2openlist/internal/util/strs"
-	"github.com/AmbitiousJun/go-emby2openlist/internal/util/urls"
 )
 
 // NewEmptyObj 初始化一个对象类型的 json 数据
@@ -44,16 +41,11 @@ func NewByObj(obj any) *Item {
 	}
 
 	item := NewEmptyObj()
-	wg := sync.WaitGroup{}
 	if v.Kind() == reflect.Struct {
 		for i := 0; i < v.NumField(); i++ {
 			fieldVal := v.Field(i)
 			fieldType := v.Type().Field(i)
-			wg.Add(1)
-			go func() {
-				defer wg.Done()
-				item.Put(fieldType.Name, NewByVal(fieldVal.Interface()))
-			}()
+			item.Put(fieldType.Name, NewByVal(fieldVal.Interface()))
 		}
 	}
 
@@ -62,16 +54,9 @@ func NewByObj(obj any) *Item {
 			panic("不支持的 map 类型")
 		}
 		for _, key := range v.MapKeys() {
-			ck := key
-			wg.Add(1)
-			go func() {
-				defer wg.Done()
-				item.Put(ck.Interface().(string), NewByVal(v.MapIndex(ck).Interface()))
-			}()
+			item.Put(key.Interface().(string), NewByVal(v.MapIndex(key).Interface()))
 		}
 	}
-
-	wg.Wait()
 	return item
 }
 
@@ -93,17 +78,10 @@ func NewByArr(arr any) *Item {
 		return NewByVal(arr)
 	}
 
-	item := &Item{arr: make([]*Item, v.Len()), jType: JsonTypeArr}
-	wg := sync.WaitGroup{}
+	item := NewEmptyArr()
 	for i := 0; i < v.Len(); i++ {
-		ci := i
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
-			item.PutIdx(ci, NewByVal(v.Index(ci).Interface()))
-		}()
+		item.Append(NewByVal(v.Index(i).Interface()))
 	}
-	wg.Wait()
 	return item
 }
 
@@ -124,16 +102,8 @@ func NewByVal(val any) *Item {
 	}
 
 	switch t.Kind() {
-	case reflect.Bool, reflect.Int, reflect.Float64, reflect.Int64:
+	case reflect.Bool, reflect.Int, reflect.Float64, reflect.Int64, reflect.String:
 		item.val = val
-		return item
-	case reflect.String:
-		newVal := reflect.ValueOf(val).String()
-		if conv, err := strconv.Unquote(`"` + newVal + `"`); err == nil {
-			// 将字符串中的 unicode 字符转换为 utf8
-			newVal = conv
-		}
-		item.val = urls.TransferSlash(newVal)
 		return item
 	case reflect.Struct, reflect.Map:
 		return NewByObj(val)
@@ -148,11 +118,7 @@ func NewByVal(val any) *Item {
 // New 从 json 字符串中初始化成 item 对象
 func New(rawJson string) (*Item, error) {
 	if strs.AnyEmpty(rawJson) {
-		return NewByVal(rawJson), nil
-	}
-
-	if strings.HasPrefix(rawJson, `"`) && strings.HasSuffix(rawJson, `"`) {
-		return NewByVal(rawJson[1 : len(rawJson)-1]), nil
+		return nil, errors.New("empty raw json")
 	}
 
 	if rawJson == "null" {
@@ -166,25 +132,12 @@ func New(rawJson string) (*Item, error) {
 		}
 
 		item := NewEmptyObj()
-		wg := sync.WaitGroup{}
-		var handleErr error
 		for key, value := range data {
-			ck, cv := key, value
-			wg.Add(1)
-			go func() {
-				defer wg.Done()
-				subI, err := New(string(cv))
-				if err != nil {
-					handleErr = err
-					return
-				}
-				item.Put(ck, subI)
-			}()
-		}
-		wg.Wait()
-
-		if handleErr != nil {
-			return nil, handleErr
+			subI, err := New(string(value))
+			if err != nil {
+				return nil, err
+			}
+			item.Put(key, subI)
 		}
 		return item, nil
 	}
@@ -195,31 +148,22 @@ func New(rawJson string) (*Item, error) {
 			return nil, err
 		}
 
-		item := &Item{arr: make([]*Item, len(data)), jType: JsonTypeArr}
-		wg := sync.WaitGroup{}
-		var handleErr error
-		for idx, value := range data {
-			ci, cv := idx, value
-			wg.Add(1)
-			go func() {
-				defer wg.Done()
-				subI, err := New(string(cv))
-				if err != nil {
-					handleErr = err
-					return
-				}
-				item.PutIdx(ci, subI)
-			}()
-		}
-		wg.Wait()
-
-		if handleErr != nil {
-			return nil, handleErr
+		item := NewEmptyArr()
+		for _, value := range data {
+			subI, err := New(string(value))
+			if err != nil {
+				return nil, err
+			}
+			item.Append(subI)
 		}
 		return item, nil
 	}
 
 	// 尝试转换成基础类型
+	var s string
+	if err := json.Unmarshal([]byte(rawJson), &s); err == nil {
+		return NewByVal(s), nil
+	}
 	var b bool
 	if err := json.Unmarshal([]byte(rawJson), &b); err == nil {
 		return NewByVal(b), nil
