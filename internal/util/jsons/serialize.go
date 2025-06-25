@@ -36,5 +36,5 @@ func (i *Item) String() string {
 	if err != nil {
 		return "null"
 	}
-	return strings.TrimSpace(buf.String()) // 去掉末尾的换行
+	return strings.TrimSpace(buf.String())
 }
