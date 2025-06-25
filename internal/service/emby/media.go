@@ -205,15 +205,14 @@ func findVideoPreviewInfos(source *jsons.Item, originName, clientApiKey string, 
 	wg.Wait()
 
 	// 移除 res 中的空值项
-	for i := 0; i < len(res); {
-		if res[i] != nil {
-			i++
+	nonNil := res[:0]
+	for _, v := range res {
+		if v == nil {
 			continue
 		}
-		res = append(res[:i], res[i+1:]...)
+		nonNil = append(nonNil, v)
 	}
-
-	resChan <- res
+	resChan <- nonNil
 }
 
 // addSubtitles2MediaStreams 添加转码字幕到 PlaybackInfo 的 MediaStreams 项中
