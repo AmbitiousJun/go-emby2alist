@@ -51,9 +51,9 @@ func PlayingStoppedHelper(c *gin.Context) {
 		return
 	}
 	body := jsons.NewEmptyObj()
-	body.Put("ItemId", jsons.NewByVal(itemId))
-	body.Put("PlaySessionId", jsons.NewByVal(randoms.RandomHex(32)))
-	body.Put("PositionTicks", jsons.NewByVal(bodyJson.Attr("PositionTicks").Val()))
+	body.Put("ItemId", jsons.FromValue(itemId))
+	body.Put("PlaySessionId", jsons.FromValue(randoms.RandomHex(32)))
+	body.Put("PositionTicks", jsons.FromValue(bodyJson.Attr("PositionTicks").Val()))
 	go sendPlayingProgress(kType, kName, apiKey, body)
 }
 

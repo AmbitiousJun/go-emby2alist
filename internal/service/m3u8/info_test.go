@@ -389,7 +389,7 @@ func TestNewByContent(t *testing.T) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	log.Println(jsons.NewByObj(info))
+	log.Println(jsons.FromObject(info))
 }
 
 func TestNewByRemote(t *testing.T) {
@@ -398,7 +398,7 @@ func TestNewByRemote(t *testing.T) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	log.Println(jsons.NewByObj(info))
+	log.Println(jsons.FromObject(info))
 }
 
 func TestConvert(t *testing.T) {

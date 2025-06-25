@@ -38,7 +38,7 @@ func FetchResource(fi FetchInfo) model.HttpRes[Resource] {
 		if !fi.TryRawIfTranscodeFail {
 			return model.HttpRes[Resource]{Code: originRes.Code, Msg: originRes.Msg}
 		}
-		log.Printf(colors.ToRed("请求转码资源失败, 尝试请求原画资源, 原始响应: %v"), jsons.NewByObj(originRes))
+		log.Printf(colors.ToRed("请求转码资源失败, 尝试请求原画资源, 原始响应: %v"), jsons.FromObject(originRes))
 		fi.UseTranscode = false
 		return FetchResource(fi)
 	}
