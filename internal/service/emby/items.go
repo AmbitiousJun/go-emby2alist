@@ -180,7 +180,7 @@ func ProxyAddItemsPreviewInfo(c *gin.Context) {
 			originId, _ := ms.Attr("Id").String()
 			originName := findMediaSourceName(ms)
 			allTplIds := getAllPreviewTemplateIds()
-			ms.Put("Name", jsons.NewByVal("(原画) "+originName))
+			ms.Put("Name", jsons.FromValue("(原画) "+originName))
 
 			if path, ok := ms.Attr("Path").String(); ok {
 				ms.Attr("Path").Set(urls.Unescape(path))
@@ -192,9 +192,9 @@ func ProxyAddItemsPreviewInfo(c *gin.Context) {
 			}
 
 			for _, tplId := range allTplIds {
-				copyMs := jsons.NewByVal(ms.Struct())
-				copyMs.Put("Name", jsons.NewByVal(fmt.Sprintf("(%s) %s", tplId, originName)))
-				copyMs.Put("Id", jsons.NewByVal(fmt.Sprintf("%s%s%s", originId, MediaSourceIdSegment, tplId)))
+				copyMs := jsons.FromValue(ms.Struct())
+				copyMs.Put("Name", jsons.FromValue(fmt.Sprintf("(%s) %s", tplId, originName)))
+				copyMs.Put("Id", jsons.FromValue(fmt.Sprintf("%s%s%s", originId, MediaSourceIdSegment, tplId)))
 				copyMs.Put("MediaStreams", proresMediaStreams)
 				toAdd = append(toAdd, copyMs)
 			}

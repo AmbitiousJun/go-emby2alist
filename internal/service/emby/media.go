@@ -165,7 +165,7 @@ func findVideoPreviewInfos(source *jsons.Item, originName, clientApiKey string, 
 				return
 			}
 
-			copySource := jsons.NewByVal(source.Struct())
+			copySource := jsons.FromValue(source.Struct())
 			format := fmt.Sprintf("%dx%d", transcode.TemplateWidth, transcode.TemplateHeight)
 			copySource.Attr("Name").Set(fmt.Sprintf("(%s_%s) %s", transcode.TemplateId, format, originName))
 
@@ -188,13 +188,13 @@ func findVideoPreviewInfos(source *jsons.Item, originName, clientApiKey string, 
 			tu.RawQuery = q.Encode()
 
 			// 标记转码资源使用转码容器
-			copySource.Put("SupportsTranscoding", jsons.NewByVal(true))
-			copySource.Put("TranscodingContainer", jsons.NewByVal("ts"))
-			copySource.Put("TranscodingSubProtocol", jsons.NewByVal("hls"))
-			copySource.Put("TranscodingUrl", jsons.NewByVal(tu.String()))
+			copySource.Put("SupportsTranscoding", jsons.FromValue(true))
+			copySource.Put("TranscodingContainer", jsons.FromValue("ts"))
+			copySource.Put("TranscodingSubProtocol", jsons.FromValue("hls"))
+			copySource.Put("TranscodingUrl", jsons.FromValue(tu.String()))
 			copySource.DelKey("DirectStreamUrl")
-			copySource.Put("SupportsDirectPlay", jsons.NewByVal(false))
-			copySource.Put("SupportsDirectStream", jsons.NewByVal(false))
+			copySource.Put("SupportsDirectPlay", jsons.FromValue(false))
+			copySource.Put("SupportsDirectStream", jsons.FromValue(false))
 
 			// 设置转码字幕
 			addSubtitles2MediaStreams(copySource, subtitleList, openlistPathRes.Path, transcode.TemplateId, clientApiKey)
@@ -242,16 +242,16 @@ func addSubtitles2MediaStreams(source *jsons.Item, subtitleList []openlist.Trans
 	for index, sub := range subtitleList {
 		subStream, _ := jsons.New(`{"AttachmentSize":0,"Codec":"vtt","DeliveryMethod":"External","DeliveryUrl":"/Videos/6066/4ce9f37fe8567a3898e66517b92cf2af/Subtitles/14/0/Stream.vtt?api_key=964a56845f6a4c4a8ba42204ec6f775c","DisplayTitle":"(VTT)","ExtendedVideoSubType":"None","ExtendedVideoSubTypeDescription":"None","ExtendedVideoType":"None","Index":14,"IsDefault":false,"IsExternal":true,"IsExternalUrl":false,"IsForced":false,"IsHearingImpaired":false,"IsInterlaced":false,"IsTextSubtitleStream":true,"Protocol":"File","SupportsExternalStream":true,"Type":"Subtitle"}`)
 
-		lang := jsons.NewByVal(sub.Lang)
+		lang := jsons.FromValue(sub.Lang)
 		subStream.Put("DisplayLanguage", lang)
 		subStream.Put("Language", lang)
 
 		subName := urls.ResolveResourceName(sub.Url)
-		subStream.Put("DisplayTitle", jsons.NewByVal(openlist.SubLangDisplayName(sub.Lang)))
-		subStream.Put("Title", jsons.NewByVal(fmt.Sprintf("(%s) %s", sub.Lang, subName)))
+		subStream.Put("DisplayTitle", jsons.FromValue(openlist.SubLangDisplayName(sub.Lang)))
+		subStream.Put("Title", jsons.FromValue(fmt.Sprintf("(%s) %s", sub.Lang, subName)))
 
 		idx := curMediaStreamsSize + index
-		subStream.Put("Index", jsons.NewByVal(idx))
+		subStream.Put("Index", jsons.FromValue(idx))
 
 		u, _ := url.Parse(fmt.Sprintf("/Videos/%s/%s/Subtitles/%d/0/Stream.vtt", itemId, fakeId, idx))
 		q := u.Query()
@@ -260,7 +260,7 @@ func addSubtitles2MediaStreams(source *jsons.Item, subtitleList []openlist.Trans
 		q.Set("sub_name", subName)
 		q.Set(QueryApiKeyName, clientApiKey)
 		u.RawQuery = q.Encode()
-		subStream.Put("DeliveryUrl", jsons.NewByVal(u.String()))
+		subStream.Put("DeliveryUrl", jsons.FromValue(u.String()))
 
 		mediaStreams.Append(subStream)
 	}

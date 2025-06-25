@@ -10,20 +10,20 @@ import (
 )
 
 func TestMarshal(t *testing.T) {
-	log.Println(jsons.NewByVal("Ambitious"))
-	log.Println(jsons.NewByVal(true))
-	log.Println(jsons.NewByVal(23))
-	log.Println(jsons.NewByVal(3.14159))
-	log.Println(jsons.NewByVal(nil))
+	log.Println(jsons.FromValue("Ambitious"))
+	log.Println(jsons.FromValue(true))
+	log.Println(jsons.FromValue(23))
+	log.Println(jsons.FromValue(3.14159))
+	log.Println(jsons.FromValue(nil))
 
 	arr := []any{"Ambitious", true, 23, 3.14159, nil}
-	log.Println(jsons.NewByArr(arr))
+	log.Println(jsons.FromArray(arr))
 
 	m := map[string]any{"1": arr}
-	log.Println(jsons.NewByObj(m))
+	log.Println(jsons.FromObject(m))
 
 	arr = append(arr, map[string]any{"Path": "/a/b/c", "Age": 18, "Name": nil})
-	log.Println(jsons.NewByArr(arr))
+	log.Println(jsons.FromArray(arr))
 }
 
 func TestUnmarshal(t *testing.T) {
@@ -44,7 +44,7 @@ func TestUnmarshal(t *testing.T) {
 }
 
 func TestMap(t *testing.T) {
-	item := jsons.NewByArr([]any{1, 2, 1, 3, 8})
+	item := jsons.FromArray([]any{1, 2, 1, 3, 8})
 	res := item.Map(func(val *jsons.Item) any { return "😄" + strconv.Itoa(val.Ti().Val().(int)) })
 	log.Println("转换完成后的数组: ", res)
 }

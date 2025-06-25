@@ -22,14 +22,10 @@ func NewEmptyArr() *Item {
 	return &Item{arr: make([]*Item, 0), jType: JsonTypeArr}
 }
 
-// NewByObj 根据对象初始化 json 数据
-func NewByObj(obj any) *Item {
+// FromObject 根据对象初始化 json 数据
+func FromObject(obj any) *Item {
 	if obj == nil {
-		return NewByVal(nil)
-	}
-
-	if item, ok := obj.(*Item); ok {
-		return item
+		return FromValue(nil)
 	}
 
 	v := reflect.ValueOf(obj)
@@ -37,7 +33,7 @@ func NewByObj(obj any) *Item {
 		v = v.Elem()
 	}
 	if v.Kind() != reflect.Struct && v.Kind() != reflect.Map {
-		return NewByVal(obj)
+		return FromValue(obj)
 	}
 
 	item := NewEmptyObj()
@@ -45,7 +41,10 @@ func NewByObj(obj any) *Item {
 		for i := 0; i < v.NumField(); i++ {
 			fieldVal := v.Field(i)
 			fieldType := v.Type().Field(i)
-			item.Put(fieldType.Name, NewByVal(fieldVal.Interface()))
+			if !fieldVal.CanInterface() {
+				continue
+			}
+			item.Put(fieldType.Name, FromValue(fieldVal.Interface()))
 		}
 	}
 
@@ -54,20 +53,16 @@ func NewByObj(obj any) *Item {
 			panic("不支持的 map 类型")
 		}
 		for _, key := range v.MapKeys() {
-			item.Put(key.Interface().(string), NewByVal(v.MapIndex(key).Interface()))
+			item.Put(key.Interface().(string), FromValue(v.MapIndex(key).Interface()))
 		}
 	}
 	return item
 }
 
-// NewByArr 根据数组初始化 json 数据
-func NewByArr(arr any) *Item {
+// FromArray 根据数组初始化 json 数据
+func FromArray(arr any) *Item {
 	if arr == nil {
-		return NewByVal(nil)
-	}
-
-	if item, ok := arr.(*Item); ok {
-		return item
+		return FromValue(nil)
 	}
 
 	v := reflect.ValueOf(arr)
@@ -75,18 +70,22 @@ func NewByArr(arr any) *Item {
 		v = v.Elem()
 	}
 	if v.Kind() != reflect.Array && v.Kind() != reflect.Slice {
-		return NewByVal(arr)
+		return FromValue(arr)
 	}
 
 	item := NewEmptyArr()
 	for i := 0; i < v.Len(); i++ {
-		item.Append(NewByVal(v.Index(i).Interface()))
+		field := v.Index(i)
+		if !field.CanInterface() {
+			continue
+		}
+		item.Append(FromValue(field.Interface()))
 	}
 	return item
 }
 
-// NewByVal 根据指定普通值初始化 json 数据, 如果是数组或对象类型也会自动转化
-func NewByVal(val any) *Item {
+// FromValue 根据指定普通值初始化 json 数据, 如果是数组或对象类型也会自动转化
+func FromValue(val any) *Item {
 	item := &Item{jType: JsonTypeVal}
 	if val == nil {
 		return item
@@ -106,9 +105,9 @@ func NewByVal(val any) *Item {
 		item.val = val
 		return item
 	case reflect.Struct, reflect.Map:
-		return NewByObj(val)
+		return FromObject(val)
 	case reflect.Array, reflect.Slice:
-		return NewByArr(val)
+		return FromArray(val)
 	default:
 		log.Panicf("无效的数据类型, kind: %v, name: %v", t.Kind(), t.Name())
 		return nil
@@ -122,7 +121,7 @@ func New(rawJson string) (*Item, error) {
 	}
 
 	if rawJson == "null" {
-		return NewByVal(nil), nil
+		return FromValue(nil), nil
 	}
 
 	if strings.HasPrefix(rawJson, "{") {
@@ -160,28 +159,11 @@ func New(rawJson string) (*Item, error) {
 	}
 
 	// 尝试转换成基础类型
-	var s string
-	if err := json.Unmarshal([]byte(rawJson), &s); err == nil {
-		return NewByVal(s), nil
+	var v any
+	if err := json.Unmarshal([]byte(rawJson), &v); err != nil {
+		return nil, fmt.Errorf("不支持的字符串: %s", rawJson)
 	}
-	var b bool
-	if err := json.Unmarshal([]byte(rawJson), &b); err == nil {
-		return NewByVal(b), nil
-	}
-	var i int
-	if err := json.Unmarshal([]byte(rawJson), &i); err == nil {
-		return NewByVal(i), nil
-	}
-	var i64 int64
-	if err := json.Unmarshal([]byte(rawJson), &i64); err == nil {
-		return NewByVal(i64), nil
-	}
-	var f float64
-	if err := json.Unmarshal([]byte(rawJson), &f); err == nil {
-		return NewByVal(f), nil
-	}
-
-	return nil, fmt.Errorf("不支持的字符串: %s", rawJson)
+	return FromValue(v), nil
 }
 
 // Read 从流中读取 JSON 数据并转换为对象

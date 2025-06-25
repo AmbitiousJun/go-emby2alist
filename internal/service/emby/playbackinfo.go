@@ -115,19 +115,19 @@ func TransferPlaybackInfo(c *gin.Context) {
 		}
 
 		// 转换直链链接
-		source.Put("SupportsDirectPlay", jsons.NewByVal(true))
-		source.Put("SupportsDirectStream", jsons.NewByVal(true))
+		source.Put("SupportsDirectPlay", jsons.FromValue(true))
+		source.Put("SupportsDirectStream", jsons.FromValue(true))
 		newUrl := fmt.Sprintf(
 			"/videos/%s/stream?MediaSourceId=%s&%s=%s&Static=true",
 			itemInfo.Id, source.Attr("Id").Val(), itemInfo.ApiKeyName, itemInfo.ApiKey,
 		)
-		source.Put("DirectStreamUrl", jsons.NewByVal(newUrl))
+		source.Put("DirectStreamUrl", jsons.FromValue(newUrl))
 		log.Printf(colors.ToBlue("设置直链播放链接为: %s"), newUrl)
 
 		// 简化资源名称
 		name := findMediaSourceName(source)
 		if name != "" {
-			source.Put("Name", jsons.NewByVal(name))
+			source.Put("Name", jsons.FromValue(name))
 		}
 		name = source.Attr("Name").Val().(string)
 		source.Attr("Name").Set(fmt.Sprintf("(原画) %s", name))
@@ -137,7 +137,7 @@ func TransferPlaybackInfo(c *gin.Context) {
 			source.Attr("Path").Set(urls.Unescape(path))
 		}
 
-		source.Put("SupportsTranscoding", jsons.NewByVal(false))
+		source.Put("SupportsTranscoding", jsons.FromValue(false))
 		source.DelKey("TranscodingUrl")
 		source.DelKey("TranscodingSubProtocol")
 		source.DelKey("TranscodingContainer")
@@ -259,13 +259,13 @@ func useCacheSpacePlaybackInfo(c *gin.Context, itemInfo ItemInfo) bool {
 		newAdoIdx, err := strconv.Atoi(c.Query("AudioStreamIndex"))
 		var newAdoVal *jsons.Item
 		if err == nil {
-			newAdoVal = jsons.NewByVal(newAdoIdx)
+			newAdoVal = jsons.FromValue(newAdoIdx)
 			targetMs.Put("DefaultAudioStreamIndex", newAdoVal)
 		}
 		var newSubVal *jsons.Item
 		newSubIdx, err := strconv.Atoi(c.Query("SubtitleStreamIndex"))
 		if err == nil {
-			newSubVal = jsons.NewByVal(newSubIdx)
+			newSubVal = jsons.FromValue(newSubIdx)
 			targetMs.Put("DefaultSubtitleStreamIndex", newSubVal)
 		}
 

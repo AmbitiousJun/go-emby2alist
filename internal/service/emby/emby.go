@@ -150,7 +150,7 @@ func TestProxyUri(c *gin.Context) bool {
 	}
 	infos.RespBody = string(bodyBytes)
 	infos.RespStatus = resp.StatusCode
-	log.Printf(colors.ToYellow("测试 uri 代理信息: %s"), jsons.NewByVal(infos))
+	log.Printf(colors.ToYellow("测试 uri 代理信息: %s"), jsons.FromValue(infos))
 
 	c.Status(infos.RespStatus)
 	c.Writer.Write(bodyBytes)
