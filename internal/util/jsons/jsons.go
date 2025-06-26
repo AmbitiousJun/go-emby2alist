@@ -115,12 +115,14 @@ func FromValue(val any) *Item {
 }
 
 // New 从 json 字符串中初始化成 item 对象
-func New(rawJson string) (*Item, error) {
-	if strs.AnyEmpty(rawJson) {
-		return nil, errors.New("empty raw json")
-	}
+func New(rawJson string) (i *Item, err error) {
+	defer func() {
+		if rec := recover(); rec != nil {
+			err = fmt.Errorf("内部转换异常: %v", rec)
+		}
+	}()
 
-	if rawJson == "null" {
+	if strs.AnyEmpty(rawJson) || rawJson == "null" {
 		return FromValue(nil), nil
 	}
 
