@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"net/http"
 
-	"github.com/AmbitiousJun/go-emby2openlist/internal/util/jsons"
+	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/util/jsons"
 )
 
 // RespCache 公开对外暴露的缓存接口

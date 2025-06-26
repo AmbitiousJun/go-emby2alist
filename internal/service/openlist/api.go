@@ -9,12 +9,12 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/AmbitiousJun/go-emby2openlist/internal/config"
-	"github.com/AmbitiousJun/go-emby2openlist/internal/model"
-	"github.com/AmbitiousJun/go-emby2openlist/internal/util/colors"
-	"github.com/AmbitiousJun/go-emby2openlist/internal/util/https"
-	"github.com/AmbitiousJun/go-emby2openlist/internal/util/jsons"
-	"github.com/AmbitiousJun/go-emby2openlist/internal/util/strs"
+	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/config"
+	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/model"
+	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/util/colors"
+	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/util/https"
+	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/util/jsons"
+	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/util/strs"
 )
 
 // FetchResource 请求 openlist 资源 url 直链

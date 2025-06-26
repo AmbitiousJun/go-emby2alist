@@ -8,8 +8,8 @@ import (
 	"slices"
 	"strconv"
 
-	"github.com/AmbitiousJun/go-emby2openlist/internal/config"
-	"github.com/AmbitiousJun/go-emby2openlist/internal/util/https"
+	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/config"
+	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/util/https"
 
 	"github.com/gin-gonic/gin"
 )

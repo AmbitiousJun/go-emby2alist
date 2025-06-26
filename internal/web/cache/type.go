@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"sync"
 
-	"github.com/AmbitiousJun/go-emby2openlist/internal/util/jsons"
+	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/util/jsons"
 
 	"github.com/gin-gonic/gin"
 )

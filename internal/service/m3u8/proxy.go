@@ -7,10 +7,10 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/AmbitiousJun/go-emby2openlist/internal/service/openlist"
-	"github.com/AmbitiousJun/go-emby2openlist/internal/util/colors"
-	"github.com/AmbitiousJun/go-emby2openlist/internal/util/https"
-	"github.com/AmbitiousJun/go-emby2openlist/internal/util/strs"
+	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/service/openlist"
+	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/util/colors"
+	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/util/https"
+	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/util/strs"
 
 	"github.com/gin-gonic/gin"
 )

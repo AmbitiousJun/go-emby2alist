@@ -1,6 +1,6 @@
 package config
 
-import "github.com/AmbitiousJun/go-emby2openlist/internal/setup"
+import "github.com/AmbitiousJun/go-emby2openlist/v2/internal/setup"
 
 // Log 日志配置
 type Log struct {

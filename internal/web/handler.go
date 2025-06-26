@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"regexp"
 
-	"github.com/AmbitiousJun/go-emby2openlist/internal/constant"
+	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/constant"
 	"github.com/gin-gonic/gin"
 )
 

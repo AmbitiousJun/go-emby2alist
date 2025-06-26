@@ -3,10 +3,10 @@ package web
 import (
 	"log"
 
-	"github.com/AmbitiousJun/go-emby2openlist/internal/constant"
-	"github.com/AmbitiousJun/go-emby2openlist/internal/service/emby"
-	"github.com/AmbitiousJun/go-emby2openlist/internal/service/m3u8"
-	"github.com/AmbitiousJun/go-emby2openlist/internal/util/colors"
+	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/constant"
+	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/service/emby"
+	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/service/m3u8"
+	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/util/colors"
 
 	"github.com/gin-gonic/gin"
 )

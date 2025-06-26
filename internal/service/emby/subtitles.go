@@ -5,8 +5,8 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/AmbitiousJun/go-emby2openlist/internal/util/strs"
-	"github.com/AmbitiousJun/go-emby2openlist/internal/web/cache"
+	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/util/strs"
+	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/web/cache"
 	"github.com/gin-gonic/gin"
 )
 

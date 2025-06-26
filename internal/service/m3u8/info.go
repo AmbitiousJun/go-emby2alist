@@ -12,12 +12,12 @@ import (
 	"strings"
 	"time"
 
-	"github.com/AmbitiousJun/go-emby2openlist/internal/service/emby"
-	"github.com/AmbitiousJun/go-emby2openlist/internal/service/openlist"
-	"github.com/AmbitiousJun/go-emby2openlist/internal/util/colors"
-	"github.com/AmbitiousJun/go-emby2openlist/internal/util/https"
-	"github.com/AmbitiousJun/go-emby2openlist/internal/util/strs"
-	"github.com/AmbitiousJun/go-emby2openlist/internal/util/urls"
+	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/service/emby"
+	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/service/openlist"
+	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/util/colors"
+	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/util/https"
+	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/util/strs"
+	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/util/urls"
 )
 
 // NewByContent 根据 m3u8 文本初始化一个 info 对象

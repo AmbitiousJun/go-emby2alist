@@ -6,10 +6,10 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/AmbitiousJun/go-emby2openlist/internal/config"
-	"github.com/AmbitiousJun/go-emby2openlist/internal/service/openlist"
-	"github.com/AmbitiousJun/go-emby2openlist/internal/util/colors"
-	"github.com/AmbitiousJun/go-emby2openlist/internal/util/urls"
+	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/config"
+	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/service/openlist"
+	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/util/colors"
+	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/util/urls"
 )
 
 // OpenlistPathRes 路径转换结果

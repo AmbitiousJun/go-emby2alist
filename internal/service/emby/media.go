@@ -13,14 +13,14 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/AmbitiousJun/go-emby2openlist/internal/config"
-	"github.com/AmbitiousJun/go-emby2openlist/internal/service/openlist"
-	"github.com/AmbitiousJun/go-emby2openlist/internal/service/path"
-	"github.com/AmbitiousJun/go-emby2openlist/internal/util/https"
-	"github.com/AmbitiousJun/go-emby2openlist/internal/util/jsons"
-	"github.com/AmbitiousJun/go-emby2openlist/internal/util/randoms"
-	"github.com/AmbitiousJun/go-emby2openlist/internal/util/strs"
-	"github.com/AmbitiousJun/go-emby2openlist/internal/util/urls"
+	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/config"
+	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/service/openlist"
+	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/service/path"
+	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/util/https"
+	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/util/jsons"
+	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/util/randoms"
+	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/util/strs"
+	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/util/urls"
 
 	"github.com/gin-gonic/gin"
 )

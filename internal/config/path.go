@@ -5,7 +5,7 @@ import (
 	"log"
 	"strings"
 
-	"github.com/AmbitiousJun/go-emby2openlist/internal/util/colors"
+	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/util/colors"
 )
 
 type Path struct {

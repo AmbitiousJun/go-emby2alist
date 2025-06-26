@@ -5,11 +5,11 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/AmbitiousJun/go-emby2openlist/internal/config"
-	"github.com/AmbitiousJun/go-emby2openlist/internal/service/emby"
-	"github.com/AmbitiousJun/go-emby2openlist/internal/util/colors"
-	"github.com/AmbitiousJun/go-emby2openlist/internal/web/cache"
-	"github.com/AmbitiousJun/go-emby2openlist/internal/web/webport"
+	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/config"
+	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/service/emby"
+	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/util/colors"
+	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/web/cache"
+	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/web/webport"
 
 	"github.com/gin-gonic/gin"
 )

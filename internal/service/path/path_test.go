@@ -4,7 +4,7 @@ import (
 	"log"
 	"testing"
 
-	"github.com/AmbitiousJun/go-emby2openlist/internal/service/path"
+	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/service/path"
 )
 
 func TestSplit(t *testing.T) {

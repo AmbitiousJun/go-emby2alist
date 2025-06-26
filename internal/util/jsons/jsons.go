@@ -9,7 +9,7 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/AmbitiousJun/go-emby2openlist/internal/util/strs"
+	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/util/strs"
 )
 
 // NewEmptyObj 初始化一个对象类型的 json 数据
