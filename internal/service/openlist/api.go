@@ -146,6 +146,9 @@ func FetchFsOther(path string, header http.Header) model.HttpRes[FsOther] {
 func Fetch(uri, method string, header http.Header, body map[string]any, v any) error {
 	host := config.C.Openlist.Host
 	token := config.C.Openlist.Token
+	if strs.AnyEmpty(host, token) {
+		return fmt.Errorf("openlist.host 或 openlist.token 配置为空")
+	}
 
 	// 1 发出请求
 	if header == nil {
