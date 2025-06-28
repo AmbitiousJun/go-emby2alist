@@ -24,7 +24,7 @@ func proxyAndSetRespHeader(c *gin.Context) (model.HttpRes[*jsons.Item], bool) {
 		checkErr(c, errors.New(res.Msg))
 		return res, false
 	}
-	https.CloneHeader(c, respHeader)
+	https.CloneHeader(c.Writer, respHeader)
 	return res, true
 }
 

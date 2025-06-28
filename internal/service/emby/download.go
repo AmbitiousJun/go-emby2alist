@@ -138,7 +138,7 @@ func DownloadStrategyChecker() gin.HandlerFunc {
 		}
 
 		if strategy == config.DlStrategyOrigin {
-			if err := https.ProxyPass(c, config.C.Emby.Host); err != nil {
+			if err := https.ProxyPass(c.Request, c.Writer, config.C.Emby.Host); err != nil {
 				log.Printf(colors.ToRed("下载接口代理失败: %v"), err)
 			}
 		}

@@ -181,7 +181,7 @@ func TransferPlaybackInfo(c *gin.Context) {
 		}
 	}
 
-	https.CloneHeader(c, respHeader)
+	https.CloneHeader(c.Writer, respHeader)
 	jsons.OkResp(c, resJson)
 }
 
@@ -328,7 +328,7 @@ func useCacheSpacePlaybackInfo(c *gin.Context, itemInfo ItemInfo) bool {
 
 		jsonBody.Put("MediaSources", newMediaSources)
 		respHeader := spaceCache.Headers()
-		https.CloneHeader(c, respHeader)
+		https.CloneHeader(c.Writer, respHeader)
 		jsons.OkResp(c, jsonBody)
 		return true
 	}
@@ -340,7 +340,7 @@ func useCacheSpacePlaybackInfo(c *gin.Context, itemInfo ItemInfo) bool {
 		if itemInfo.MsInfo.Empty {
 			log.Printf(colors.ToBlue("复用缓存空间中的 PlaybackInfo 信息, itemId: %s"), itemInfo.Id)
 			c.Status(spaceCache.Code())
-			https.CloneHeader(c, spaceCache.Headers())
+			https.CloneHeader(c.Writer, spaceCache.Headers())
 			// 避免缓存的请求头中出现脏数据
 			c.Header("Access-Control-Allow-Origin", "*")
 			c.Writer.Write(spaceCache.BodyBytes())
@@ -448,7 +448,7 @@ func LoadCacheItems(c *gin.Context) {
 
 // fetchFullPlaybackInfo 请求全量的 PlaybackInfo 信息
 func fetchFullPlaybackInfo(c *gin.Context, itemInfo ItemInfo) (*jsons.Item, error) {
-	u, err := url.Parse(https.ClientRequestHost(c) + itemInfo.PlaybackInfoUri)
+	u, err := url.Parse(https.ClientRequestHost(c.Request) + itemInfo.PlaybackInfoUri)
 	if err != nil {
 		return nil, fmt.Errorf("PlaybackInfo 地址异常: %v, uri: %s", err, itemInfo.PlaybackInfoUri)
 	}

@@ -15,7 +15,7 @@ func ChangeBaseVideoModuleCorsDefined(c *gin.Context) {
 	// 1 代理请求
 	c.Request.Header.Del("If-Modified-Since")
 	c.Request.Header.Del("If-None-Match")
-	resp, err := https.ProxyRequest(c, config.C.Emby.Host)
+	resp, err := https.ProxyRequest(c.Request, config.C.Emby.Host)
 	if checkErr(c, err) {
 		return
 	}
@@ -40,7 +40,7 @@ func ChangeBaseVideoModuleCorsDefined(c *gin.Context) {
 	jsScript := fmt.Sprintf(`(function(){ var modFunc; modFunc = function(){if(!%s||!%s||!%s||!%s){console.log('emby 未初始化完成...');setTimeout(modFunc);return;}%s=function(mediaSource,playMethod){return null;};console.log('cors 脚本补丁已注入')}; modFunc() })()`, modObj, modObjDefault, modObjPrototype, modObjCorsFunc, modObjCorsFunc)
 
 	c.Status(http.StatusOK)
-	https.CloneHeader(c, resp.Header)
+	https.CloneHeader(c.Writer, resp.Header)
 	c.Writer.Write(append(bodyBytes, []byte(jsScript)...))
 	c.Writer.Flush()
 }
