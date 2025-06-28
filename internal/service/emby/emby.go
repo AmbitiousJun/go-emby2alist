@@ -76,7 +76,7 @@ func ProxyOrigin(c *gin.Context) {
 	c.Request.Header.Set("X-Forwarded-For", c.ClientIP())
 	c.Request.Header.Set("X-Real-IP", c.ClientIP())
 
-	if err := https.ProxyPass(c, origin); err != nil {
+	if err := https.ProxyPass(c.Request, c.Writer, origin); err != nil {
 		log.Printf(colors.ToRed("代理异常: %v"), err)
 	}
 }

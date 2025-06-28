@@ -86,7 +86,7 @@ func TransferPlaybackInfo(c *gin.Context) {
 
 	if mediaSources.Empty() {
 		log.Println(colors.ToYellow("没有找到可播放的资源"))
-		jsons.OkResp(c, resJson)
+		jsons.OkResp(c.Writer, resJson)
 		return
 	}
 
@@ -181,8 +181,8 @@ func TransferPlaybackInfo(c *gin.Context) {
 		}
 	}
 
-	https.CloneHeader(c, respHeader)
-	jsons.OkResp(c, resJson)
+	https.CloneHeader(c.Writer, respHeader)
+	jsons.OkResp(c.Writer, resJson)
 }
 
 // handleRemotePlayback 判断如果请求的 PlaybackInfo 信息是远程地址, 直接返回结果
@@ -328,8 +328,8 @@ func useCacheSpacePlaybackInfo(c *gin.Context, itemInfo ItemInfo) bool {
 
 		jsonBody.Put("MediaSources", newMediaSources)
 		respHeader := spaceCache.Headers()
-		https.CloneHeader(c, respHeader)
-		jsons.OkResp(c, jsonBody)
+		https.CloneHeader(c.Writer, respHeader)
+		jsons.OkResp(c.Writer, jsonBody)
 		return true
 	}
 
@@ -340,7 +340,7 @@ func useCacheSpacePlaybackInfo(c *gin.Context, itemInfo ItemInfo) bool {
 		if itemInfo.MsInfo.Empty {
 			log.Printf(colors.ToBlue("复用缓存空间中的 PlaybackInfo 信息, itemId: %s"), itemInfo.Id)
 			c.Status(spaceCache.Code())
-			https.CloneHeader(c, spaceCache.Headers())
+			https.CloneHeader(c.Writer, spaceCache.Headers())
 			// 避免缓存的请求头中出现脏数据
 			c.Header("Access-Control-Allow-Origin", "*")
 			c.Writer.Write(spaceCache.BodyBytes())
@@ -388,7 +388,7 @@ func LoadCacheItems(c *gin.Context) {
 	}
 
 	defer func() {
-		jsons.OkResp(c, resJson)
+		jsons.OkResp(c.Writer, resJson)
 	}()
 
 	// 未开启转码资源获取功能
@@ -448,7 +448,7 @@ func LoadCacheItems(c *gin.Context) {
 
 // fetchFullPlaybackInfo 请求全量的 PlaybackInfo 信息
 func fetchFullPlaybackInfo(c *gin.Context, itemInfo ItemInfo) (*jsons.Item, error) {
-	u, err := url.Parse(https.ClientRequestHost(c) + itemInfo.PlaybackInfoUri)
+	u, err := url.Parse(https.ClientRequestHost(c.Request) + itemInfo.PlaybackInfoUri)
 	if err != nil {
 		return nil, fmt.Errorf("PlaybackInfo 地址异常: %v, uri: %s", err, itemInfo.PlaybackInfoUri)
 	}

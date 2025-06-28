@@ -20,10 +20,11 @@ import (
 // PlayingStoppedHelper 拦截停止播放接口, 然后手动请求一次 Progress 接口记录进度
 func PlayingStoppedHelper(c *gin.Context) {
 	// 取出原始请求体信息
-	bodyBytes, err := https.ExtractReqBody(c)
+	bodyBytes, newBody, err := https.ExtractReqBody(c.Request.Body)
 	if checkErr(c, err) {
 		return
 	}
+	c.Request.Body = newBody
 	bodyJson, err := jsons.New(string(bodyBytes))
 	if checkErr(c, err) {
 		return
@@ -60,10 +61,11 @@ func PlayingStoppedHelper(c *gin.Context) {
 // PlayingProgressHelper 拦截 Progress 请求, 如果进度报告为 0, 认为是无效请求
 func PlayingProgressHelper(c *gin.Context) {
 	// 取出原始请求体信息
-	bodyBytes, err := https.ExtractReqBody(c)
+	bodyBytes, newBody, err := https.ExtractReqBody(c.Request.Body)
 	if checkErr(c, err) {
 		return
 	}
+	c.Request.Body = newBody
 	bodyJson, err := jsons.New(string(bodyBytes))
 	if checkErr(c, err) {
 		return

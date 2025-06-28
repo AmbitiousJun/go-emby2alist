@@ -50,7 +50,7 @@ func ResortRandomItems(c *gin.Context) {
 
 	// 缓存空间没有数据时, 默认使用 emby 的原始随机结果
 	if !ok {
-		u := strings.ReplaceAll(https.ClientRequestUrl(c), "/Items", "/Items/with_limit")
+		u := strings.ReplaceAll(https.ClientRequestUrl(c.Request), "/Items", "/Items/with_limit")
 		c.Redirect(http.StatusTemporaryRedirect, u)
 		return
 	}
@@ -73,7 +73,7 @@ func ResortRandomItems(c *gin.Context) {
 
 		c.Status(code)
 		header.Set("Content-Length", strconv.Itoa(len(respBody)))
-		https.CloneHeader(c, header)
+		https.CloneHeader(c.Writer, header)
 		c.Writer.Write(respBody)
 	}()
 
@@ -115,7 +115,7 @@ func RandomItemsWithLimit(c *gin.Context) {
 	}
 
 	c.Status(resp.StatusCode)
-	https.CloneHeader(c, resp.Header)
+	https.CloneHeader(c.Writer, resp.Header)
 	c.Header(cache.HeaderKeyExpired, cache.Duration(time.Hour*3))
 	c.Header(cache.HeaderKeySpace, ItemsCacheSpace)
 	c.Header(cache.HeaderKeySpaceKey, calcRandomItemsCacheKey(c))
@@ -139,7 +139,7 @@ func calcRandomItemsCacheKey(c *gin.Context) string {
 func ProxyAddItemsPreviewInfo(c *gin.Context) {
 	// 代理请求
 	c.Request.Header.Del("Accept-Encoding")
-	resp, err := https.ProxyRequest(c, config.C.Emby.Host)
+	resp, err := https.ProxyRequest(c.Request, config.C.Emby.Host)
 	if checkErr(c, err) {
 		return
 	}
@@ -157,8 +157,8 @@ func ProxyAddItemsPreviewInfo(c *gin.Context) {
 
 	// 预响应请求
 	defer func() {
-		https.CloneHeader(c, resp.Header)
-		jsons.OkResp(c, resJson)
+		https.CloneHeader(c.Writer, resp.Header)
+		jsons.OkResp(c.Writer, resJson)
 	}()
 
 	// 获取 Items 数组
@@ -210,7 +210,7 @@ func ProxyAddItemsPreviewInfo(c *gin.Context) {
 func ProxyLatestItems(c *gin.Context) {
 	// 代理请求
 	c.Request.Header.Del("Accept-Encoding")
-	resp, err := https.ProxyRequest(c, config.C.Emby.Host)
+	resp, err := https.ProxyRequest(c.Request, config.C.Emby.Host)
 	if checkErr(c, err) {
 		return
 	}
@@ -228,8 +228,8 @@ func ProxyLatestItems(c *gin.Context) {
 
 	// 预响应请求
 	defer func() {
-		https.CloneHeader(c, resp.Header)
-		jsons.OkResp(c, resJson)
+		https.CloneHeader(c.Writer, resp.Header)
+		jsons.OkResp(c.Writer, resJson)
 	}()
 
 	// 遍历 MediaSources 解码 path

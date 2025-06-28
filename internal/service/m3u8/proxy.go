@@ -50,7 +50,7 @@ func ProxyPlaylist(c *gin.Context) {
 	}
 
 	// ts 切片使用绝对路径
-	routePrefix := https.ClientRequestHost(c) + "/videos"
+	routePrefix := https.ClientRequestHost(c.Request) + "/videos"
 
 	m3uContent, ok := GetPlaylist(params.OpenlistPath, params.TemplateId, true, true, routePrefix, params.ApiKey)
 	if ok {
@@ -131,7 +131,7 @@ func ProxySubtitle(c *gin.Context) {
 			return
 		}
 		defer resp.Body.Close()
-		https.CloneHeader(c, resp.Header)
+		https.CloneHeader(c.Writer, resp.Header)
 		c.Status(resp.StatusCode)
 		if _, err = io.Copy(c.Writer, resp.Body); err != nil {
 			log.Printf(colors.ToRed("代理字幕失败: %v"), err)

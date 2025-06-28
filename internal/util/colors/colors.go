@@ -1,9 +1,5 @@
 package colors
 
-import (
-	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/setup"
-)
-
 // 日志颜色输出常量
 const (
 	Blue   = "\x1b[38;2;090;156;248m"
@@ -15,6 +11,18 @@ const (
 
 	reset = "\x1b[0m"
 )
+
+// Enabler
+type Enabler interface {
+
+	// EnableColor 标记是否启用颜色输出
+	EnableColor() bool
+}
+
+var enabler Enabler
+
+// SetEnabler 设置颜色输出控制器
+func SetEnabler(e Enabler) { enabler = e }
 
 // ToBlue 将字符串转成蓝色
 func ToBlue(str string) string {
@@ -50,7 +58,7 @@ func ToGray(str string) string {
 //
 // 如果用户关闭了颜色输出, 则直接返回原字符串
 func wrapColor(color, str string) string {
-	if !setup.LogColorEnbale {
+	if enabler != nil && !enabler.EnableColor() {
 		return str
 	}
 	return color + str + reset

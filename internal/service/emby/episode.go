@@ -21,7 +21,7 @@ import (
 func ResortEpisodes(c *gin.Context) {
 	// 1 检查配置是否开启
 	if !config.C.Emby.EpisodesUnplayPrior {
-		checkErr(c, https.ProxyPass(c, config.C.Emby.Host))
+		checkErr(c, https.ProxyPass(c.Request, c.Writer, config.C.Emby.Host))
 		return
 	}
 
@@ -33,7 +33,7 @@ func ResortEpisodes(c *gin.Context) {
 
 	// 3 代理请求
 	c.Request.Header.Del("Accept-Encoding")
-	resp, err := https.ProxyRequest(c, config.C.Emby.Host)
+	resp, err := https.ProxyRequest(c.Request, config.C.Emby.Host)
 	if checkErr(c, err) {
 		return
 	}
@@ -53,7 +53,7 @@ func ResortEpisodes(c *gin.Context) {
 		return
 	}
 	resp.Header.Del("Content-Length")
-	https.CloneHeader(c, resp.Header)
+	https.CloneHeader(c.Writer, resp.Header)
 	defer func() {
 		bytes, _ := json.Marshal(ih)
 		c.Header("Content-Length", strconv.Itoa(len(bytes)))

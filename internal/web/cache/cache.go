@@ -89,7 +89,7 @@ func RequestCacher() gin.HandlerFunc {
 				c.Redirect(rc.code, rc.header.header.Get("Location"))
 			} else {
 				c.Status(rc.code)
-				https.CloneHeader(c, rc.header.header)
+				https.CloneHeader(c.Writer, rc.header.header)
 				c.Writer.Write(rc.body)
 			}
 			c.Abort()
@@ -104,7 +104,7 @@ func RequestCacher() gin.HandlerFunc {
 		c.Next()
 
 		// 6 不缓存错误请求
-		if https.IsErrorResponse(c) {
+		if https.IsErrorStatus(c.Writer.Status()) {
 			return
 		}
 
