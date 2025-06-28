@@ -94,6 +94,18 @@ func TransferPlaybackInfo(c *gin.Context) {
 	var haveReturned = errors.New("have returned")
 	resChans := make([]chan []*jsons.Item, 0)
 	err = mediaSources.RangeArr(func(_ int, source *jsons.Item) error {
+		// 简化资源名称
+		name := findMediaSourceName(source)
+		if name != "" {
+			source.Put("Name", jsons.FromValue(name))
+		}
+		name = source.Attr("Name").Val().(string)
+		source.Attr("Name").Set(fmt.Sprintf("(原画) %s", name))
+
+		// 提前触发转码版本收集
+		resChan := make(chan []*jsons.Item, 1)
+		go findVideoPreviewInfos(source, name, itemInfo.ApiKey, resChan)
+
 		// 如果客户端请求携带了 MediaSourceId 参数
 		// 在返回数据时, 需要重新设置回原始的 Id
 		if !msInfo.Empty {
@@ -124,14 +136,6 @@ func TransferPlaybackInfo(c *gin.Context) {
 		source.Put("DirectStreamUrl", jsons.FromValue(newUrl))
 		log.Printf(colors.ToBlue("设置直链播放链接为: %s"), newUrl)
 
-		// 简化资源名称
-		name := findMediaSourceName(source)
-		if name != "" {
-			source.Put("Name", jsons.FromValue(name))
-		}
-		name = source.Attr("Name").Val().(string)
-		source.Attr("Name").Set(fmt.Sprintf("(原画) %s", name))
-
 		// path 解码
 		if path, ok := source.Attr("Path").String(); ok {
 			source.Attr("Path").Set(urls.Unescape(path))
@@ -154,8 +158,6 @@ func TransferPlaybackInfo(c *gin.Context) {
 		if !msInfo.Empty || !cfg.Enable || !cfg.ContainerValid(source.Attr("Container").Val().(string)) {
 			return nil
 		}
-		resChan := make(chan []*jsons.Item, 1)
-		go findVideoPreviewInfos(source, name, itemInfo.ApiKey, resChan)
 		resChans = append(resChans, resChan)
 		return nil
 	})
