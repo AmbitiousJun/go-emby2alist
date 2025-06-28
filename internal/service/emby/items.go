@@ -158,7 +158,7 @@ func ProxyAddItemsPreviewInfo(c *gin.Context) {
 	// 预响应请求
 	defer func() {
 		https.CloneHeader(c.Writer, resp.Header)
-		jsons.OkResp(c, resJson)
+		jsons.OkResp(c.Writer, resJson)
 	}()
 
 	// 获取 Items 数组
@@ -229,7 +229,7 @@ func ProxyLatestItems(c *gin.Context) {
 	// 预响应请求
 	defer func() {
 		https.CloneHeader(c.Writer, resp.Header)
-		jsons.OkResp(c, resJson)
+		jsons.OkResp(c.Writer, resJson)
 	}()
 
 	// 遍历 MediaSources 解码 path

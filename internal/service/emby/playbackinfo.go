@@ -86,7 +86,7 @@ func TransferPlaybackInfo(c *gin.Context) {
 
 	if mediaSources.Empty() {
 		log.Println(colors.ToYellow("没有找到可播放的资源"))
-		jsons.OkResp(c, resJson)
+		jsons.OkResp(c.Writer, resJson)
 		return
 	}
 
@@ -182,7 +182,7 @@ func TransferPlaybackInfo(c *gin.Context) {
 	}
 
 	https.CloneHeader(c.Writer, respHeader)
-	jsons.OkResp(c, resJson)
+	jsons.OkResp(c.Writer, resJson)
 }
 
 // handleRemotePlayback 判断如果请求的 PlaybackInfo 信息是远程地址, 直接返回结果
@@ -329,7 +329,7 @@ func useCacheSpacePlaybackInfo(c *gin.Context, itemInfo ItemInfo) bool {
 		jsonBody.Put("MediaSources", newMediaSources)
 		respHeader := spaceCache.Headers()
 		https.CloneHeader(c.Writer, respHeader)
-		jsons.OkResp(c, jsonBody)
+		jsons.OkResp(c.Writer, jsonBody)
 		return true
 	}
 
@@ -388,7 +388,7 @@ func LoadCacheItems(c *gin.Context) {
 	}
 
 	defer func() {
-		jsons.OkResp(c, resJson)
+		jsons.OkResp(c.Writer, resJson)
 	}()
 
 	// 未开启转码资源获取功能
