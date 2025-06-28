@@ -7,8 +7,11 @@ import (
 	"io"
 	"log"
 	"reflect"
+	"runtime"
 	"strings"
+	"sync"
 
+	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/util/parallels"
 	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/util/strs"
 )
 
@@ -131,16 +134,7 @@ func New(rawJson string) (i *Item, err error) {
 		if err := json.Unmarshal([]byte(rawJson), &data); err != nil {
 			return nil, err
 		}
-
-		item := NewEmptyObj()
-		for key, value := range data {
-			subI, err := New(string(value))
-			if err != nil {
-				return nil, err
-			}
-			item.Put(key, subI)
-		}
-		return item, nil
+		return makeObject(data)
 	}
 
 	if strings.HasPrefix(rawJson, "[") {
@@ -148,16 +142,7 @@ func New(rawJson string) (i *Item, err error) {
 		if err := json.Unmarshal([]byte(rawJson), &data); err != nil {
 			return nil, err
 		}
-
-		item := NewEmptyArr()
-		for _, value := range data {
-			subI, err := New(string(value))
-			if err != nil {
-				return nil, err
-			}
-			item.Append(subI)
-		}
-		return item, nil
+		return makeArray(data)
 	}
 
 	// 尝试转换成基础类型
@@ -179,4 +164,91 @@ func Read(reader io.Reader) (*Item, error) {
 		return nil, fmt.Errorf("读取 reader 数据失败: %v", err)
 	}
 	return New(string(bytes))
+}
+
+// makeObject 根据原始对象数据构造对象 Item
+func makeObject(rawData map[string]json.RawMessage) (*Item, error) {
+	item := NewEmptyObj()
+	if len(rawData) == 0 {
+		return item, nil
+	}
+
+	// 并行构造子项
+	type result struct {
+		key  string
+		item *Item
+		err  error
+	}
+	results := make(chan result, runtime.NumCPU()*2)
+	wg := sync.WaitGroup{}
+
+	for key, value := range rawData {
+		wg.Add(1)
+		go func(key string, value json.RawMessage) {
+			defer wg.Done()
+			subI, err := New(string(value))
+			results <- result{key: key, item: subI, err: err}
+		}(key, value)
+	}
+
+	// 异步关闭结果收集通道
+	go func() {
+		wg.Wait()
+		close(results)
+	}()
+
+	// 收集结果
+	for r := range results {
+		if r.err != nil {
+			return nil, r.err
+		}
+		item.Put(r.key, r.item)
+	}
+	return item, nil
+}
+
+// makeArray 根据原始数组数据构造数组 Item
+func makeArray(rawData []json.RawMessage) (*Item, error) {
+	item := NewEmptyArr()
+	if len(rawData) == 0 {
+		return item, nil
+	}
+
+	// 分块处理
+	ranges := parallels.SliceChunk(len(rawData))
+
+	// 并行构造子项
+	type result struct {
+		idx  int
+		item *Item
+		err  error
+	}
+	results := make(chan result, runtime.NumCPU()*2)
+	wg := sync.WaitGroup{}
+
+	for _, r := range ranges {
+		wg.Add(1)
+		go func(r parallels.Range) {
+			defer wg.Done()
+			for i := range r.End - r.Start {
+				subI, err := New(string(rawData[i+r.Start]))
+				results <- result{idx: i + r.Start, item: subI, err: err}
+			}
+		}(r)
+	}
+
+	// 异步关闭结果收集通道
+	go func() {
+		wg.Wait()
+		close(results)
+	}()
+
+	// 收集结果
+	for r := range results {
+		if r.err != nil {
+			return nil, r.err
+		}
+		item.PutIdx(r.idx, r.item)
+	}
+	return item, nil
 }

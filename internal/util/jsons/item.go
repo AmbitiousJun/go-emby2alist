@@ -3,6 +3,7 @@ package jsons
 import (
 	"errors"
 	"math/rand"
+	"slices"
 )
 
 // JsonType json 属性值类型
@@ -102,13 +103,18 @@ func (i *Item) Idx(index int) *TempItem {
 
 // PutIdx 设置数组指定索引的 item
 func (i *Item) PutIdx(index int, newItem *Item) {
-	if i.jType != JsonTypeArr || newItem == nil {
+	if i.jType != JsonTypeArr || newItem == nil || index < 0 {
 		return
 	}
-	if index < 0 || index >= len(i.arr) {
+
+	if index < len(i.arr) {
+		i.arr[index] = newItem
 		return
 	}
-	i.arr[index] = newItem
+
+	padding := make([]*Item, index-len(i.arr))
+	i.arr = slices.Concat(i.arr, padding)
+	i.arr = append(i.arr, newItem)
 }
 
 // RangeArr 遍历数组
