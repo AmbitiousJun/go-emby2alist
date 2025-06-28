@@ -15,8 +15,8 @@ const (
 // Enabler
 type Enabler interface {
 
-	// Enable 标记是否启用颜色输出
-	Enable() bool
+	// EnableColor 标记是否启用颜色输出
+	EnableColor() bool
 }
 
 var enabler Enabler
@@ -58,7 +58,7 @@ func ToGray(str string) string {
 //
 // 如果用户关闭了颜色输出, 则直接返回原字符串
 func wrapColor(color, str string) string {
-	if enabler != nil && !enabler.Enable() {
+	if enabler != nil && !enabler.EnableColor() {
 		return str
 	}
 	return color + str + reset

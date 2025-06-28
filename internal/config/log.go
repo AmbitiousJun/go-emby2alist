@@ -13,7 +13,7 @@ func (lc *Log) Init() error {
 	return nil
 }
 
-// Enable 标记是否启用颜色输出
-func (lc *Log) Enable() bool {
+// EnableColor 标记是否启用颜色输出
+func (lc *Log) EnableColor() bool {
 	return !lc.DisableColor
 }
