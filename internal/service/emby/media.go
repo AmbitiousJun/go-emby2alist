@@ -103,7 +103,20 @@ func getEmbyFileLocalPath(itemInfo ItemInfo) (string, error) {
 //
 // 传递 resChan 进行异步查询, 通过监听 resChan 获取查询结果
 func findVideoPreviewInfos(source *jsons.Item, originName, clientApiKey string, resChan chan []*jsons.Item) {
+	if resChan == nil {
+		return
+	}
+	defer close(resChan)
+
 	if source == nil || source.Type() != jsons.JsonTypeObj {
+		resChan <- nil
+		return
+	}
+
+	// 未启用配置
+	cfg := config.C.VideoPreview
+	srcContainer, _ := source.Attr("Container").String()
+	if !cfg.Enable || !cfg.ContainerValid(srcContainer) {
 		resChan <- nil
 		return
 	}
