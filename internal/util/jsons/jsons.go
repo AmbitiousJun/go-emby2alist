@@ -11,6 +11,7 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/util/maps"
 	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/util/parallels"
 	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/util/strs"
 )
@@ -173,6 +174,10 @@ func makeObject(rawData map[string]json.RawMessage) (*Item, error) {
 		return item, nil
 	}
 
+	// map 转切片, 分块处理
+	keys := maps.Keys(rawData)
+	ranges := parallels.SliceChunk(len(keys))
+
 	// 并行构造子项
 	type result struct {
 		key  string
@@ -182,13 +187,16 @@ func makeObject(rawData map[string]json.RawMessage) (*Item, error) {
 	results := make(chan result, runtime.NumCPU()*2)
 	wg := sync.WaitGroup{}
 
-	for key, value := range rawData {
+	for _, r := range ranges {
 		wg.Add(1)
-		go func(key string, value json.RawMessage) {
+		go func(r parallels.Range) {
 			defer wg.Done()
-			subI, err := New(string(value))
-			results <- result{key: key, item: subI, err: err}
-		}(key, value)
+			for i := range r.End - r.Start {
+				key := keys[i+r.Start]
+				subI, err := New(string(rawData[key]))
+				results <- result{key: key, item: subI, err: err}
+			}
+		}(r)
 	}
 
 	// 异步关闭结果收集通道
